@@ -1,0 +1,120 @@
+<html>
+<head>
+  <title>linux之sort用法 - 东方雨中漫步者 - 博客园</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1966"/>
+<h1>linux之sort用法 - 东方雨中漫步者 - 博客园</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="position: relative; max-width: 1005.578125px;"><div style="font-size: 16px"><div style="font-family:Verdana, Arial, Helvetica, sans-serif;color:rgb(0, 0, 0);font-size:9pt;line-height:1.5;background:url(http://www.cnblogs.com/Skins/coffee/images/bg_body.gif) 0% 0%;"><div style="text-align:left;"><div style="text-align:left;overflow-x:hidden;background:transparent;"><div style="background:url(http://www.cnblogs.com/Skins/coffee/images/bg_left.gif) 0% 0% repeat-x rgb(254, 254, 242);"><div style="text-overflow:ellipsis;overflow:hidden;word-break:break-all;"><div><h1 style="margin:0px;padding:0px;font-weight:bold;float:left;line-height:1.5;width:100%;clear:both;font-size:14px;padding-left:5px;"><a href="http://www.cnblogs.com/dong008259/archive/2011/12/08/2281214.html" style="margin:0px;padding:0px;color:rgb(7, 93, 179);text-decoration:none;">linux之sort用法</a></h1><div style="margin:0px;padding:5px 2px 5px 5px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;margin-top:5px;"><div style="margin:0px;padding:0px;margin-bottom:20px;word-break:break-word;"><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">sort命令是帮我们依据不同的数据类型进行排序，其语法及常用参数格式：<br style="margin:0px;padding:0px;"/>
+　　<span style="margin:0px;padding:0px;line-height:1.5;color:#ff0000;">sort [-bcfMnrtk][源文件][-o 输出文件]</span><br style="margin:0px;padding:0px;"/>
+补充说明：sort可针对文本文件的内容，以行为单位来排序。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">参　　数：<br style="margin:0px;padding:0px;"/>
+  -b   忽略每行前面开始出的空格字符。<br style="margin:0px;padding:0px;"/>
+  -c   检查文件是否已经按照顺序排序。<br style="margin:0px;padding:0px;"/>
+  -f   排序时，忽略大小写字母。<br style="margin:0px;padding:0px;"/>
+  -M   将前面3个字母依照月份的缩写进行排序。<br style="margin:0px;padding:0px;"/>
+  -n   依照数值的大小排序。<br style="margin:0px;padding:0px;"/>
+  -o&lt;输出文件&gt;   将排序后的结果存入指定的文件。<br style="margin:0px;padding:0px;"/>
+  -r   以相反的顺序来排序。<br style="margin:0px;padding:0px;"/>
+  -t&lt;分隔字符&gt;   指定排序时所用的栏位分隔字符。<br style="margin:0px;padding:0px;"/>
+  -k  选择以哪个区间进行排序。<br style="margin:0px;padding:0px;"/>
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:2em;">下面通过几个例子来讲述Sort的使用。<br style="margin:0px;padding:0px;"/><br style="margin:0px;padding:0px;"/>
+（1）sort将文件的每一行作为一个单位，相互比较，比较原则是从首字符向后，依次按ASCII码值进行比较，最后将他们按升序输出。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat seq.txt<br style="margin:0px;padding:0px;"/>
+banana<br style="margin:0px;padding:0px;"/>
+apple<br style="margin:0px;padding:0px;"/>
+pear<br style="margin:0px;padding:0px;"/>
+orange<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort seq.txt<br style="margin:0px;padding:0px;"/>
+apple<br style="margin:0px;padding:0px;"/>
+banana<br style="margin:0px;padding:0px;"/>
+orange<br style="margin:0px;padding:0px;"/>
+pear</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">用户可以保存排序后的文件内容，或把排序后的文件内容输出至打印机。下例中用户把排序后的文件内容保存到名为result的文件中。<br style="margin:0px;padding:0px;"/>
+$ Sort seq.txt &gt; result</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">（2）sort的-u选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">它的作用很简单，就是在输出行中去除重复行。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat seq.txt<br style="margin:0px;padding:0px;"/>
+banana<br style="margin:0px;padding:0px;"/>
+apple<br style="margin:0px;padding:0px;"/>
+pear<br style="margin:0px;padding:0px;"/>
+orange<br style="margin:0px;padding:0px;"/>
+pear<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort seq.txt<br style="margin:0px;padding:0px;"/>
+apple<br style="margin:0px;padding:0px;"/>
+banana<br style="margin:0px;padding:0px;"/>
+orange<br style="margin:0px;padding:0px;"/>
+pear<br style="margin:0px;padding:0px;"/>
+pear<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort -u seq.txt<br style="margin:0px;padding:0px;"/>
+apple<br style="margin:0px;padding:0px;"/>
+banana<br style="margin:0px;padding:0px;"/>
+orange<br style="margin:0px;padding:0px;"/>
+pear</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">pear由于重复被-u选项无情的删除了。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">（3）sort的-r选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">sort默认的排序方式是升序，如果想改成降序，就加个-r就搞定了。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+3<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+4<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+3<br style="margin:0px;padding:0px;"/>
+4<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort -r number.txt<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+4<br style="margin:0px;padding:0px;"/>
+3<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+（5）sort的-o选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">由于sort默认是把结果输出到标准输出，所以需要用重定向才能将结果写入文件，形如sort filename &gt; newfile。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">但是，如果你想把排序结果输出到原文件中，用重定向可就不行了。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ sort -r number.txt &gt; number.txt<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ cat number.txt<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$<br style="margin:0px;padding:0px;"/>
+看，竟然将number清空了。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">就在这个时候，-o选项出现了，它成功的解决了这个问题，让你放心的将结果写入原文件。这或许也是-o比重定向的唯一优势所在。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+3<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+4<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort -r number.txt -o number.txt<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ cat number.txt<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+4<br style="margin:0px;padding:0px;"/>
+3<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+1</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">（6） sort的-n选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">你有没有遇到过10比2小的情况。我反正遇到过。出现这种情况是由于排序程序将这些数字按字符来排序了，排序程序会先比较1和2，显然1小，所以就将10放在2前面喽。这也是sort的一贯作风。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">我们如果想改变这种现状，就要使用-n选项，来告诉sort，“要以数值来排序”！</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+10<br style="margin:0px;padding:0px;"/>
+19<br style="margin:0px;padding:0px;"/>
+11<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+10<br style="margin:0px;padding:0px;"/>
+11<br style="margin:0px;padding:0px;"/>
+19<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+[rocrocket@rocrocket programming]$ sort -n number.txt<br style="margin:0px;padding:0px;"/>
+1<br style="margin:0px;padding:0px;"/>
+2<br style="margin:0px;padding:0px;"/>
+5<br style="margin:0px;padding:0px;"/>
+10<br style="margin:0px;padding:0px;"/>
+11<br style="margin:0px;padding:0px;"/>
+19</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">（7） sort的-t选项和-k选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">如果有一个文件的内容是这样：</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ cat facebook.txt<br style="margin:0px;padding:0px;"/>
+banana:30:5.5<br style="margin:0px;padding:0px;"/>
+apple:10:2.5<br style="margin:0px;padding:0px;"/>
+pear:90:2.3<br style="margin:0px;padding:0px;"/>
+orange:20:3.4</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">这个文件有三列，列与列之间用冒号隔开了，第一列表示水果类型，第二列表示水果数量，第三列表示水果价格。那么我想以水果数量来排序，也就是以第二列来排序，如何利用sort实现？幸好，sort提供了-t选项，后面可以设定间隔符。指定了间隔符之后，就可以用-k来指定列数了。</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">[rocrocket@rocrocket programming]$ sort -n -k 2 -t ‘:’ facebook.txt<br style="margin:0px;padding:0px;"/>
+apple:10:2.5<br style="margin:0px;padding:0px;"/>
+orange:20:3.4<br style="margin:0px;padding:0px;"/>
+banana:30:5.5<br style="margin:0px;padding:0px;"/>
+pear:90:2.3</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">（8） 其他的sort常用选项</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">-f会将小写字母都转换为大写字母来进行比较，亦即忽略大小写</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">-c会检查文件是否已排好序，如果乱序，则输出第一个乱序的行的相关信息，最后返回1</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">-C会检查文件是否已排好序，如果乱序，不输出内容，仅返回1</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">-M会以月份来排序，比如JAN小于FEB等等</p><p style="margin:10px auto;padding:0px;line-height:1.5;color:rgb(0, 0, 0);font-size:13px;text-indent:0px;">-b会忽略每一行前面的所有空白部分，从第一个可见字符开始比较。</p></div><div style="margin:0px;padding:0px;margin-top:20px;"><div style="margin:0px;padding:0px;margin-bottom:10px;"><br/></div></div></div></div></div></div></div></div></div></div></div></span>
+</div></body></html> 

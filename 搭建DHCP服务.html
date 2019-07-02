@@ -1,0 +1,45 @@
+<html>
+<head>
+  <title>搭建DHCP服务</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1451"/>
+<h1>搭建DHCP服务</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
+一、TCP Wrappers
+<div>     1、配置文件：</div><div>          /etc/hosts.deny</div><div>          /etc/hosts.allow</div><div>     2、策略格式：</div><div>               服务列表：客户机地址列表</div><div>     3、策略写法：</div><div>               服务和客户列表如果有多个可用，隔开</div><div>               网段表示方法：</div><div>                    .baidu.com或*.baidu.com</div><div>     4、应用规则：</div><div>               a、没有配置时，默认允许访问</div><div>               b、修改限时生效，无需重启</div><div>               c、先查看allow再查看deny，匹配即停止</div><div>               d、配置拒绝个别，允许所有时，allow文件中，不用添加任何内容</div><div>二、DHCP服务</div><div>     DHCP服务的作用：为大量客户机自动分配地址，提供集中管理</div><div>     DHCP原理：</div><div>          租约过程分四个步骤：</div><div>        <font color="#7B003D"> </font> <font color="#AD0000">a、客户机请求ip：DHCP客户机在网络中广播DHCP Discover包请求IP地址</font></div><div><font color="#AD0000">          b、服务器响应：服务器收到DHCP Discover包后响应并发送DHCP offer包</font></div><div><font color="#AD0000">          c、客户机选择IP：客户机收到DHCP offer包后选择IP地址，并发送DHCP Rquest包</font></div><div><font color="#AD0000">          d、服务器确认租约：服务器收到DHCP Rquest包后发送DHCP Ack/Nack包（确认发送ack包，拒绝发送Nack包）</font></div><div>          更新租约：</div><div>          <font color="#AD0000">IP地址的租约达到50%后，须重新更新租期</font></div><div><font color="#AD0000">          客户机会在租期过去50%的时候，直接向为其提供IP地址的DHCP Server发送DHCP REQUEST消息包。如果客户机接收到该服务器回应的DHCP ACK消息包，客户机就根据包中所提供的新的租期以及其它已经更新的TCP/IP参数，更新自己的配置，IP租用更新完成。如果没有收到该服务器的回复，则客户机继续使用现有的IP地址，因为当前租期还有50%。</font></div><div><font color="#AD0000">          如果在租期过去50%的时候没有更新，则客户机将在租期过去87.5%的时候再次向为其提供IP地址的DHCP联系。如果还不成功，到租约的100%时候，客户机必须放弃这个IP地址，重新申请。如果此时无DHCP可用，客户机会使用169.254.0.0/16中随机的一个地址，并且每隔5分钟再进行尝试。</font></div><div>     1、软件包：dhcp</div><div>     2、服务名：dhcpd（主程序）、dhcrelay（中继服务）</div><div>     3、端口：<font color="#AD0000">udp 67、udp 68</font></div><div>     4、配置文件：</div><div>               /etc/dhcp/dhcpd.conf     主配置文件</div><div>               /etc/sysconfig/dhcrelay     中继配置文件</div><div>               /usr/share/doc/dhcp*/dhcp.conf.sample     主配置文件模板</div><div>     5、常见配置</div><div>     6、搭建DHCP和DHCP中继服务</div><div>实验过程：</div><div>     搭建DHCP服务器</div><div>          服务器端：</div><div>          1）、yum -y install dhcp</div><div>          2）、<font color="#E30000">cp /usr/share/doc/dchp*/dhcpd.conf.sample     /etc/dhcp/dhcpd.conf</font></div><div>          3）、vim /etc/dhcp/dhcpd.conf删除多余配置，保留一个subnet区域</div><div>                    subnet 192.168.1.0 netmask 255.255.255.0{</div><div>                         option routes 192.168.1.2;</div><div>                         option subnet-mask 255.255.255.0;</div><div>                         option domain-name-servers 192.168.1.2;</div><div>                         range 192.168.1.10 192.168.1.100</div><div>                         default-lease-time 21600;</div><div>                         max-lease-time 23200;</div><div>                    }</div><div>          4）、service dhcpd restart</div><div>          客户端：</div><div>          1）、vim /etc/sysconfig/network-scripts/ifcfg-eth0</div><div>                    DEVICE=eth0</div><div>                    ONBOOT=yes</div><div>                    BOOTPROTO=dhcp</div><div>          2）、service network restart</div><div>     搭建中继服务</div><div>          服务器端：</div><div>          1）、yum -y install dhcp</div><div>          2）、cp /usr/share/doc/dhcp*/dhcpd.conf.sample     /etc/dhcp/dhcpd.conf</div><div>          3）、vim /etc/dhcp/dhcpd.conf删除多余配置，保留一个subnet区域</div><div>                         subnet 192.168.1.0 netmask 255.255.255.0{</div><div>                              option routes 192.168.1.2;</div><div>                              range 192.168.1.10 192.168.1.100</div><div>                              option domain-name-servers 192.168.1.2;                              </div><div>                              default-lease-time 21600;</div><div>                              max-lease-time 23200;</div><div>                         }</div><div>                         subnet 200.200.200.0 netmask 255.255.255.0{</div><div>                              option routes 200.200.200.2;</div><div>                              range 192.168.1.10 192.168.1.100</div><div>                              option domain-name-servers 200.200.200.100;</div><div>                              default-lease-time 21600;</div><div>                              max-lease-time 23200;</div><div>                         }</div><div>          4）service dhcpd restart</div><div>          5）route add default gw 192.168.1.2</div><div>          中继端：</div><div>          1、yum -y install dhcp</div><div>          2、<font color="#E30000">vim /etc/sysctl.conf</font></div><div><font color="#E30000">                    ip.net.ipv4_forward 1</font></div><div><font color="#E30000">         </font> 3、<font color="#E30000">sysctl -p</font></div><div>          4、<font color="#E30000">vim /etc/sysconfig/dhcrelay</font></div><div><font color="#E30000">                    INTERFACE=&quot;eth0 eth1&quot;            </font><i><font color="#328712">#网卡名称</font></i></div><div><font color="#E30000">                    DHCPSERVER=&quot;192.168.1.1&quot;    </font> <font color="#328712"><i>#DHCP服务器地址</i></font></div><div>          5、<font color="#E30000">service dhcrelay restart</font></div><div>          客户端：</div><div>          1、vim /etc/sysconfig/network-scripts/ifcfg-eth0</div><div>                    DEVICE=eth0</div><div>                    ONBOOT=yes</div><div>                    BOOTPROTO=dhcp</div><div>          2、service network restart</div><div><br/></div><div>DHCP配置文件（/etc/dhcp/dhcpd.conf）</div><div>ddns-update-style interim; <i><font color="#328712">//设置dhcp互动更新模式</font></i><br/>
+ignore client-updates; <i><font color="#328712">//忽略客户端更新</font></i><br/>
+subnet 192.168.12.0 netmask 255.255.255.0 {  <i><font color="#328712">//设置子网申明</font><br/><font color="#DE5700"># --- default gateway</font></i><br/>
+option routers 192.168.12.1; <i><font color="#328712">//设置客户端默认网关</font></i><br/>
+option subnet-mask 255.255.255.0; <font color="#328712"><i>//设置客户端子网掩码</i></font><br/>
+option nis-domain &quot;ixdba.net &quot;; <i><font color="#328712">//设置NIS域</font></i><br/>
+option domain-name &quot; ixdba.net &quot;; <i><font color="#328712">//设置DNS域</font></i><br/>
+option domain-name-servers 192.168.12.1; <i><font color="#328712">//设置DNS服务器地址</font></i><br/>
+option time-offset -18000; # Eastern Standard Time <i><font color="#328712">//设置时间偏差</font></i><br/>
+# option ntp-servers 192.168.12.1;          <i><font color="#328712">//设置时间服务器</font></i><br/>
+# option netbios-name-servers 192.168.12.1;    <i><font color="#328712">//设置netbios服务器地址</font></i><br/>
+# --- Selects point-to-point node (default is hybrid). Don't change this unless<br/>
+# -- you understand Netbios very well<br/>
+# option netbios-node-type 2;<br/>
+range dynamic-bootp 192.168.12.128 192.168.12.254; <i><font color="#328712">//设置地址池</font></i><br/>
+default-lease-time 21600; <i><font color="#328712">//设置默认租期，单位为秒</font></i><br/>
+max-lease-time 43200; <i><font color="#328712">//设置客户端最长租期，单位为秒</font></i><br/>
+# we want the nameserver to appear at a fixed address<br/>
+host ns { <font color="#328712"><i>//设置保留地址</i></font><br/>
+server-name marvin.RedHat.com;    <i><font color="#328712">//分配地址的服务器名</font></i><br/>
+hardware ethernet 12:34:56:78:AB:CD;  <i><font color="#328712">//被保留地址的机器的MAC</font></i><br/>
+fixed-address 207.175.42.254;   <i><font color="#328712">//分配的IP地址</font></i><br/>
+}<br/>
+}</div></span>
+</div></body></html> 

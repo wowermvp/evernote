@@ -1,0 +1,119 @@
+<html>
+<head>
+  <title>cisco交换机配置MAC VLAN—基于开源软件open-vmpsd | 随笔记录</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1305"/>
+<h1>cisco交换机配置MAC VLAN—基于开源软件open-vmpsd | 随笔记录</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;line-height:1.4em;"><div style="zoom:1;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;color:rgb(85, 85, 85);background-color:white;line-height:1.4em;font-family:&quot;Courier New&quot;;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;font-size:0.75em;box-shadow:transparent 0px 2px 5px;background:transparent;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><div style="zoom:1;"><div style="zoom:1;"><div style="zoom:1;font-family:inherit;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;word-wrap:break-word;font-size:1.25em;line-height:1.4875em;"><div style="zoom:1;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;outline:0px;vertical-align:baseline;"><h3 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.35em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">总述</h3>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">在一个社区网络中若存在数量较多的接入层交换机，网络中有多个VLAN，若此社区网络中的用户是经常变动接入位置，那么管理人员对交换机的接口进行VLAN调整将非常麻烦和容易出错，在此类场景下使用MAC VLAN功能可有效的减轻管理人员的负担。</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">MAC VLAN的主要原理是当交换机的接口有设备接入时会学习到接入设备的MAC地址，交换机根据自身配置的VMPS服务器地址向此服务器发送MAC地址与VLAN的对应关系查询 ，若VMPS服务器中有匹配的项目则向交换机返回相应的对应关系，交换机收到对应关系后将此接口自动调整为对应的VLAN。 若VMPS没有查找到对应的记录，可以配置返回一个默认VLAN给交换机或者直接不响应此请求。具体情况可根据管理人员进行配置。</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">VMPS服务器是cisco的一个闭源项目，网上没有公开项目说明书，所以此功能为cisco设备具有的功能，属于部分型号的交换机才支持(高型号)，还需要相应的软件授权费用。对此，开源社区有人对cisco的VMPS协议通讯方式进行分析后开发了一个openvmps项目，此项目可以基于Linux主机运行来接替vmps server的工作。</p>
+<h3 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.35em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">关于Open-vmps</h3>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">openvmps在使用时有如下要求：</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">1. 所有交换机需要使用VTP协议进行VLAN的管理</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">openvmps开源项目地址</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">http://sourceforge.net/projects/vmps/files/?source=navbar</p>
+<h3 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.35em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">配置过程说明</h3>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">VTP域创建</h4>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">此部分略，cisco交换机级成的网络开启VTP，一般选一台相对“核心”的设备为server，其它接入交换机为client， 创建VTP域名即可。</p>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">接入层交换机配置VMPS server</h4>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">在全局模式下可以指定1台主vmps server， 3台辅助vmps server(辅助根据情况决定数量及是否需要)</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">(config)#vmps server xxx.xxx.xxx.xxx primary ##主服务器
+(config)#vmps server xxx.xxx.xxx.xxx ##辅助服务器1</pre>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">接入层交换机配置接口为动态方式调整vlan</h4>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">(config)#interface fastEthernet 0/35
+(config-if)#switchport mode access 
+(config-if)#switchport access vlan dynamic</pre>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">安装open-vmps软件</h4>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">从开源项目官方网站下载源码包，在Linux主机上进行编译安装</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">tar zxvf vmpsd-1.4.06.tar.gz 
+cd vmpsd-1.4.06
+./configure
+make &amp;&amp; make install</pre>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">安装完成后，主程序会自动加入到环境变量，执行程序位置在 /usr/local/bin/vmpsd  软件配置文件位置在/usr/local/etc/vlan.db</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">配置文件vlan.db的配置说明：</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">vmps domain cisco ////////指定VTP域名为cisco
+ 
+Vmps mode open //////////指定VMPS运行模式为OPEN。Vmps能够以OPEN或者secure的模式工作，OPEN时，VMPS会对未授权的MAC地址返回拒绝，对没有列在VMPS数据库中的MAC地址返回一个fallback(后备)。在secure模式，VMPS对于未授权的或者没有列在数据库的MAC地址都会关闭相应的端口。
+ 
+Vmps fallback ----none-----////////指定一个后备，none时表示没有。
+ 
+Vmps no-domain-req deny ////////指定VMPS客户端交换机如果不属于VTP域，将不提供任何映射
+ 
+Vmps-mac-address ////////与Address之间的关联。对指定的MAC地址使用关键字--NONE--关键字表示，阻止该主机加入到任何。在。Db中还有很多参数，感兴趣的可以自己研究。
+ 
+///// 添加MAC与VLAN的对应关系， 语法为： Address {mac-address} -name {vlan-name}, 此处的vlan-name就是在VTP上新建VLAN时，使用name 对VLAN进行命名的那个名字。
+ 
+Address 0001.2201.88ce.-name IT-Department
+ 
+Address 0001.2201.75ca.-name Sale</pre>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">启动vmps：以root用户执行下面命令，可以启动VMPS：</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">#/usr/local/bin/vmpsd</pre>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">OpenVMPS默认端口时UDP1589，用netstat -an | grep 1589可以查看vmpsd进程是否运行。<br style="zoom:1;"/>
+如果需要在开启Liunx服务器是就加载vmpsd.可以在/etc/rc.local中加入/usr/local/bin/vmpsd/</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">其他VMPSD的配置信息如下：</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">　　Vpmsd [-d] [-a address] [-f file] [-l level] [-p port]
+ 
+　　-d: 在前台运行VMPSD，可以很清楚的看到对MAC地址与的关联
+ 
+　　-a address 设置绑定到VMPSD的IP地址
+ 
+　　-f file 设置VMPSD数据库配置文件，默认为/usr/local/etc/.db
+ 
+　　-l level 设置日志级别
+ 
+　　-p port 设置VMPSD的监听端口，默认为1589</pre>
+<h3 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.35em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">检测效果</h3>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">检测效果可从两方面进行，从VMPS server上查看响应信息，从接入交换机上debug VQPC(查询协议客户端)调试，将会看到MAC地址与关联的过程</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">在VMPS server上查看方法：以前台进程的方式，打印日志到屏幕，在vmps 启动时以前台方式启动</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">/usr/local/bin/vmpsd -d</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">效果如下：</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">[root@R710-TEST-226 etc]# /usr/local/bin/vmpsd -d
+VMPSD STARTED. Waiting for requests
+ALLOW: 00:21:cc:70:fa:3f -&gt; IT-CS, switch (unknown) [10.0.0.20] port Fa0/35</pre>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">在接入交换机上查看方法：debug vqpc all</p>
+<pre style="margin-bottom:1.625em;border:1px solid rgb(204, 204, 204);font-size:90%;font-style:inherit;font-weight:inherit;margin:0px;outline:0px;padding:0.75em 1.625em;vertical-align:baseline;zoom:1;font-family:&quot;Courier New&quot;, Courier, monospace;overflow:auto;width:80%;display:block;clear:both;white-space:pre-wrap;word-wrap:break-word;color:rgb(51, 51, 51);background-image:url(&quot;images/textures/body-bg3.png&quot;);background-color:rgb(238, 238, 238);background-repeat:repeat;">#debug vqpc all
+#terminal monitor 
+#
+Mar 31 09:41:48.432: VQPC EVENT: -pm_port_vqp_start: port Fa0/35
+Mar 31 09:41:48.449: VQPC LEARN: 
+Mar 31 09:41:48.449: VQPC LEARN: -learning mac 0021.cc70.fa3f on vlan 0, port Fa0/35
+Mar 31 09:41:48.449: VQPC LEARN: adding mac 0021.cc70.fa3f on vlan 0, port Fa0/35, type = 0x0021
+Mar 31 09:41:48.449: VQPC: allocating transID 0x000000B1
+Mar 31 09:41:48.449: VQPC PAK: xmt transaction ID = 0x000000B1
+Mar 31 09:41:48.449: VQPC PAK: sending query to VMPS
+Mar 31 09:41:48.458: VQPC PAK: 
+Mar 31 09:41:48.458: VQPC PAK: rcvd packet from VMPS
+Mar 31 09:41:48.458: VQPC PAK: transaction ID = 0x000000B1
+Mar 31 09:41:48.458: VQPC: rcvd response, transID = 0x000000B1
+Mar 31 09:41:48.458: VQPC PAK: VLAN name TLV, vlanName = IT-CS
+Mar 31 09:41:48.458: VQPC PAK: Cookie TLV, cookie = 0021.cc70.fa3f, length = 6
+Mar 31 09:41:48.458: VQPC EVENT: -set_hwidb_vlanid: port Fa0/35 to vlan 7, mac: 0021.cc70.fa3f
+Mar 31 09:41:48.458: VQPC EVENT: saving 0021.cc70.fa3f from old vlan 0
+Mar 31 09:41:48.458: VQPC EVENT: changing Fa0/35 to vlan 7
+Mar 31 09:41:48.533: VQPC LEARN: adding mac 0021.cc70.fa3f on vlan 7, port Fa0/35, type = 0x0001
+Mar 31 09:41:48.533: VQPC LEARN: deleting mac 0021.cc70.fa3f on vlan 0, port Fa0/35
+Mar 31 09:41:48.533: VQPC LEARN: changing mac 0021.cc70.fa3f on vlan 7, port Fa0/35 to FORWARDING
+Mar 31 09:41:49.028: VQPC LEARN: vqpc_shim_new_address: Dynamic address 0021.cc70.fa3f is already learned on port Fa0/35, for vlan 7 so do nothing.</pre>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">注意事项</h4>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">在启用MAC vlan的交换机上，如果一个接口下需要连接两台及以上的PC,则需要将所有PC的MAC都写在VMPS server中，否则vpqc 会将没有在vmps server中查到的记录直接拒绝掉，客户虽然可以获取到IP，但到达交换机的流量会被拒绝</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;">一个接口下连接的多个设备MAC必需要相同的VLAN， MAC-VLAN在cisco下一个接口不可能同时位于多个VLAN。否则会导致哪个先抢到就设置成哪个的VLAN。</p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;"> </p>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;">以下是关于vmps的一些说明整理</h4>
+<h4 style="zoom:1;border:0px;font-style:inherit;outline:0px;padding:0px;vertical-align:baseline;font-size:1.5em;margin:0px 0px 1em;font-family:&quot;Courier New&quot;;font-weight:bold;"><a href="http://www.spkevin.com/attachment-document/cisco/vmps.pdf" style="outline:0px;zoom:1;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px;font-family:inherit;padding:0px;vertical-align:baseline;border:0px;color:rgb(82, 192, 212);text-decoration:underline;" target="_blank" title="vmps">打开连接</a>   <a href="http://www.spkevin.com/attachment-document/cisco/cisco-VMPS.pdf" style="outline:0px;zoom:1;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px;font-family:inherit;padding:0px;vertical-align:baseline;border:0px;color:rgb(82, 192, 212);text-decoration:underline;" target="_blank">CISCO官方对VMPS的讲解及常见错误分析</a></h4>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;"> </p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;"> </p>
+<p style="zoom:1;border:0px;font-family:inherit;font-size:100%;font-style:inherit;font-weight:inherit;margin:0px 0px 1.625em;outline:0px;padding:0px;vertical-align:baseline;"> </p>
+</div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

@@ -1,0 +1,52 @@
+<html>
+<head>
+  <title>ISCSI网络存储服务</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1419"/>
+<h1>ISCSI网络存储服务</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
+SAN网络：Storage Area Network，存储区域网络。多采用高速光纤通道，对速率、冗余要求高，使用iscsi存储协议，块级传输
+<div>NAS网络：Network Attachment Storage，网络附加存储。采用普通以太网，对速率、冗余无特别要求，使用NFS、CIFS共享协议，文件级传输。</div><div>iscsi的工作方式：</div><div>     服务（设备）端------target</div><div>     客户（应用）端------initiator</div><div><br/></div><div>服务端：</div><div><font color="#DE5700">1、创建iSCSI对象target （tgtd端口号：3260）</font></div><div>yum -y install scsi-target-utils</div><div>使用tgtadm工具创建target<br/>
+-L、--lld 指定驱动类型，如“-L iscsi”<br/>
+-o、--op 指定操作类型，如“-o new”<br/>
+-m、--mode 指定管理目标，如“-m target”<br/>
+-t、--tid 指定对象ID号，如“-t 1”<br/>
+-T、--targetname 指定iSCSI对象的名称</div><div><br/></div><div># sevice tgtd start</div><div># tgtadm -L iscsi -o new -m target -t 1 -T iqn.2015-05.com.xdl.www:lvm</div><div><font color="#328712"><i>#创建iscsi对象target</i></font></div><div># tgtadm -L iscsi -o new -m target -t 2 -T iqn.2015-05.com.xdl.www:raid</div><div># tgtadm -L iscsi -o show -m target</div><div><i><font color="#328712">#查看已创建的iscsi对象</font></i></div><div><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">Target 1: iqn.2015-05.com.xdl.www:lvm</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">    ……</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">Target 2: iqn.2015-05.com.xdl.www:raid</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">    System information:</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">        Driver: iscsi</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">        State: ready</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">    I_T nexus information:</p><p style="language:zh-CN;margin-top:0pt;margin-bottom:0pt;text-align:left; direction:ltr;unicode-bidi:embed;vertical-align:baseline">    LUN information:</p><div>        <span style="color: red;">LUN: 0</span></div></div><div><font color="#FF0000">     </font>.......</div><div><br/></div><div style="text-align: left; widows: 1;"><font color="#DE5700">2、为客户机分配LUN</font></div><div style="text-align: left; widows: 1;">仍然使用tgtdam管理工具<br/>
+-l、--lun 指定LUN的ID号，如“-l 1”<br/>
+-b、--backing-store 指定块设备位置，如“-b /dev/md0”<br/>
+-I、--initiator-address 指定客户机地址，如“-I 192.168.4.22”<br/>
+-m logicalunit 可简写为-m lu，表示管理目标位LUN<br/>
+-o bind 用来绑定客户机地址</div><div style="text-align: left; widows: 1;"><br/></div><div style="text-align: left; widows: 1;"># tgtadm -L iscsi -o new -m lu -t 1 -l 1 -b /dev/vg0/lv0</div><div style="text-align: left; widows: 1;"># tgtadm -L iscsi -o new -m lu -t 2 -l 1-b /dev/md0</div><div style="text-align: left; widows: 1;"># tgtadm -L iscsi -o bind -m target -t 1 -I 192.168.216.4</div><div style="text-align: left; widows: 1;"># tgtadm -L iscsi -o bind -m target -t 2 -I 192.168.216.5</div><div style="text-align: left; widows: 1;"># tgtadm -L iscsi -o show -m target</div><div style="text-align: left; widows: 1;"><br/></div><div style="text-align: left; widows: 1;"><font color="#DE5700">3、保存target和LUN设置</font></div><div style="text-align: left; widows: 1;">     配置文件 /etc/tgt/targets.conf</div><div style="text-align: left; widows: 1;"># vim /etc/tgt/targets.conf</div><div style="text-align: left; widows: 1;">     ......</div><div style="text-align: left; widows: 1;">default-driver iscsi</div><div style="text-align: left; widows: 1;">&lt;target iqn.2015-05.com.xdl.www:lvm&gt;</div><div style="text-align: left; widows: 1;">     backing-store /dev/vg0/lv0</div><div style="text-align: left; widows: 1;">     initiator-address 192.168.216.4</div><div style="text-align: left; widows: 1;">&lt;/target&gt;</div><div style="text-align: left; widows: 1;">&lt;target iqn.2015-05.com.xdl.www:raid&gt;</div><div style="text-align: left; widows: 1;">     backing-store /dev/md0</div><div style="text-align: left; widows: 1;">     initiator-address 192.168.216.5</div><div style="text-align: left; widows: 1;">&lt;/target&gt;</div><div style="text-align: left; widows: 1;">     ......</div><div style="text-align: left; widows: 1;"># chkconfig tgtd on</div><div style="text-align: left; widows: 1;"><br/></div><div style="text-align: left; widows: 1;">客户端：</div><div style="text-align: left; widows: 1;"><font color="#DE5700">1、发现并连接iSCSI对象</font></div><div style="text-align: left; widows: 1;"><font color="#DE5700">IP:192.168.216.4</font></div><div style="text-align: left; widows: 1;"># yum -y install iscsi-initiator-utils lsscsi</div><div style="text-align: left; widows: 1;"># service iscsi start</div><div style="text-align: left; widows: 1;"># tgtadm -m discovery -t sendtargets -p 192.168.216.3</div><div style="text-align: left; widows: 1;">192.168.216.4:3260,1 iqn.2015-05.com.xdl.www:lvm</div><div style="text-align: left; widows: 1;"><font color="#328712">其中选项“-m discover”表示发现查找<br/>
+“-t sendtargets”表示发布的target（可缩写为-t st）<br/>
+“-p”用来指定iscsi服务器地址<br/>
+结果列出了iscsi服务器发布的，本机可以使用的iscsi对象名称，下一步就是根据此名称连接到指定的iscsi存储对象，使用-m node 选项便是管理目标位节点，选项“-l”或者“--login”表示连接/登录</font></div><div style="text-align: left; widows: 1;"># tgtadm -m node -T iqn.2015-05.com.xdl.www:lvm --login</div><div style="text-align: left; widows: 1;">Logging in to [iface: default, target: iqn.2015-05.com.xdl.www:lvm, portal: 192.168.216.3,3260]<br/>
+Login to [iface: default, target: iqn.2015-05.com.xdl.www:lvm, portal: 192.168.216.3,3260] successful.</div><div style="text-align: left; widows: 1;"><font color="#DE5700">确认已连接的iSCSI设备</font><br/>
+使用lsscsi确认带 IET 标记的设备<br/>
+[root@localhost ~]# lsscsi</div><div style="text-align: left; widows: 1;">[1:0:0:0]    cd/dvd  NECVMWar VMware IDE CDR10 1.00  /dev/sr0<br/>
+[2:0:0:0]    disk    VMware,  VMware Virtual S 1.0   /dev/sda<br/>
+[3:0:0:0]    storage IET      Controller       0001  -<br/>
+[3:0:0:1]    disk    IET      VIRTUAL-DISK     0001  /dev/sdb</div><div style="text-align: left; widows: 1;"><font color="#DE5700">2、使用iSCSI存储设备</font></div><div style="text-align: left; widows: 1;">格式化及挂载访问<br/>
+fdisk、mkfs、mount操作，与普通设备无异<br/>
+若iSCSI设备已包含文件系统，则无需再格式化分区</div><div style="text-align: left; widows: 1;">创建目录挂载文件系统</div><div style="text-align: left; widows: 1;"># mkdir /disk1</div><div style="text-align: left; widows: 1;"># mount /dev/sdb /disk1</div><div style="text-align: left; widows: 1;"><font color="#DE5700">3、保存iscsi的连接配置</font></div><div style="text-align: left; widows: 1;">     <font color="#328712">为了是iscsi存储设备使用正常，客户机应确保iscsi服务能够自动启动，并将挂载iscsi设备中的文件系统的操作写入/etc/fstab文件。由于iscsi设备的特殊性，fstab文件中的配置记录应启用“_netdev”挂载参数，表示这是一个网络设备。</font></div><div style="text-align: left; widows: 1;"># vim /etc/fstab</div><div style="text-align: left; widows: 1;">/dev/sdb          /disk1          ext4          defaults,_netdev     0  0</div><div style="text-align: left; widows: 1;">可能客户端新添加硬盘后，网络存储设备不再是/dev/sdc1，这时候使用设备的UUID号更加可靠<br/>
+[root@localhost ~]# blkid /dev/sdc1<br/>
+/dev/sdc1: UUID=&quot;93846775-458c-405d-bd46-2de7712dfeb6&quot; TYPE=&quot;ext3&quot;<br/>
+[root@localhost ~]# vi /etc/fstab<br/>
+……<br/>
+UUID=93846775-458c-405d-bd46-2de7712dfeb6   /opt/data   ext3  defaults,_netdev  0 0<br/><br/><font color="#E30000">第一次重启之前，建议先断开iSCSI，避免假死现象</font><br/>
+[root@localhost ~]# umount /dev/sdc1<br/>
+[root@localhost ~]# iscsiadm -m node -T iqn.2015-05.com.xdl.www:lvm  --logout<br/><br/>
+[root@localhost ~]# chkconfig --level 35 iscsi on<br/>
+[root@localhost ~]# reboot<br/><br/><font color="#E30000">注意：如果有两个客户端使用同一个iscsi网络存储设备，其中一个客户机在这个存储设备中创建了新文件，另一个客户机需要重新挂载才能看见新创建的文件</font></div><div style="text-align: left; widows: 1;">客户端IP:192.168.216.5与IP:192.168.216.4操作相同</div></span>
+</div></body></html> 

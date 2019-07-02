@@ -1,0 +1,629 @@
+<html>
+<head>
+  <title>Java系列笔记(5) - 线程 - Daniel·广 - 博客园</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1127"/>
+<h1>Java系列笔记(5) - 线程 - Daniel·广 - 博客园</h1>
+
+<div><span>
+  <div>
+<div style="font-size: 16px; display: inline-block; min-width: 100%;"><div><div style="font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;color:rgb(0, 0, 0);background:rgb(210, 216, 222);font:12px/1.5 tahoma, arial, sans-serif;text-size-adjust:none;font-size:14px;"><div><div><div style="text-overflow:ellipsis;overflow:hidden;word-break:break-all;"><div><div><div style="background:rgb(255, 255, 255);border-radius:7px;box-shadow:rgb(167, 168, 173) 1px 1px 2px;text-overflow:ellipsis;overflow:hidden;word-break:break-all;"><div>
+		<h1 style="margin:0px;padding:0px;font-size:1.5em;font-weight:bold;line-height:1.5em;width:100%;clear:both;text-align:center;">
+			<a href="https://www.cnblogs.com/zhguang/p/3330676.html" style="margin:0px;padding:0px;color:rgb(46, 177, 232);text-decoration:none;font-size:1.5rem;font-weight:bold;text-shadow:rgb(167, 168, 173) 0px 0px 1px;line-height:1.5em;">Java系列笔记(5) - 线程</a>
+		</h1>
+		<div style="clear:both;margin:0px;padding:0px;"></div>
+		<div style="margin:0px;padding:5px;line-height:1.5;color:rgb(68, 68, 68);">
+			<div style="margin-bottom:20px;word-break:break-word;margin:0px;padding:0px;"><div style="margin:0px;padding:0px;line-height:1.5;">
+<div style="margin:0px;padding:0px;line-height:1.5;">我想关注这个系列博客的粉丝们都应该已经发现了，我一定是个懒虫，在这里向大家道歉了。这个系列的博客是在我工作之余写的，经常几天才写一小节，不过本着宁缺毋滥的精神，所有写的东西都是比较精炼的。这篇文章是本系列的第五篇，主要讲Java线程相关的内容，基本上包含了线程要了解的比较深入的东西。技术在于积累，在于总结，在于表达，在于分享，这4点都做到了，一个技术才是我们自己的。<br style="margin:0px;padding:0px;"/>另外说一下，本Java系列笔记，目前一共计划写12篇，在这个系列中，侧重于Java技术的原理和深入理解，相对之下，代码和实例较少，不过需要实例的地方，都给出了网上相关的实例。本系列文章的主要来源是我自己的积累、自己的理解、看的书、以及网上的资料，在文中我尽可能注明了引用出处，如果有发现引用了您的资料而没有注明的，请尽快联系我:daniel.zhguang@gmail.com。<br style="margin:0px;padding:0px;"/>这是第5篇，接下是第6篇《并发》，我一定尽快写，尽快写，快写，写。。。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">目录</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><ol style="padding-left:40px;margin:0px;padding:0px;">
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread01" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程原理和概念</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread02" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程状态</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread03" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程的局部变量表</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread04" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">Java内存模型</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread05" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程间通信</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread06" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">重排序和相关规则</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread07" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程调度和常见内部方法</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread08" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">线程池</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread09" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">特殊线程类</a></li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><a href="https://www.cnblogs.com/zhguang/p/3330676.html#thread10" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">特殊线程分析工具</a></li>
+
+</ol></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread01" style="margin:0px;padding:0px;"></a>1，线程原理和概念</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">当代操作系统，大多数都支持多任务处理。对于多任务的处理，有两个常见的概念：进程和线程。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">     进程</strong>是操作系统分配资源的单位，这里的资源包括CPU、内存、IO、磁盘等等设备，进程之间切换时，操作系统需要分配和回收这些资源，所以其开销相对较大（远大于线程切换）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">     线程</strong>是CPU分配时间的单位，理论上，每个进程至少包含一个线程，每个线程都寄托在一个进程中。一个线程相当于是一个进程在内存中的某个代码段，多个线程在切换时，CPU会根据其优先级和相互关系分配时间片。除时间切换之外，线程切换时一般没有其它资源（或只有很少的内存资源）需要切换，所以切换速度远远高于进程切换。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     进程的调度以时间片为单位进行，如果两个进程都分得一个同等长度的时间片，其中进程A只有一个线程，另一个进程B有10个线程，那么两个进程执行的时间片相同，但A的线程执行的时间是B的线程的10倍。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     一般来说，线程可以分为<strong style="margin:0px;padding:0px;">内核级线程</strong>和<strong style="margin:0px;padding:0px;">用户级线程</strong>（注意区别于Java内部所使用的<span style="margin:0px;padding:0px;color:#ff0000;">用户线程</span>和<span style="margin:0px;padding:0px;color:#ff0000;">守护线程</span>的概念）.</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     <strong style="margin:0px;padding:0px;">内核级线程</strong>是需要内核支持的线程，其创建、撤销、切换，需要内核系统的支持，在操作系统内核中为每个内核线程分配有一个内核控制模块，用以感知和控制线程。事实上，可以将内核系统程序当成一个大的内核进程，内核级线程就是这个内核进程的一个线程。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    <strong style="margin:0px;padding:0px;"> 用户级线程</strong>只存在于用户空间中，其创建、撤销、切换，都不需要内核系统支持，用户级线程的切换，发生在用户进程内部，切换很快捷。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     在java中，我们一般只关注用户级线程，所有java的线程，就是在java的JVM主进程下启动的各个线程。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     java的各个线程并发执行，其实往往只是一种错觉，对于单核cpu而言，java各线程只是按调度策略执行一个个的时间段，所以在一个cpu中，一个时间点上只有一个线程在执行的，但可能还没执行完，就轮到下个线程执行了。对于多核cpu而言，可能存在绝对意义上的线程并发（即两个线程在两个cpu中同时执行）。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     在Java中，我们还常常遇到用户线程和守护（后台）线程的概念。这将在第4节中介绍。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread02" style="margin:0px;padding:0px;"></a>2，线程状态</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在Java中，线程通常都有五种状态，创建、就绪、运行、阻塞和死亡。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　第一是<strong style="margin:0px;padding:0px;">创建</strong>状态。在生成线程对象，并且还没有调用该对象的start方法时，这是线程处于创建状态，在这种状态下，用getState()方法可以获取当前线程的状态，状态值为State.NEW。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　第二是<strong style="margin:0px;padding:0px;">就绪</strong>状态。当调用了线程对象的start方法之后，并且该线程没有被BLOCK，该线程就进入了就绪状态，但是此时线程调度程序还没有把该线程设置为当前线程，此时处于就绪状态。在线程运行之后，从等待或者睡眠中回来之后，也会处于就绪状态。如果此时调用getState()方法，会得到State.RUNABLE；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　第三是<strong style="margin:0px;padding:0px;">运行</strong>状态。线程调度程序将处于就绪状态的线程设置为当前线程，此时线程就进入了运行状态，开始运行run函数当中的代码。运行状态仅仅发生在处于就绪状态的线程获得了JVM的调度的情况下，所以处于运行状态的线程没有专门定义RUNNING状态，对于处于运行状态的线程，调用的getState()获得的仍然是State.RUNABLE。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　第四是<strong style="margin:0px;padding:0px;">阻塞</strong>状态。线程正在运行的时候，被暂停，通常是为了等待某个时间的发生(比如说某项资源就绪)之后再继续运行。sleep，suspend，wait，join等方法都可以导致线程阻塞。在阻塞状态下，调用getState()可能获得3种线程状态：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     1，BLOCKED：这种状况仅仅会发生在线程期望进入同步代码块或同步方法（synchronized or Lock），并且尚未获得锁的情况下，这有两种可能，一种是线程直接从运行（RUNNING）状态抢锁进入同步代码；另一种是线程在执行了wait方法后，被notify/notifyAll唤醒（或wait(long)时间到期），然后希望重新抢锁的情况下，可以直接进入BLOCKED状态。处于BLOCKED状态的线程，只有在获得了锁之后，才会脱离阻塞状态。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     2，TIMED_WAITING：如果线程执行了sleep(long)/join(long),wait(long)，会触发线程进入TIMED_WAITING状态，在这种状态下，与普通的WAITING状态相似，但是当设定的时间到了，就会脱离阻塞状态；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     3，WAITING：如果调用join()或wait()方法，就进入了WAITING状态，在该状态下，如果是因为调用了join()方法进入WAITING，则当join的目标线程执行完毕，该线程就会进入到RUNNABLE状态，如果是因为调用了wait()进入的WAITING，则需要等<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">锁对象</span></strong>执行了notify()或notifyAll()之后才能脱离阻塞。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    <span style="margin:0px;padding:0px;color:#ff0000;"> 注1：无论上面3种哪种阻塞状态，都只能是从运行（RUNNING，而不是RUNABLE）状态而非其它任何状态转换得来，比如，不可能直接从NEW状态进入BLOCKED状态；</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     <span style="margin:0px;padding:0px;color:#ff0000;">注2：什么是锁对象？从本质上来讲，所有的锁，都是加在对象维度的，无论是同步块还是同步方法，甚至是静态同步方法（静态同步方法加在class对象上），这一点可以参考下节《Java系列笔记(6) - 并发》，所以加锁的对象，就叫锁对象，wait必须处于一个锁对象的同步块中才能调用，所以就需要等到锁对象notify()或notifyAll()被调用后才能脱离；</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">     注3：wait()方法是对object的，而不仅仅是对线程的，所以当调用obj.wait()后，该线程就会进入对象obj的锁定池中，并等待锁释放，所以需要注意wait()方法必须防止同步代码块中使用，否则会出现java.lang.IllegalMonitorStateException异常</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　第五是<strong style="margin:0px;padding:0px;">死亡</strong>状态。如果一个线程的run方法执行结束或抛出异常或者调用stop方法并完成对线程的中止之后后，该线程就会死亡。此时，再调用getState()方法，得到的是State.TERMINATED。对于已经死亡的线程，无法再使用start方法令其进入就绪。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">对于线程的几种状态，下面的图很好的说明了状态之间的转换关系。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271641437997147.jpg" type="image/jpeg" data-filename="271641437997147.jpg" height="469" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="660"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread03" style="margin:0px;padding:0px;"></a>3，线程的局部变量表</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">本节请结合《Java系列笔记(3) - Java内存区域和GC机制》来阅读。在本节，我们需要将Thread类和Java中线程的概念分开来讲了：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">一个Thread类实例只是一个对象，像Java中的任何其他对象一样，具有变量和方法，生死于堆上。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">Java中，每个线程都有一个调用栈，即使你不在Java程序中创建任何新的线程，线程也在后台运行着（如：main线程）。一个Java应用总是从main()方法开始运行，mian()方法运行在一个线程内，它被称为主线程。一旦创建一个新的线程，就产生一个新的调用栈。</li>
+
+</ul>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> 在《Java系列笔记(3) - Java内存区域和GC机制》一文第2节中，我们将Java的虚拟机内存分为几个部分，其中线程共享的是堆区和方法区，线程私有的是虚拟机栈，本地方法栈和程序计数器。在本文，我们只关注Java线程内存模型中最突出的两个模块：<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">堆内存</span></strong> 和 <strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">栈内存</span></strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">（注：这种划分方式“粗糙”，但却是最直观，也最容易理解的。）</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     在这里，堆内存，就是前面说的堆区，由各个线程共享，存储的是对象的实例；而栈内存，指的是虚拟机栈（在HotSpot虚拟机中，本地方法栈是与虚拟机栈放在一起实现的，所以这里不再专门区分），存储的是局部变量表、动态链接、方法出口。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">下面要详细说这个“局部变量表”，局部变量表是什么呢？它是每个线程私有一份的，内存空间在编译时期就已经确定了，在执行时，不会改变局部变量表的大小。其中存储的主要是下面的数据，</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1，<strong style="margin:0px;padding:0px;">基本数据类型（boolean、byte、char、short、int、float）</strong>，每个变量占有一个内存单元。这些变量在堆内存中也有一份，在每个线程的局部变量表中，存储的不过是堆内存中这份数据的一份拷贝（接下来会介绍这些变量从局部变量表到堆内存的同步方法）。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2，<strong style="margin:0px;padding:0px;">基本数据类型（long、double）</strong>，与其它基本数据类型相同，他们也是局部变量表中的一份拷贝，不过区别在于这两个类型的数据占有2个内存单元（64位机器除外）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3，<strong style="margin:0px;padding:0px;">String类型</strong>，无论从哪个方面说，String类型起始是一个对象，在局部变量表中存储的也永远都只是一个应用，但是这里把String类型独立出来，是因为String是一个很特殊的类型：String与基本数据类型一样，是覆盖型修改的，也就是说，String是不可变字符序列，String一旦创建，就不能对其value进行修改，如果要修改，只能先创建一个新的对象，并将引用指向新对象。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">（请参考这里：《Java String类型剖析及其JVM内存分配详解 》http://blog.csdn.net/yihuiworld/article/details/13511925）</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#f14f9a;">简单来说，String有两种声明方式：</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#f14f9a;">String aaa=&quot;abcd&quot;;</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#f14f9a;">String bbb=new String(&quot;abcd&quot;);</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#f14f9a;">第一种声明方式是直接在常量池中找一下有没有现成的&quot;abcd&quot;串的存在，如果有，将aaa的引用指向该串，如果没有，在常量池中新产生一个&quot;abcd&quot;，并将aaa的引用指向该串；</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#f14f9a;">第二种声明方式是现在堆中new一个String对象（只要用到new，就一定是先在堆中创建对象&quot;abcd&quot;），然后bbb的应用指向该对象。这个对象与常量池中的&quot;abcd&quot;没有关系，只有在调用bbb.intern()方法时，才能查到常量池中的&quot;abcd&quot;串。</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     无论上面哪种声明方式，String都具有不可变性，所以，虽然局部变量表中保持的是String的一份引用，但是这份引用是堆中引用的一个副本，可能出现主内存和线程local内存不同步更新的情况，因此类似于基本数据类型。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">4，<strong style="margin:0px;padding:0px;">普通对象引用</strong>，注意，线程中存储的没有对象，只有对象引用，可能通过句柄方式或直接引用方式来查找到堆上的对象（具体参考：《Java系列笔记(3) - Java内存区域和GC机制》第3节<strong style="margin:0px;padding:0px;">Java对象的访问方式</strong>）</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">5，<strong style="margin:0px;padding:0px;">返回地址（returnAddress）</strong>：指向了一条字节码指令的地址，不属于变量的一部分，这里先不关注。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在上面的描述中，我们把那些<strong style="margin:0px;padding:0px;">非常量</strong>的 基本数据类型、String、普通对象引用 统称为线程中的<span style="margin:0px;padding:0px;color:#ff0000;"><strong style="margin:0px;padding:0px;">“变量”</strong></span>。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread04" style="margin:0px;padding:0px;"></a>4，Java内存模型</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">接下来，我们把上面所说的堆内存中的对象和基本数据类型的备份，称为<span style="margin:0px;padding:0px;color:#ff0000;"><strong style="margin:0px;padding:0px;">主内存(main memory)</strong></span>，把上面所说的栈内存中用于存储变量的部分内存，称为<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">本地内存(local memory)</span></strong>（或叫工作内存），这就组成了<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">Java内存模型（JMM）</span></strong>。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1，Java线程对于变量的所有操作（读取、赋值），都是在自己的工作内存中进行的，线程不直接读写主内存中的变量。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2，不同线程无法直接访问对方工作内存中的变量；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3，线程间变量值的传递，需要主内存来完成。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> <img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271642362213366.png" type="image/png" data-filename="271642362213366.png" height="538" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="760"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;"> </span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">关于主内存与工作内存之间的具体交互协议，即一个变量如何从主内存拷贝到工作内存、如何从工作内存同步到主内存之间的实现细节，Java内存模型定义了以下<strong style="margin:0px;padding:0px;">八种操作</strong>来完成（参见：Java内存模型：http://www.cnblogs.com/nexiyi/p/java_memory_model_and_thread.html）：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">lock（锁定）：作用于主内存的变量，把一个变量标识为一条线程独占状态。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">unlock（解锁）：作用于主内存变量，把一个处于锁定状态的变量释放出来，释放后的变量才可以被其他线程锁定。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">read（读取）：作用于主内存变量，把一个变量值从主内存传输到线程的工作内存中，以便随后的load动作使用</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">load（载入）：作用于<span style="margin:0px;padding:0px;color:#ff0000;">工作内存</span>的变量，它把read操作从主内存中得到的变量值放入工作内存的变量副本中。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">use（使用）：作用于<span style="margin:0px;padding:0px;color:#ff0000;">工作内存</span>的变量，把工作内存中的一个变量值传递给执行引擎，每当虚拟机遇到一个需要使用变量的值的字节码指令时将会执行这个操作。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">assign（赋值）：作用于<span style="margin:0px;padding:0px;color:#ff0000;">工作内存</span>的变量，它把一个从执行引擎接收到的值赋值给工作内存的变量，每当虚拟机遇到一个给变量赋值的字节码指令时执行这个操作。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">store（存储）：作用于<span style="margin:0px;padding:0px;color:#ff0000;">工作内存</span>的变量，把工作内存中的一个变量的值传送到主内存中，以便随后的write的操作。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">write（写入）：作用于主内存的变量，它把store操作从工作内存中一个变量的值传送到主内存的变量中。</li>
+
+</ul>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">　　如果要把一个变量从主内存中复制到工作内存，就需要按顺寻地执行read和load操作，如果把变量从工作内存中同步回主内存中，就要按顺序地执行store和write操作。Java内存模型只要求上述操作必须按顺序执行，而没有保证必须是连续执行。也就是read和load之间，store和write之间是可以插入其他指令的，如对主内存中的变量a、b进行访问时，可能的顺序是read a，read b，load b， load a。Java内存模型还规定了在执行上述八种基本操作时，必须满足如下规则：</p>
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">不允许read和load、store和write操作之一单独出现</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">不允许一个线程丢弃它的最近assign的操作，即变量在工作内存中改变了之后必须同步到主内存中。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">不允许一个线程无原因地（没有发生过任何assign操作）把数据从工作内存同步回主内存中。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">一个新的变量只能在主内存中诞生，不允许在工作内存中直接使用一个未被初始化（load或assign）的变量。即就是对一个变量实施use和store操作之前，不许先执行过了assign和load操作。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">一个变量在同一时刻只允许一条线成对其进行lock操作，lock和unlock必须成对出现</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果对一个变量执行lock操作，将会清空工作内存中此变量的值，在执行引擎使用这个变量前需要重新执行load或assign操作初始化变量的值</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果一个变量事先没有被lock操作锁定，则不允许对它执行unlock操作；也不允许去unlock一个被其他线程锁定的变量。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">对一个变量执行unlock操作之前，必须先把次变量同步到主内存中（执行store和write操作）。</li>
+
+</ul>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread05" style="margin:0px;padding:0px;"></a>5，线程间通信</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">上节所讲到的Java内存模型（JMM）控制了线程间的通信，Java线程间通信，使用的是共享内存模型，而非消息传递模型，也就是说，线程间是通过write-read内存中的公共状态来进行隐式通信的，多个线程之间不能直接传递数据交互，它们之间的交互只能通过共享变量来实现。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">线程间通信的步骤：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">线程A把本地内存A中更新过的共享变量刷新到主内存中去。</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">线程B到主内存中去读取线程A之前已更新过的共享变量。</li>
+
+</ul>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271642516431955.png" type="image/png" data-filename="271642516431955.png" height="570" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="762"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread06" style="margin:0px;padding:0px;"></a>6，重排序和一致性规则</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">重排序</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     Java的内存模型与硬件系统内存模型是相对应的，主内存相当于硬件的内存,而为了获取更好的运行速度,虚拟机及硬件系统可能会让工作内存优先存储于寄存器和高速缓存中，而每个线程的本地内存就相当于是寄存器和告诉缓存。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">      基于高速缓存的存储交互很好地解决了处理器与内存的速度矛盾，但是引入了一个新的问题：缓存一致性（Cache Coherence）。在多处理器系统中，每个处理器都有自己的高速缓存，而他们又共享同一主存，多个处理器运算任务都涉及同一块主存，需要 一种协议可以保障数据的一致性，这类协议有MSI、MESI、MOSI及Dragon Protocol等。第4节内存模型中介绍的8种操作，就类似于这样的一个协议。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">      为了使得处理器内部的运算单元能尽可能被充分利用，处理器可能会对输入代码进行乱起执行（Out-Of-Order Execution）优化，处理器会在计算之后将对乱序执行的代码进行结果重组，保证结果准确性。与处理器的乱序执行优化类似，Java虚拟机的即时编译 器中也有类似的指令重排序（Instruction Recorder）优化。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">重排序分成三种类型：</p>
+<ol style="padding-left:40px;margin:0px;padding:0px;">
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">编译器优化的重排序。编译器在不改变单线程程序语义放入前提下，可以重新安排语句的执行顺序。</li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">指令级并行的重排序。现代处理器采用了指令级并行技术来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。</li>
+<li style="list-style-type:decimal;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">内存系统的重排序。由于处理器使用缓存和读写缓冲区，这使得加载和存储操作看上去可能是在乱序执行。</li>
+
+</ol></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<div style="margin:0px;padding:0px;line-height:1.5;"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271643557686664.png" type="image/png" data-filename="271643557686664.png" height="76" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="529"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">JMM属于语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，通过禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保证。</div>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">对于编译器重排序，JMM的编译器重排序规则会禁止特定类型的编译器重排序（不是所有的编译器重排序都要禁止）。</p>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">对于处理器重排序，JMM的处理器重排序规则会要求java编译器在生成指令序列时，插入特定类型的<strong style="margin:0px;padding:0px;">内存屏障</strong>（memory barriers，intel称之为memory fence）指令，通过内存屏障指令来禁止特定类型的处理器重排序（不是所有的处理器重排序都要禁止）。</p>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">为了保证内存的可见性，Java编译器在生成指令序列的适当位置会插入内存屏障指令来禁止特定类型的处理器重排序。Java内存模型把内存屏障分为LoadLoad、LoadStore、StoreLoad和StoreStore四种：</div>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271644188462447.png" type="image/png" data-filename="271644188462447.png" height="345" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="666"/></p>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">关于重排序的原理和一致性规则，可以参考：http://blog.csdn.net/vking_wang/article/details/8574376，需要注意一些常见的规则：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">数据依赖性</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">as-if-serial语义</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">happens-before</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">数据竞争</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">顺序一致性</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">上面的原理和规则，有一个共同目标：在不改变程序执行结果的前提下，尽可能的提高并行度。这里做了解即可，这里不再叙述，在网上可以找到很多类似的文档有详述。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread07" style="margin:0px;padding:0px;"></a>7，线程调度和常见内部方法</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java线程的调度是多线程执行的核心，良好的调度策略，可以充分发挥系统的性能，并提高程序的执行效率。不过，需要注意一点，Java线程的执行具有一定的控制粒度，也就是说，你编写的线程调度策略，只能最大限度的控制和影响线程执行次序，而无法做到精准控制。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">下面介绍线程调度常见的一些方法。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">线程交互和协作方法</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">wait()</span>：调用一个对象的wait方法，会导致当前持有该对象锁的线程等待，直到该对象的另一个持锁线程调用notify/notifyAll唤醒。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">wait(long timeout)</span>：与wait相似，不过除了被notify/notifyAll唤醒以外，超过long定义的超时时间，也会自动唤醒。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">wait(long timeout, int nanos)</span>:与wait(long)相同，不过nanos可以提供纳秒(毫微秒)级别的更精确的超时控制。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">notify()</span>：调用一个对象的notify()方法，会导致当前持有该对象锁的所有线程中的随机某一个线程被唤醒。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">notifyAll()</span>：调用一个对象的notifyAll()，会导致当前持有该对象锁的所有线程同时被唤醒。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">注意1：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1，对于wait/notify/notifyAll的调用，必须在该对象的同步方法或同步代码块中。当然，一个Thread实例也是一个对象，所以，对于thread自身的同步代码内，可以调用自身的wait。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2，wait方法的调用会释放锁，而sleep或yield不会。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3，在本文第2节有过讲述，当wait被唤醒或超时时，并不是直接进入运行态或就绪态，而是先进入Blocked态，抢锁成功，才能进入运行态。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">4，notify和notifyAll的区别在于：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     notify唤醒的是对象多个锁线程中的一个线程，这个线程进入Blocked状态，开始抢锁，当这个线程执行完释放锁的时候，即使现在没有其它线程占用锁，其它处于wait状态的线程也会继续等待notify而不是主动去抢锁。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     notifyAll要残酷的多，一单notifyAll消息发出，所有wait在这个对象上的线程都会去抢锁，抢到锁的执行，其它线程Blocked在这个锁上，当抢到锁的线程执行完成释放锁之后，其它线程自动抢锁。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">     也就是说，线程wait后的唤醒过程必须是：wait-notify-抢锁-执行-释放锁。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">5，notify和wait必须加循环进行保证，这是一个良好的编程习惯，这是因为，没有循环条件保证的话，如果有多个wait线程在等待notify，当notifyAll发出时，两个wait线程同时被唤醒，进入RUNABLE状态，如果此时他们竞争一个非锁资源，则只有一个能抢到，另一个虽然抢不到，但因为是非锁资源，所以会继续执行，就容易造成问题。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">注意2，在java中，还有另一对方法suspend()和resume()，他们的作用类似于wait()/notify()，区别在于，suspend()和resume()不会释放锁，所以这两个方法容易造成死锁问题（ta suspend tb，tb又在等着ta释放锁），现在，这两个方法已经不再使用了。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">休眠</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">sleep方法如其名，是让线程休眠的，而且是那个线程调用，就是哪个线程休眠。可以是调用TimeUtil.sleep(long)、Thread.sleep(long)，或当前线程对象t上的t.sleep(long)，其结果都是当前线程休眠。当然如果是非当前线程t2.sleep(long)，则为t2休眠。。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">sleep方法有两个：<span style="margin:0px;padding:0px;color:#ff0000;">sleep(long timeout), sleep(long timeout,int nanos)</span>，两个方法功能相似，后一种方法能够提供纳秒级别的控制。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">sleep是Thread类的方法，不是对象的，也无法通过notify来唤醒，当sleep的时间到了，自然会唤醒。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在sleep休眠期间，线程会释放出CPU资源给其它线程，但线上本身仍占有锁，而不会释放锁。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">sleep()的调用使得其它低优先级、同等优先级、高优先级的线程有了执行的机会。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">优先级</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">java线程的优先级并不绝对，它所控制的是执行的机会，也就是说，优先级高的线程执行的概率比较大，而优先级低的线程也并不是没有机会，只是执行的概率相对低一些。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java线程一共有10个优先级，分别为1-10，数值越大，表明优先级越高，一个普通的线程，其优先级为5；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">线程的优先级具有继承性，如果一个线程B是在另一个线程A中创建的，则B叫做A的子线程，B的初始优先级与A保持一致。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">java中使用  <span style="margin:0px;padding:0px;color:#ff0000;">t.setPriority(n)</span>来设置优先级，n必须为1-10之间的整数，否则会抛异常。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java各优先级线程间具有不确定性，由于操作系统的不同，不同优先级的线程会有很大的表现上的不同，所以很难比较或统计。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">不过，需要注意的是编码过程中，最好不要有代码逻辑是依赖于线程优先级的，不然可能造成问题，因为在Java中，高优先级不一定比低优先级先执行，也不一定比他低优先级线程被调度到的几率大（只能说。。。更倾向于高优先级）</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">注：对于线程组ThreadGroup的优先级，具有特殊性，简单的说，就是线程组内的线程，优先级不能超过线程组的整体设置。由于Threadgroup是一个失败的东西，用的少，而且将来可能会被淘汰，所以这里也就不细说了，有兴趣的可以参考：http://silentlakeside.iteye.com/blog/1175981</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">让步</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java的让步使用的是<span style="margin:0px;padding:0px;color:#ff0000;">Thread.yield()</span>静态方法，功能是暂停当前线程的执行，并让步于其它同优先级线程，让其它线程先执行。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">yield()仅仅是让出CPU资源，但是让给谁，是由系统决定的，是不确定的，当前线程使用yield()让出资源后，线程不会释放锁，而是回到就绪状态，等待调度执行。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">yield()只是使当前线程重新回到可执行状态，所有执行yield()的线程有可能在进入到可执行状态后马上又被执行，所以yield()方法只能使同优先级的线程有执行的机会，而且仅仅是机会而已，如果调用yield()后发现没有同等级别的其它线程，则当前线程会立即重新进入运行态。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">yield()从某种程度上与sleep()相似，但yield不能指定让步的时间。而且，sleep()让出的机会并不限制其它线程的优先级，而yield仅限于其它同优先级线程。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">实际上，yield()方法对应了如下操作；先检测当前是否有相同优先级的线程处于同可运行状态，如有，则把CPU的占有权交给次线程，否则继续运行原来的线程，所以yield()方法称为“退让”，它把运行机会让给了同等级的其他线程。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">合并</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java线程见合并，使用的是join方法。join()方法做的事情是将并行执行的线程合并为串行执行的，例如，如果在线程ta中调用tb.join()，则ta会停止当前执行，并让tb先执行，直到tb执行完毕，ta才会继续执行。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">join方法有3个重载方法。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">t.join()</span>是允许t插队到自己前面，等t执行完成再执行自己；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">t.join(long timeout)</span>是允许t插队到自己前面，等待t执行，且最长只等待timeout毫秒（不管t有没有被调度执行，当前调用t.join的线程都只等timeout的时间）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#ff0000;">t.join(long timeout, int nanos)</span>与t.join(long)一样，只不过可以提供纳秒级的精度；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">如果当前线程ta调用tb.join()，tb开始执行，ta进入WAITING或TIMED_WAITING状态。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">注意，如果ta调用tb.join()，则ta会释放当前持有的锁。事实上，join是通过wait/notify来实现的，当ta调用tb.join()，ta就wait在tb对象上，同时释放锁，tb对象抢锁执行，当执行完成后，tb自己发出notify通知。触发ta继续执行，注意，当tb用notify通知ta后，ta还要重新抢锁。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java7中，出现了一个新的模式：<span style="margin:0px;padding:0px;color:#ff0000;">fork()/join()</span>模式，采用的是分而治之的思想来实现并发编程，fork用于将现场拆分成多个小块并行执行，join用于合并结果。不过这个模式容易出问题，要慎用，有兴趣的可以参考：http://www.ibm.com/developerworks/cn/java/j-lo-forkjoin/</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">守护线程</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">如果对一个线程t，调用<span style="margin:0px;padding:0px;color:#ff0000;">t. setDaemon(true)</span>，则可以将该线程设置为守护线程，JVM判断程序运行结束的标准是所有用户线程执行完成，当用户线程全部结束，即使守护线程仍在运行，或尚未开始，JVM都会结束。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">不能将正在运行的线程设置为守护线程，因此t.setDaemon(true)方法必须在t.start()之前调用；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">如果在一个守护线程中new出来一个新线程，及时不执行setDaemon(true)，新的线程也是守护线程；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">守护线程一般用来做GC、后台监控、内存管理等后台型任务，且这些任务即使随时被结束，也不影响整体程序的运行。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">中断</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在线程中，中断是一个重要的功能，java线程中的interrupt也是一个很容易出现误用的方法，。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在Java线程中，中断有且只有一个含义，<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">就是让线程退出阻塞状态</span></strong>，<span style="margin:0px;padding:0px;color:#ff0000;">t.interrupt()</span>只是向线程t发出一个中断信号，让该线程退出阻塞状态。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">所以，</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1，如果线程t当前是可中断的阻塞状态（如调用了sleep、join等方法导致线程进入WATING / TIMED_WAITING状态），在任意其它线程中调用t.interrupt()，那么线程会立即抛出一个InterruptedException，退出阻塞状态；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2，如果是调用wait进入的WAITING / TIMED_WAITING状态，调用了t.interrupt()后，需要先等线程抢到锁，脱离BLOCKED状态，才会抛出InterruptExceptiong；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3，如果线程t当前是不可中断的阻塞状态（如不能中断的IO操作、尚未获取锁的BLOCKED状态），调用了t.interrupt()后，则需要等到脱离了阻塞状态之后，才立即抛出InterruptedException；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">4，如果线程t当前处在运行状态，则调用了t.interrupt()，线程会继续运行，直到发生了sleep、join、wait等方法的调用，才会在进入阻塞之后，随后立即抛出InterruptedException，跳出阻塞状态；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">事实上，在sleep、wait、join方法中，会不断的检查中断状态的值，如果发现中断状态为true，则立即抛出InterruptedExceptiong，并尝试跳出阻塞（用尝试的原因是wait方法阻塞的线程可能需要先抢锁）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">调用这3个方法的实际效果如下：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1. sleep() &amp; interrupt()</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    线程A正在使用sleep()暂停着: Thread.sleep(100000);</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    如果要取消他的等待状态,可以在正在执行的线程里(比如这里是B)调用</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">        a.interrupt();</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    令线程A放弃睡眠操作,这里a是线程A对应到的Thread实例</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    当在sleep中时 线程被调用interrupt()时,就马上会放弃暂停的状态.并抛出InterruptedException.丢出异常的,是A线程.</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2. wait() &amp; interrupt()</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    线程A调用了wait()进入了等待状态,也可以用interrupt()取消.</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    不过这时候要小心锁定的问题.线程在进入等待区,会把锁定解除,当对等待中的线程调用interrupt()时</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    ,会先重新获取锁定,再抛出异常.在获取锁定之前,是无法抛出异常的.</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3. join() &amp; interrupt()</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    当线程以join()等待其他线程结束时,当它被调用interrupt()，它与sleep()时一样, 会马上跳到catch块里. </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    注意，是对谁调用interrupt()方法,一定是调用被阻塞线程的interrupt方法.如在线程a中调用来线程t.join().</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">    则a会等t执行完后在执行t.join后的代码,当在线程b中调用来 a.interrupt()方法,则会抛出InterruptedException，当然join()也就被取消了。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Thread.interrupted()方法可以用来判断当前线程的中断状态，不过，需要注意的是，该方法同时具有清除中断位的作用，也就是说，如果一个线程t被中断了，当该方法第一次被调用时，返回结果为true，同时中断状态被清除，第二次被调用时，返回结果为false；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">一般的，在线程的run方法中，可以采用try catch捕获异常+ 中断状态判断相结合的方式来判断：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                </span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">try</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">{</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                </span> <span style="margin:0px;padding:0px;color:#008000;font-family:Times New Roman;font-size:small;">//检查程序是否发生中断 </span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                </span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">while</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">(!<strong style="margin:0px;padding:0px;">Thread</strong>.</span> <span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">interrupted</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">()) {</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                                 <strong style="margin:0px;padding:0px;">System</strong>.</span><span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">out</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">.println(</span> <span style="margin:0px;padding:0px;color:#ff00ff;font-family:Times New Roman;font-size:small;">&quot;I am running!&quot;</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                                </span> <span style="margin:0px;padding:0px;color:#008000;font-family:Times New Roman;font-size:small;">//point1 before sleep </span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                                 <strong style="margin:0px;padding:0px;">Thread</strong>.</span><span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">sleep</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">(</span> <span style="margin:0px;padding:0px;color:#ff0000;font-family:Times New Roman;font-size:small;">20</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                                </span> <span style="margin:0px;padding:0px;color:#008000;font-family:Times New Roman;font-size:small;">//point2 after sleep </span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                                 <strong style="margin:0px;padding:0px;">System</strong>.</span><span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">out</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">.println(</span> <span style="margin:0px;padding:0px;color:#ff00ff;font-family:Times New Roman;font-size:small;">&quot;Calculating&quot;</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                }</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                }</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">catch</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">(<strong style="margin:0px;padding:0px;">InterruptedException</strong> e) {</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                                 <strong style="margin:0px;padding:0px;">System</strong>.</span><span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">out</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">.println(</span> <span style="margin:0px;padding:0px;color:#ff00ff;font-family:Times New Roman;font-size:small;">&quot;Exiting by Exception&quot;</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                }</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                 <strong style="margin:0px;padding:0px;">System</strong>.</span><span style="margin:0px;padding:0px;color:#800000;font-family:Times New Roman;font-size:small;">out</span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">.println(</span> <span style="margin:0px;padding:0px;color:#ff00ff;font-family:Times New Roman;font-size:small;">&quot;ATask.run() interrupted!&quot;</span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">);</span></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">如果一个线程无法响应中断（比如线程的run中是一个不sleep的死循环），则可能永远无法用interrupt()方法来结束它的运行。这一点在Java线程池（ThreadPoolExecutor）中用到，因为线程池有可能调用shutdown()或shutdownNow()来结束池中线程，这两个方法都是通过interrupt来执行的，如果其中一个线程无法中断，那线程池的这个方法就可能达不到预期效果。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread08" style="margin:0px;padding:0px;"></a>8，线程池</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">Runable与Callable</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">创建Java线程除了使用Thread类之外，还可以有Runable和Callable两种，这两者都是可以实现并发线程的接口，他们的区别是：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">1，Runnable是JDK1.1中就出现的，属于包java.lang，而Callable是在JDK1.5才提供的，属于java.util.concurrent；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">2，Runnable中要实现的是void run()方法，没有返回值，而Callable要实现的是V call()方法，返回一个泛型V的返回值（通过Future.get()方法获取）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">3，Runnable中抛出的异常，在线程外是无法捕获的，而Callable是可以抛出Exception；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">4，Runnable和Callable都可以用于ExecutorService，而Thread类只支持Runnable，当然，可以用FutureTask对Callable进行封装，并用Thread类才能运行；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">5，运行Callable可以得到一个Future对象，用于表示异步计算的结果，类似于CallBack，而Runable不行；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">运行Runnable和Callable的代码如下：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Runnable：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">class</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">SomeRunnable</strong></span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">implements</strong></span> <span style="margin:0px;padding:0px;color:#8080ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Runnable</strong></span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">{</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                </span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">public</strong></span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">void</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">run()</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                {</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                </span> <span style="margin:0px;padding:0px;color:#008000;font-family:Times New Roman;font-size:small;">//do something here</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                }</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">}</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#8080ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Runnable</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">oneRunnable =</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">new</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">SomeRunnable</strong> ();</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Thread</strong> oneThread =</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">new</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Thread</strong>(oneRunnable);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">oneThread.start();</span></div>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Callable：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">class</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">SomeCallable</strong></span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">implements</strong></span> <span style="margin:0px;padding:0px;color:#8080ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Callable</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">&lt;<strong style="margin:0px;padding:0px;">String</strong>&gt;</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">{</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                </span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">public</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">String</strong> call()</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">throws</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">Exception {</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                </span> <span style="margin:0px;padding:0px;color:#008000;font-family:Times New Roman;font-size:small;">// do something</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                                </span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">return</strong></span> <span style="margin:0px;padding:0px;color:#ff00ff;font-family:Times New Roman;font-size:small;">&quot;&quot;</span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">;</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">                }</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">}</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;color:#8080ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Callable</strong></span><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">&lt;<strong style="margin:0px;padding:0px;">String</strong>&gt; oneCallable =</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">new</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">SomeCallable</strong>();</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">FutureTask</strong>&lt;<strong style="margin:0px;padding:0px;">String</strong> &gt; oneTask =</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">new</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">FutureTask</strong> &lt;<strong style="margin:0px;padding:0px;">String</strong>&gt;(oneCallable);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Thread</strong> twoThread =</span> <span style="margin:0px;padding:0px;color:#0000ff;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">new</strong></span> <span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Thread</strong> (oneTask);</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">twoThread.start();</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"> </span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"><strong style="margin:0px;padding:0px;">Future和FutureTask</strong></span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">Future是对Runnable或Callable的任务结果进行查询、获取结果、取消等操作的异步管理类；</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">（注：Future对Runnable的管理是通过FutureTask实现的）</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">Future与Callable一样位于java.util.concurrent包下，是一个泛型接口。提供如下方法：</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">   1，</code><code style="margin:0px;padding:0px;">boolean</code> <code style="margin:0px;padding:0px;">cancel(</code><code style="margin:0px;padding:0px;">boolean</code> <code style="margin:0px;padding:0px;">mayInterruptIfRunning);该方法用于取消任务，如果取消成功，返回true，如果取消失败，返回false。</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">mayInterruptIfRunning参数表示的是是否允许取消正在执行且没有完毕的任务，true表示可以取消正在执行的任务；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">如果任务已经执行完成，无论参数是什么，该方法都返回false；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">如果任务正在执行：若参数为true，则取消成功的话返回true；若参数为false，则直接返回false；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">若任务尚未执行，则无论参数是什么，都在取消成功后返回true；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">   2，</code><code style="margin:0px;padding:0px;">boolean</code> <code style="margin:0px;padding:0px;">isCancelled();该方法判断任务是否被取消成功，如果在任务正常完成前被取消成功，则返回true；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">   3，</code><code style="margin:0px;padding:0px;">boolean</code> <code style="margin:0px;padding:0px;">isDone(); 该方法判断任务是否正常完成，如果是，返回true；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">   4，</code><code style="margin:0px;padding:0px;">V get()</code> <code style="margin:0px;padding:0px;">throws</code> <code style="margin:0px;padding:0px;">InterruptedException, ExecutionException; 该方法用于获取执行结果，调用该方法后，会产生阻塞，调用者会一直阻塞知道任务完毕返回结果才继续执行；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">   5，</code><code style="margin:0px;padding:0px;">V get(</code><code style="margin:0px;padding:0px;">long</code> <code style="margin:0px;padding:0px;">timeout, TimeUnit unit)</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">        </code><code style="margin:0px;padding:0px;">throws</code> <code style="margin:0px;padding:0px;">InterruptedException, ExecutionException, TimeoutException;该方法与get相似，只不过，有超时限制，如果到了指定时间还没有得到结果，则返回null；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">Future是一个接口，无法用于直接创建对象，而且Runnable也无法直接用Future，所以就有了FutureTask，FutureTask也位于java.util.concurrent包，FuntureTask的实现如下：</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"><code style="margin:0px;padding:0px;">public</code> <code style="margin:0px;padding:0px;">class</code> <code style="margin:0px;padding:0px;">FutureTask&lt;V&gt;</code> <code style="margin:0px;padding:0px;">implements</code> <code style="margin:0px;padding:0px;">RunnableFuture&lt;V&gt;，就是说，FutureTask实现了RunnableFuture接口，而RunnableFuture接口是怎么回事呢？</code></code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"><code style="margin:0px;padding:0px;">public</code> <code style="margin:0px;padding:0px;">interface</code> <code style="margin:0px;padding:0px;">RunnableFuture&lt;V&gt;</code> <code style="margin:0px;padding:0px;">extends</code> <code style="margin:0px;padding:0px;">Runnable, Future&lt;V&gt; {</code></code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">    </code><code style="margin:0px;padding:0px;">void</code> <code style="margin:0px;padding:0px;">run();</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">}</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">可见，FutureTask实际上同时实现了Future接口和Runnable接口，所以它既可以作为Runnable被Thread线程执行，也可以作为Future得到Callable的返回值；</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"> </code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">FutureTask提供了两个构造器：</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;"><code style="margin:0px;padding:0px;">public</code> <code style="margin:0px;padding:0px;">FutureTask(Callable&lt;V&gt; callable) {</code>}</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">public</code> <code style="margin:0px;padding:0px;">FutureTask(Runnable runnable, V result) {</code>}</div>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">用这两个构造器，FutureTask可以对callable和runnable的做出实现，并且由于FutureTask实现了Future接口，所以可以实现对于callable和runnable的管理。</span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;"> </span></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><span style="margin:0px;padding:0px;font-family:Times New Roman;font-size:small;">对于Callable、Runnable、Future、FutureTask的实现实例，可以参考：</span><a href="http://www.cnblogs.com/dolphin0520/p/3949310.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">http://www.cnblogs.com/dolphin0520/p/3949310.html</a>和 <a href="http://blog.csdn.net/zhangzhaokun/article/details/6615454" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">http://blog.csdn.net/zhangzhaokun/article/details/6615454</a></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">线程池</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">线程池存在的目的在于：提前创建好需要的线程，减少临时创建线程带来的资源消耗。而且每个ThreadPoolExecutor线程池还维护者一些统计数据，如完成的任务数，可以方便的进行统计，同时该类还提供了很多可调整的参数和<span style="margin:0px;padding:0px;color:#ff0000;">扩展的钩子（hook）</span>。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">java.util.concurrent中，关于线程池提供了很多接口和类，这些接口和类的关系如下：（图片来自：http://www.blogjava.net/xylz/archive/2010/12/21/341281.html，<a href="http://www.blogjava.net/xylz/archive/2010/12/21/341281.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">深入浅出 Java Concurrency (29): 线程池 part 2 Executor 以及Executors</a>）</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/271645263771582.png" type="image/png" data-filename="271645263771582.png" height="622" style="border:0px;max-width:300px;height:auto;margin:0px;padding:0px;" width="660"/></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">从图中可以看出：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">Executor是顶层接口，其中只有一个execute(Runnable)的声明，返回值是void；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">ExecutorService接口集成了Executor接口，同时提供了submit、invokeAll、invokeAny、shutDown等方法；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">AbstractExecutorService实现了ExecutorService接口，并基本实现其所有方法；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">ThreadPoolExecutor继承了类AbstractExecutorService；并提供了execute()/submit()/shutdown()/shudownNow()等方法的具体实现（execute是提供了具体实现，其它方法用了超类的实现）；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">注：execute和submit的区别在于：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">execute</strong>是定义在Executor中，并在ThreadPoolExecutor中具体实现，没有返回值的，其作用就是向线程池提交一个任务并执行；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">submit</strong>是定义在ExecutorService中，并在AbstractExecutorService中具体实现，且在ThreadPoolExecutor中没有对其进行重写，submit能够返回结果，其内部实现，其实还是在调用execute()，不过，它利用Future&amp;FutureTask来获取任务结果。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">ExecutorService提供了管理终止的方法，以及可为跟踪一个或多个异步任务执行状况而生成 Future 的方法。可以关闭 ExecutorService，这将导致其拒绝新任务。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">提供两个方法来关闭 ExecutorService：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><strong style="margin:0px;padding:0px;">shutdown()</strong>方法在终止前允许执行以前提交的任务；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><strong style="margin:0px;padding:0px;">shutdownNow()</strong> 方法阻止等待任务的启动并试图停止当前正在执行的任务。在终止后，执行程序没有任务在执行，也没有任务在等待执行，并且无法提交新任务。应该关闭未使用的 ExecutorService以允许回收其资源；</li>
+
+</ul>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">通过创建并返回一个可用于取消执行和/或等待完成的 Future，方法<strong style="margin:0px;padding:0px;">submit</strong>扩展了基本方法Executor.execute(java.lang.Runnable)。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">方法 <strong style="margin:0px;padding:0px;">invokeAny</strong> 和 <strong style="margin:0px;padding:0px;">invokeAll</strong> 是批量执行的最常用形式，它们执行任务 collection，然后等待至少一个，</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">或全部任务完成（可使用 <strong style="margin:0px;padding:0px;">ExecutorCompletionService</strong>类来编写这些方法的自定义变体）。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">注意1:它只有一个直接实现类ThreadPoolExecutor和间接实现类ScheduledThreadPoolExecutor。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">关于ThreadPoolExecutor的更多内容请参考《<a href="http://hubingforever.blog.163.com/blog/static/1710405792010964339151/" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">ThreadPoolExecutor</a>》</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">关于ScheduledThreadPoolExecutor的更多内容请参考《<a href="http://hubingforever.blog.163.com/blog/static/17104057920109643632988/" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">ScheduledThreadPoolExecutor</a>》</div>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">对于线程池的其它更深理解，可以从下面的几个方面进行：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　1.线程池状态</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　2.任务的执行</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　3.线程池中的线程初始化</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　4.任务缓存队列及排队策略</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　5.任务拒绝策略</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">　　6.线程池的关闭</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">这些内容可以参考下面的内容：《<a href="http://www.cnblogs.com/dolphin0520/p/3932921.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">Java并发编程：线程池的使用</a>》，下面摘录如下：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">线程池的状态</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">在ThreadPoolExecutor中定义了一个volatile变量，另外定义了几个static final变量表示线程池的各个状态：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">volatile int runState;</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">static final int RUNNING    = 0;</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">static final int SHUTDOWN   = 1;</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">static final int STOP       = 2;</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">static final int TERMINATED = 3;</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">runState表示当前线程池的状态，它是一个volatile变量用来保证线程之间的可见性；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">下面的几个static final变量表示runState可能的几个取值。</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">当创建线程池后，初始时，线程池处于RUNNING状态；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果调用了shutdown()方法，则线程池处于SHUTDOWN状态，此时线程池不能够接受新的任务，它会等待所有任务执行完毕；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果调用了shutdownNow()方法，则线程池处于STOP状态，此时线程池不能接受新的任务，并且会去尝试终止正在执行的任务；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">当线程池处于SHUTDOWN或STOP状态，并且所有工作线程已经销毁，任务缓存队列已经清空或执行结束后，线程池被设置为TERMINATED状态。</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">任务的执行</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">在任务提交到线程池并且执行完毕之前，需要先了解ThreadPoolExecutor中的几个重要成员变量：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">final</code> <code style="margin:0px;padding:0px;">BlockingQueue&lt;Runnable&gt; workQueue;             </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//任务缓存队列，用来存放等待执行的任务</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">final</code> <code style="margin:0px;padding:0px;">ReentrantLock mainLock =</code> <code style="margin:0px;padding:0px;">new</code> <code style="margin:0px;padding:0px;">ReentrantLock();  </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//线程池的主要状态锁，对线程池状态（比如线程池大小</code>、runState等）的改变都要使用这个锁</span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">final</code> <code style="margin:0px;padding:0px;">HashSet&lt;Worker&gt; workers =</code> <code style="margin:0px;padding:0px;">new</code> <code style="margin:0px;padding:0px;">HashSet&lt;Worker&gt;(); </code> <code style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#41ad1c;">//用来存放工作集</span></code></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">long</code>  <code style="margin:0px;padding:0px;">keepAliveTime;   </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//线程存货时间   </code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">boolean</code> <code style="margin:0px;padding:0px;">allowCoreThreadTimeOut;  </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//是否允许为核心线程设置存活时间</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">int</code>   <code style="margin:0px;padding:0px;">corePoolSize;    </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//核心池的大小（即线程池中的线程数目大于这个参数时，提交的任务会被放进任务缓存队列）</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">int</code>   <code style="margin:0px;padding:0px;">maximumPoolSize;  </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//线程池最大能容忍的线程数</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">int</code>   <code style="margin:0px;padding:0px;">poolSize;      </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//线程池中当前的线程数</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">RejectedExecutionHandler handler;</code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//任务拒绝策略</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">volatile</code> <code style="margin:0px;padding:0px;">ThreadFactory threadFactory;  </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//线程工厂，用来创建线程</code></span></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">int</code> <code style="margin:0px;padding:0px;">largestPoolSize;  </code> <code style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#41ad1c;">//用来记录线程池中曾经出现过的最大线程数</span></code></li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;"><code style="margin:0px;padding:0px;">private</code> <code style="margin:0px;padding:0px;">long</code> <code style="margin:0px;padding:0px;">completedTaskCount;  </code> <span style="margin:0px;padding:0px;color:#41ad1c;"><code style="margin:0px;padding:0px;">//用来记录已经执行完毕的任务个数</code></span></li>
+
+</ul>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">其中，corePoolSize指的是核心池大小，如果线程池中的线程数目大于这个参数时，提交的任务会被放进任务缓存队列，如果缓存队列也放不下了，则会考虑扩展线程池中的线程数，一直扩展到maximumPoolSize；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">maximumPoolSize是线程池最大能容忍多少线程数；</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">上面两个参数遵循下面的规则：</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果当前线程池中的线程数目小于corePoolSize，则每来一个任务，就会创建一个线程去执行这个任务；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果当前线程池中的线程数目&gt;=corePoolSize，则每来一个任务，会尝试将其添加到任务缓存队列当中，若添加成功，则该任务会等待空闲线程将其取出去执行；若添加失败（一般来说是任务缓存队列已满），则会尝试创建新的线程去执行这个任务；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果当前线程池中的线程数目达到maximumPoolSize，则会采取任务拒绝策略进行处理；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">如果线程池中的线程数量大于 corePoolSize时，如果某线程空闲时间超过keepAliveTime，线程将被终止，直至线程池中的线程数目不大于 corePoolSize；如果允许为核心池中的线程设置存活时间，那么核心池中的线程空闲时间超过keepAliveTime，线程也会被终止。</li>
+
+</ul>
+<div style="margin:0px;padding:0px;line-height:1.5;">通过 setCorePoolSize()和setMaximumPoolSize()可以动态设置线程池容量的大小。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+
+</div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">线程池中的线程初始化</strong></div>
+<div align="left" style="margin:0px;padding:0px;line-height:1.5;">
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">默认情况下，创建线程池之后，线程池中是没有线程的，需要提交任务之后才会创建线程。</p>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">　　在实际中如果需要线程池创建之后立即创建线程，可以通过以下两个方法办到：</p>
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">prestartCoreThread()：初始化一个核心线程；</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">prestartAllCoreThreads()：初始化所有核心线程</li>
+
+</ul>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">任务缓存队列及排队策略</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">在前面我们多次提到了任务缓存队列，即workQueue，它用来存放等待执行的任务。</p>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">　　workQueue的类型为BlockingQueue&lt;Runnable&gt;，通常可以取下面三种类型：</p>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">　　1）ArrayBlockingQueue：基于数组的先进先出队列，此队列创建时必须指定大小；</p>
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">　　2）LinkedBlockingQueue：基于链表的先进先出队列，如果创建时没有指定此队列大小，则默认为Integer.MAX_VALUE；</p>
+<div style="margin:0px;padding:0px;line-height:1.5;">　　3）synchronousQueue：这个队列比较特殊，它不会保存提交的任务，而是将直接新建一个线程来执行新来的任务。</div>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"> </strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">任务拒绝策略</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> 当线程池的任务缓存队列已满并且线程池中的线程数目达到maximumPoolSize，如果还有任务到来就会采取任务拒绝策略，通常有以下四种策略： </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">ThreadPoolExecutor.AbortPolicy:丢弃任务并抛出RejectedExecutionException异常。</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><code style="margin:0px;padding:0px;">ThreadPoolExecutor.CallerRunsPolicy：由调用线程处理该任务</code></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">线程池的关闭</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">
+<p style="margin:10px auto;text-indent:0px;padding:0px;line-height:1.5;">ThreadPoolExecutor提供了两个方法，用于线程池的关闭，分别是shutdown()和shutdownNow()，其中：</p>
+<ul style="margin-left:30px;padding-left:0px;margin:0px;padding:0px;word-break:break-all;">
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">shutdown()：不会立即终止线程池，而是要等所有任务缓存队列中的任务都执行完后才终止，但再也不会接受新的任务</li>
+<li style="list-style-type:disc;margin:0px;padding:0px;list-style:none;margin-bottom:1em;">shutdownNow()：立即终止线程池，并尝试打断正在执行的任务，并且清空任务缓存队列，返回尚未执行的任务</li>
+
+</ul>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">工厂方法</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;">Executors</strong>类为创建ExecutorService提供了便捷的<strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:#ff0000;">工厂方法</span></strong>。</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">推荐大家使用Executors 工厂方法：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Executors.newCachedThreadPool()（无界线程池，可以进行自动线程回收）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Executors.newFixedThreadPool(int)（固定大小线程池）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Executors.newSingleThreadExecutor()（单个后台线程）；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">这些工厂方法为大多数场景预定义了参数设置。如果不用这些配置，需要自己设置比较麻烦；</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+
+</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread09" style="margin:0px;padding:0px;"></a>9，特殊线程类</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">在Java线程相关的类中，有一些特殊的类并不经常用，但在特定场景下，会非常重要，比如：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">CycliBarrier和CountDownLatch（参考：Java并发编程：CountDownLatch、CyclicBarrier和Semaphore，http://www.cnblogs.com/dolphin0520/p/3920397.html）</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">这些类都有其特定的应用场景，在Java编程思想中也有相关介绍，这里就不再赘述，</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread10" style="margin:0px;padding:0px;"></a>10，特殊线程分析工具</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/>主要的线程分析工具有Jstatck，这个在网上已经有很多教程，另外推荐一个工具，是我的老大写的，开源，功能强大：</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">greys：https://github.com/oldmanpushcart/greys-anatomy</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> </div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><strong style="margin:0px;padding:0px;"><a name="thread11" style="margin:0px;padding:0px;"></a>11，参考资料</strong></div>
+<div style="margin:0px;padding:0px;line-height:1.5;"><hr style="margin:0px;padding:0px;"/></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">《Java编程思想》</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">线程执行者：http://ifeve.com/thread-executors-1/</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">线程原理：http://www.open-open.com/bbs/view/1318332540655</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java线程详解：http://www.cnblogs.com/riskyer/p/3263032.html</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">计算机操作系统之进程和线程：http://www.cnblogs.com/loveyakamoz/archive/2012/11/14/2770811.html</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">用户级线程和内核级线程的区别：http://blog.csdn.net/debugingstudy/article/details/12668389</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java多线程编程总结：http://lavasoft.blog.51cto.com/62575/27069</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java多线程小结，及解决应用挂死的问题：http://sis*huo*k.com/forum/posts/list/1280.html（这个网页居然是违禁词。。无语了）</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java编程体验：线程的7种状态及相互转换(图) <a href="http://blog.csdn.net/jiafu1115/article/details/6804386" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">http://blog.csdn.net/jiafu1115/article/details/6804386</a></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java内存模型总结：http://blog.csdn.net/vking_wang/article/details/8574376</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">java内存模型与多线程:http://www.cnblogs.com/fguozhu/articles/2657904.html</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">java虚拟机内存模式。栈和堆:http://rainyear.iteye.com/blog/1735121</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java内存模型：http://www.cnblogs.com/nexiyi/p/java_memory_model_and_thread.html</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java 多线程编程之八：多线程的调度 :http://blog.csdn.net/defonds/article/details/8664948</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java 线程的Interrupt：http://blog.csdn.net/hudashi/article/details/6958550</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">用Interrupt中断Java线程：http://hapinwater.iteye.com/blog/310558</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Runnable、Callable、Executor、Future、FutureTask关系解读 : <a href="http://blog.csdn.net/zhangzhaokun/article/details/6615454" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">http://blog.csdn.net/zhangzhaokun/article/details/6615454</a></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java并发编程：Callable、Future和FutureTask : <a href="http://www.cnblogs.com/dolphin0520/p/3949310.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">http://www.cnblogs.com/dolphin0520/p/3949310.html</a></div>
+<div style="margin:0px;padding:0px;line-height:1.5;">Java并发编程：线程池的使用：http://www.cnblogs.com/dolphin0520/p/3932921.html</div>
+<div style="margin:0px;padding:0px;line-height:1.5;"> java中Executor、ExecutorService、ThreadPoolExecutor介绍 ：http://blog.csdn.net/linghu_java/article/details/17123057</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">ScheduledThreadPoolExecutor  ：http://hubingforever.blog.163.com/blog/static/17104057920109643632988/</div>
+<div style="margin:0px;padding:0px;line-height:1.5;">ThreadPoolExecutor  ： http://hubingforever.blog.163.com/blog/static/1710405792010964339151/</div>
+
+</div></div>
+<div style="clear:both;margin:0px;padding:0px;"></div>
+<div style="margin-top:20px;margin:0px;padding:0px;">
+<div style="margin-bottom:10px;margin:0px;padding:0px;">分类: <a href="https://www.cnblogs.com/zhguang/category/482328.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;" target="_blank">Java Core</a></div>
+<div style="margin-top:0px;font-size:9pt;color:gray;margin:0px;padding:0px;">标签: <a href="https://www.cnblogs.com/zhguang/tag/Java/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:underline;margin-left:5px;">Java</a>, <a href="https://www.cnblogs.com/zhguang/tag/%E7%BA%BF%E7%A8%8B/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:underline;margin-left:5px;">线程</a>, <a href="https://www.cnblogs.com/zhguang/tag/%E7%BA%BF%E7%A8%8B%E6%B1%A0/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:underline;margin-left:5px;">线程池</a>, <a href="https://www.cnblogs.com/zhguang/tag/%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:underline;margin-left:5px;">线程通信</a>, <a href="https://www.cnblogs.com/zhguang/tag/%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:underline;margin-left:5px;">内存模型</a></div>
+<div style="margin:0px;padding:0px;"><div style="padding:10px 0px;margin-bottom:10px;margin-top:10px;border:1px dashed silver;font-size:12px;width:320px;text-align:center;margin:0px;">
+        <a href="#" style="background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D) repeat-x;display:inline-block;padding:3px 8px;color:rgb(255, 255, 255);text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;vertical-align:middle;background-color:rgb(45, 174, 191);border:none;margin:0px;">好文要顶</a>
+            <a href="#" style="background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D) repeat-x;display:inline-block;padding:3px 8px;color:rgb(255, 255, 255);text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;vertical-align:middle;background-color:rgb(227, 49, 0);border:none;margin:0px;">关注我</a>
+    <a href="#" style="background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAYAAABIdFAMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAHhJREFUeNo8zjsOxCAMBFB/KEAUFFR0Cbng3nQPw68ArZdAlOZppPFIBhH5EAB8b+Tlt9MYQ6i1BuqFaq1CKSVcxZ2Acs6406KUgpt5/LCKuVgz5BDCSb13ZO99ZOdcZGvt4mJjzMVKqcha68iIePB86GAiOv8CDADlIUQBs7MD3wAAAABJRU5ErkJggg%3D%3D) repeat-x;display:inline-block;padding:3px 8px;color:rgb(255, 255, 255);text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;border-radius:10px;box-shadow:rgba(0, 0, 0, 0.5) 0px 1px 3px;text-shadow:rgba(0, 0, 0, 0.25) 0px -1px 1px;vertical-align:middle;background-color:rgb(255, 181, 21);border:none;margin:0px;">收藏该文</a>
+    <a href="#" style="background:none;display:inline-block;padding:3px 2px;color:rgb(255, 255, 255);text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;border-radius:10px;box-shadow:none;text-shadow:none;vertical-align:middle;border:none;margin:0px;" title="分享至新浪微博"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/icon_weibo_24.png" type="image/png" data-filename="icon_weibo_24.png" height="24" style="border:none;vertical-align:middle;margin-left:5px;box-shadow:none;margin:0px;padding:0px;height:auto;max-width:300px;" width="24"/></a>
+    <a href="#" style="background:none;display:inline-block;padding:3px 2px;color:rgb(255, 255, 255);text-decoration:none;font-weight:bold;cursor:pointer;margin-right:10px;border-radius:10px;box-shadow:none;text-shadow:none;vertical-align:middle;border:none;margin:0px;" title="分享至微信"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/wechat.png" type="image/png" data-filename="wechat.png" height="24" style="border:medium none;width:24px;height:24px;box-shadow:none;margin-left:5px;vertical-align:middle;margin:0px;padding:0px;max-width:300px;" width="24"/></a>
+</div>
+<div style="float:left;width:280px;margin-top:0px;margin-bottom:10px;color:rgb(0, 0, 0);margin-left:0px;font-size:12px;margin:0px;padding:0px;">
+    <div style="float:left;line-height:18px;margin:0px;padding:0px;">
+            <a href="http://home.cnblogs.com/u/zhguang/" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;" target="_blank"><img src="Java系列笔记(5) - 线程 - Daniel·广 - 博客园_files/u406312.jpg" type="image/jpeg" data-filename="u406312.jpg" height="48" style="border:0px;vertical-align:top;float:left;margin-right:5px;padding-top:5px;padding-left:2px;margin:0px;padding:0px;height:auto;max-width:300px;" width="48"/></a>
+        <div style="float:left;line-height:18px;margin:0px;padding:0px;">
+            <a href="http://home.cnblogs.com/u/zhguang/" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">Daniel·广</a><br style="margin:0px;padding:0px;"/>
+            <a href="http://home.cnblogs.com/u/zhguang/followees" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">关注 - 0</a><br style="margin:0px;padding:0px;"/>
+            <a href="http://home.cnblogs.com/u/zhguang/followers" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">粉丝 - 163</a>
+        </div>
+    </div>
+    <div style="clear:both;margin:0px;padding:0px;"></div>
+    <div style="margin:0px;padding:0px;"></div>
+    <div style="margin:0px;padding:0px;">
+                <a href="#" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;">+加关注</a>
+    </div>
+</div>
+<div style="float:right;margin-bottom:10px;margin-right:30px;font-size:12px;width:125px;text-align:center;margin-top:10px;margin:0px;padding:0px;">
+    <div style="float:left;width:46px;height:52px;background:url(//static.cnblogs.com/images/upup.gif) no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px;margin:0px;padding:0px;">
+        <span style="font-size:14px;color:rgb(7, 93, 179);font-family:Verdana;line-height:1.5em;margin:0px;padding:0px;">1</span>
+    </div>
+    <div style="float:right;margin-left:20px;width:46px;height:52px;background:url(//static.cnblogs.com/images/downdown.gif) no-repeat;text-align:center;cursor:pointer;margin-top:2px;padding-top:5px;margin:0px;padding:0px;">
+        <span style="font-size:14px;color:rgb(7, 93, 179);font-family:Verdana;line-height:1.5em;margin:0px;padding:0px;">1</span>
+    </div>
+    <div style="clear:both;margin:0px;padding:0px;"></div>
+    <div style="margin-top:5px;margin-left:0px;font-size:12px;color:gray;margin:0px;padding:0px;">
+    </div>
+</div>
+</div>
+<div style="clear:both;margin:0px;padding:0px;"></div>
+<div style="line-height:1.8;font-size:12px;margin:0px;padding:0px;"><a href="https://www.cnblogs.com/zhguang/p/Java-JVM-GC.html" style="text-decoration:none;margin:0px;padding:0px;color:rgb(68, 68, 68);">« </a> 上一篇：<a href="https://www.cnblogs.com/zhguang/p/Java-JVM-GC.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;" title="发布于2013-12-31 18:18">Java系列笔记(4) - JVM监控与调优</a><br style="margin:0px;padding:0px;"/><a href="https://www.cnblogs.com/zhguang/p/4303816.html" style="text-decoration:none;margin:0px;padding:0px;color:rgb(68, 68, 68);">» </a> 下一篇：<a href="https://www.cnblogs.com/zhguang/p/4303816.html" style="margin:0px;padding:0px;color:rgb(68, 68, 68);text-decoration:underline;" title="发布于2015-02-27 17:27">Java系列笔记(0) - 目录和概述</a><br style="margin:0px;padding:0px;"/></div>
+</div>
+
+
+		</div>
+		<div style="margin:0px;padding:0px;float:right;width:100%;clear:both;text-align:right;padding-right:5px;color:rgb(168, 177, 186);margin-top:5px;">posted @ <span style="margin:0px;padding:0px;">2015-02-27 17:07</span> <a href="https://www.cnblogs.com/zhguang/" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:none;">Daniel·广</a> 阅读(<span style="margin:0px;padding:0px;">4129</span>) 评论(<span style="margin:0px;padding:0px;">0</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=3330676" rel="nofollow" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:none;">编辑</a> <a href="https://www.cnblogs.com/zhguang/p/3330676.html#" style="margin:0px;padding:0px;color:rgb(102, 102, 102);text-decoration:none;">收藏</a></div>
+	</div></div></div></div></div></div></div></div></div></div>
+</div>
+</span>
+</div></body></html> 

@@ -1,0 +1,205 @@
+<html>
+<head>
+  <title>memcached安装配置</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1815"/>
+<h1>memcached安装配置</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/>
+Memcached是一款开源、高性能、分布式内存对象缓存系统，可应用各种需要缓存的场景，其主要目的是通过降低对Database的访问来加速web应用程序。它是一个基于内存的“键值对”存储，用于存储数据库调用、API调用或页面引用结果的直接数据，如字符串、对象等。<br/><br/>
+memcached是以LiveJournal旗下Danga Interactive 公司的Brad Fitzpatric 为首开发的一款软件。现在<br/>
+已成为mixi、hatena、Facebook、Vox、LiveJournal等众多服务中提高Web应用扩展性的重要因素。<br/><br/>
+Memcached是一款开发工具，它既不是一个代码加速器，也不是数据库中间件。其设计哲学思想主要反映在如下方面：<br/><br/>
+1. 简单key/value存储：服务器不关心数据本身的意义及结构，只要是可序列化数据即可。存储项由“键、过期时间、可选的标志及数据”四个部分组成；<br/>
+2. 功能的实现一半依赖于客户端，一半基于服务器端：客户负责发送存储项至服务器端、从服务端获取数据以及无法连接至服务器时采用相应的动作；服务端负责接收、存储数据，并负责数据项的超时过期；<br/>
+3. 各服务器间彼此无视：不在服务器间进行数据同步；<br/>
+4. O(1)的执行效率<br/>
+5. 清理超期数据：默认情况下，Memcached是一个LRU缓存，同时，它按事先预订的时长清理超期数据；但事实上，memcached不会删除任何已缓存数据，只是在其过期之后不再为客户所见；而且，memcached也不会真正按期限清理缓存，而仅是当get命令到达时检查其时长；<br/><br/>
+Memcached提供了为数不多的几个命令来完成与服务器端的交互，这些命令基于memcached的协议实现。<br/><br/>
+存储类命令：set, add, replace, append, prepend<br/>
+获取数据类命令：get, delete, incr/decr<br/>
+统计类命令：stats, stats items, stats slabs, stats sizes<br/>
+清理命令： flush_all<br/><br/>
+一、安装libevent<br/><br/>
+memcached依赖于libevent API，因此要事先安装之，项目主页：http://libevent.org/，读者可自行选择需要的版本下载。本文采用的是目前最新版本的源码包libevent-2.0.16-stable.tar.gz。安装过程：<br/><br/>
+# tar xf libevent-2.0.20-stable.tar.gz<br/>
+# cd libevent-2.0.20<br/>
+# ./configure --prefix=/usr/local/libevent<br/>
+# make &amp;&amp; make install<br/><br/>
+# echo &quot;/usr/local/libevent/lib&quot; &gt; /etc/ld.so.conf.d/libevent.conf<br/>
+# ldconfig<br/><br/>
+二、安装配置memcached<br/><br/>
+1、安装memcached<br/>
+# tar xf memcached-1.4.15.tar.gz<br/>
+# cd memcached-1.4.15<br/>
+# ./configure --prefix=/usr/local/memcached --with-libevent=/usr/local/libevent<br/>
+# make &amp;&amp; make install<br/><br/><br/>
+2、memcached SysV的startup脚本代码如下所示，将其建立为/etc/init.d/memcached文件：<br/><br/>
+#!/bin/bash<br/>
+#<br/>
+# Init file for memcached<br/>
+#<br/>
+# chkconfig: - 86 14<br/>
+# description: Distributed memory caching daemon<br/>
+#<br/>
+# processname: memcached<br/>
+# config: /etc/sysconfig/memcached<br/><br/>
+. /etc/rc.d/init.d/functions<br/><br/>
+## Default variables<br/>
+PORT=&quot;11211&quot;<br/>
+USER=&quot;nobody&quot;<br/>
+MAXCONN=&quot;1024&quot;<br/>
+CACHESIZE=&quot;64&quot;<br/>
+OPTIONS=&quot;&quot;<br/><br/>
+RETVAL=0<br/>
+prog=&quot;/usr/local/memcached/bin/memcached&quot;<br/>
+desc=&quot;Distributed memory caching&quot;<br/>
+lockfile=&quot;/var/lock/subsys/memcached&quot;<br/><br/>
+start() {<br/>
+        echo -n $&quot;Starting $desc (memcached): &quot;<br/>
+        daemon $prog -d -p $PORT -u $USER -c $MAXCONN -m $CACHESIZE -o &quot;$OPTIONS&quot;<br/>
+        RETVAL=$?<br/>
+        echo<br/>
+        [ $RETVAL -eq 0 ] &amp;&amp; touch $lockfile<br/>
+        return $RETVAL<br/>
+}<br/><br/>
+stop() {<br/>
+        echo -n $&quot;Shutting down $desc (memcached): &quot;<br/>
+        killproc $prog<br/>
+        RETVAL=$?<br/>
+        echo<br/>
+        [ $RETVAL -eq 0 ] &amp;&amp; rm -f $lockfile<br/>
+        return $RETVAL<br/>
+}<br/><br/>
+restart() {<br/>
+        stop<br/>
+        start<br/>
+}<br/><br/>
+reload() {<br/>
+        echo -n $&quot;Reloading $desc ($prog): &quot;<br/>
+        killproc $prog -HUP<br/>
+        RETVAL=$?<br/>
+        echo<br/>
+        return $RETVAL<br/>
+}<br/><br/>
+case &quot;$1&quot; in<br/>
+  start)<br/>
+        start<br/>
+        ;;<br/>
+  stop)<br/>
+        stop<br/>
+        ;;<br/>
+  restart)<br/>
+        restart<br/>
+        ;;<br/>
+  condrestart)<br/>
+        [ -e $lockfile ] &amp;&amp; restart<br/>
+        RETVAL=$?<br/>
+        ;;      <br/>
+  reload)<br/>
+        reload<br/>
+        ;;<br/>
+  status)<br/>
+        status $prog<br/>
+        RETVAL=$?<br/>
+        ;;<br/>
+   *)<br/>
+        echo $&quot;Usage: $0 {start|stop|restart|condrestart|status}&quot;<br/>
+        RETVAL=1<br/>
+esac<br/><br/>
+exit $RETVAL<br/><br/><br/>
+使用如下命令配置memcached成为系统服务：<br/>
+# chmod +x /etc/init.d/memcached<br/>
+# chkconfig --add memcached<br/>
+# service memcached start<br/><br/>
+3、使用telnet命令测试memcached的使用<br/><br/>
+Memcached提供一组基本命令用于基于命令行调用其服务或查看服务器状态等。<br/><br/>
+# telnet 127.0.0.1 11211<br/><br/><br/>
+add命令：<br/>
+add keyname flag  timeout  datasize<br/>
+如：<br/>
+add mykey 0 10 12<br/>
+Hello world!<br/><br/>
+get命令：<br/>
+get keyname<br/>
+如：get mykey<br/>
+VALUE mykey 0 12<br/>
+Hello world!<br/>
+END<br/><br/>
+4、memcached的常用选项说明<br/><br/>
+-l &lt;ip_addr&gt;：指定进程监听的地址；<br/>
+-d: 以服务模式运行；<br/>
+-u &lt;username&gt;：以指定的用户身份运行memcached进程；<br/>
+-m &lt;num&gt;：用于缓存数据的最大内存空间，单位为MB，默认为64MB；<br/>
+-c &lt;num&gt;：最大支持的并发连接数，默认为1024；<br/>
+-p &lt;num&gt;: 指定监听的TCP端口，默认为11211；<br/>
+-U &lt;num&gt;：指定监听的UDP端口，默认为11211，0表示关闭UDP端口；<br/>
+-t &lt;threads&gt;：用于处理入站请求的最大线程数，仅在memcached编译时开启了支持线程才有效；<br/>
+-f &lt;num&gt;：设定Slab Allocator定义预先分配内存空间大小固定的块时使用的增长因子；<br/>
+-M：当内存空间不够使用时返回错误信息，而不是按LRU算法利用空间；<br/>
+-n: 指定最小的slab chunk大小；单位是字节；<br/>
+-S: 启用sasl进行用户认证；<br/><br/><br/><br/>
+三、安装Memcache的PHP扩展<br/><br/>
+①安装PHP的memcache扩展<br/><br/>
+# tar xf memcache-2.2.5.tgz<br/>
+# cd memcache-2.2.5<br/>
+/usr/local/php/bin/phpize<br/>
+# ./configure --with-php-config=/usr/local/php/bin/php-config --enable-memcache<br/>
+# make &amp;&amp; make install<br/><br/>
+上述安装完后会有类似以下的提示：<br/><br/>
+Installing shared extensions:     /usr/local/php/lib/php/extensions/no-debug-non-zts-20090626/<br/><br/>
+②编辑/usr/local/php/lib/php.ini，在“动态模块”相关的位置添加如下一行来载入memcache扩展：<br/>
+extension=/usr/local/php/lib/php/extensions/no-debug-non-zts-20090626/memcache.so<br/><br/><br/>
+而后对memcached功能进行测试，在网站目录中建立测试页面test.php，添加如下内容：<br/>
+&lt;?php<br/>
+$mem = new Memcache;<br/>
+$mem-&gt;connect(&quot;127.0.0.1&quot;, 11211)  or die(&quot;Could not connect&quot;);<br/><br/>
+$version = $mem-&gt;getVersion();<br/>
+echo &quot;Server's version: &quot;.$version.&quot;&lt;br/&gt;\n&quot;;<br/><br/>
+$mem-&gt;set('testkey', 'Hello World', 0, 600) or die(&quot;Failed to save data at the memcached server&quot;);<br/>
+echo &quot;Store data in the cache (data will expire in 600 seconds)&lt;br/&gt;\n&quot;;<br/><br/>
+$get_result = $mem-&gt;get('testkey');<br/>
+echo &quot;$get_result is from memcached server.&quot;;        <br/>
+?&gt;<br/><br/><br/>
+如果有输出“Hello World is from memcached.”等信息，则表明memcache已经能够正常工作。<br/><br/><br/>
+四、使用libmemcached的客户端工具:<br/><br/>
+访问memcached的传统方法是使用基于perl语言开发的Cache::memcached模块，这个模块在大多数perl代码中都能良好的工作，但也有着众所周知的性能方面的问题。libMemcached则是基于C语言开发的开源的C/C++代码访问memcached的库文件，同时，它还提供了数个可以远程使用的memcached管理工具，如memcat, memping，memstat，memslap等。<br/><br/>
+1) 编译安装libmemcached<br/><br/>
+# tar xf libmemcached-1.0.2.tar.gz<br/>
+# cd libmemcached-1.0.2<br/>
+# ./configure<br/>
+# make &amp;&amp; make install<br/>
+# ldconfig<br/><br/>
+2) 客户端工具<br/>
+# memcat --servers=127.0.0.1:11211 mykey<br/>
+# memping<br/>
+# memslap<br/>
+# memstat<br/><br/><br/>
+五、Nginx整合memcached:<br/><br/>
+server {<br/>
+        listen       80;<br/>
+        server_name  www.magedu.com;<br/><br/>
+        #charset koi8-r;<br/><br/>
+        #access_log  logs/host.access.log  main;<br/><br/>
+        location / {<br/>
+                set $memcached_key $uri;<br/>
+                memcached_pass     127.0.0.1:11211;<br/>
+                default_type       text/html;<br/>
+                error_page         404 @fallback;<br/>
+        }<br/><br/>
+        location @fallback {<br/>
+                proxy_pass http://172.16.0.1;<br/>
+        }<br/>
+}<br/><br/></span>
+</div></body></html> 

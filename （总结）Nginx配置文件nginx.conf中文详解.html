@@ -1,0 +1,138 @@
+<html>
+<head>
+  <title>（总结）Nginx配置文件nginx.conf中文详解</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1390"/>
+<h1>（总结）Nginx配置文件nginx.conf中文详解</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="background-attachment: scroll; background-color: transparent; background-position: 0px 0px;"><div style="text-align: left;"><div style="overflow: hidden;"><div style="overflow: hidden; text-align: left;"><div style="padding: 1px 0px 0px; margin: 0px auto; display: block;"><div style="text-align: center;"><a href="http://www.ha97.com/5194.html" rel="bookmark" style="font-family: 'Trebuchet MS', helvetica, sans-serif; font-size: 2em; line-height: 1em; text-align: left; padding: 0px; margin: 0px; color: rgb(34, 119, 34); text-decoration: none; border: none;" title="Permalink to （总结）Nginx配置文件nginx.conf中文详解">（总结）Nginx配置文件nginx.conf中文详解</a></div><div style="color: rgb(102, 102, 102); font-family: georgia; font-size: 0.9em; font-style: normal; font-variant: normal; font-weight: normal; line-height: normal; padding: 0px; margin: 0px; float: left; width: 86%;"><div style="padding:0px;margin:0px;font-size:12px;margin-top:6px;"><br/></div></div><span style="font-family: georgia; font-style: normal; font-variant: normal; font-weight: normal; line-height: normal; font-size: 0.9em; color: rgb(102, 102, 102); display: block; height: 0px; clear: both; visibility: hidden;">.</span></div><div style="color: rgb(0, 34, 0); font-family: georgia; font-size: 15px; font-style: normal; font-variant: normal; font-weight: normal; line-height: normal; padding: 0px; margin: 25px auto 30px; display: block;"><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><strong style="padding:0px;margin:0px;">PS：<a href="http://www.ha97.com/category/web-server/nginx" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="Nginx">Nginx</a>使用有两三年了，现在经常碰到有新用户问一些很基本的问题，我也没时间一一回答，今天下午花了点时间，结合自己的使用经验，把Nginx的主要配置参数说明分享一下，也参考了一些网络的内容，这篇是目前最完整的Nginx配置参数中文说明了。更详细的模块参数请参考：http://wiki.nginx.org/Main</strong></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);"><br style="padding:0px;margin:0px;"/>
+#定义Nginx运行的用户和用户组<br style="padding:0px;margin:0px;"/>
+user www www;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#nginx进程数，建议设置为等于CPU总核心数。<br style="padding:0px;margin:0px;"/><a href="http://www.ha97.com/tag/worker_processes" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="worker_processes">worker_processes</a> 8;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#全局错误日志定义类型，[ debug | info | notice | warn | error | crit ]<br style="padding:0px;margin:0px;"/>
+error_log /var/log/nginx/error.log info;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#进程文件<br style="padding:0px;margin:0px;"/>
+pid /var/run/nginx.pid;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#一个nginx进程打开的最多文件描述符数目，理论值应该是最多打开文件数（系统的值ulimit -n）与nginx进程数相除，但是nginx分配请求并不均匀，所以建议与ulimit -n的值保持一致。<br style="padding:0px;margin:0px;"/>
+worker_rlimit_nofile 65535;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#工作模式与连接数上限<br style="padding:0px;margin:0px;"/>
+events<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+#参考事件模型，use [ kqueue | rtsig | epoll | /dev/poll | select | poll ]; epoll模型是<a href="http://www.ha97.com/category/linux" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="Linux">Linux</a> 2.6以上版本内核中的高性能网络I/O模型，如果跑在FreeBSD上面，就用kqueue模型。<br style="padding:0px;margin:0px;"/>
+use epoll;<br style="padding:0px;margin:0px;"/>
+#单个进程最大连接数（最大连接数=连接数*进程数）<br style="padding:0px;margin:0px;"/>
+worker_connections 65535;<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+#设定http服务器<br style="padding:0px;margin:0px;"/>
+http<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+include mime.types; #文件扩展名与文件类型映射表<br style="padding:0px;margin:0px;"/>
+default_type application/octet-stream; #默认文件类型<br style="padding:0px;margin:0px;"/>
+#charset utf-8; #默认编码<br style="padding:0px;margin:0px;"/>
+server_names_hash_bucket_size 128; #服务器名字的hash表大小<br style="padding:0px;margin:0px;"/>
+client_header_buffer_size 32k; #上传文件大小限制<br style="padding:0px;margin:0px;"/>
+large_client_header_buffers 4 64k; #设定请求缓<br style="padding:0px;margin:0px;"/>
+client_max_body_size 8m; #设定请求缓<br style="padding:0px;margin:0px;"/>
+sendfile on; #开启高效文件传输模式，sendfile指令指定nginx是否调用sendfile函数来输出文件，对于普通应用设为 on，如果用来进行下载等应用磁盘IO重负载应用，可设置为off，以平衡磁盘与网络I/O处理速度，降低系统的负载。注意：如果图片显示不正常把这个改成off。<br style="padding:0px;margin:0px;"/>
+autoindex on; #开启目录列表访问，合适下载服务器，默认关闭。<br style="padding:0px;margin:0px;"/>
+tcp_nopush on; #防止网络阻塞<br style="padding:0px;margin:0px;"/>
+tcp_nodelay on; #防止网络阻塞<br style="padding:0px;margin:0px;"/>
+keepalive_timeout 120; #长连接超时时间，单位是秒</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#<a href="http://www.ha97.com/tag/fastcgi" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="FastCGI">FastCGI</a>相关参数是为了改善网站的性能：减少资源占用，提高访问速度。下面参数看字面意思都能理解。<br style="padding:0px;margin:0px;"/>
+fastcgi_connect_timeout 300;<br style="padding:0px;margin:0px;"/>
+fastcgi_send_timeout 300;<br style="padding:0px;margin:0px;"/>
+fastcgi_read_timeout 300;<br style="padding:0px;margin:0px;"/>
+fastcgi_buffer_size 64k;<br style="padding:0px;margin:0px;"/>
+fastcgi_buffers 4 64k;<br style="padding:0px;margin:0px;"/>
+fastcgi_busy_buffers_size 128k;<br style="padding:0px;margin:0px;"/>
+fastcgi_temp_file_write_size 128k;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#gzip模块设置<br style="padding:0px;margin:0px;"/>
+gzip on; #开启gzip压缩输出<br style="padding:0px;margin:0px;"/>
+gzip_min_length 1k; #最小压缩文件大小<br style="padding:0px;margin:0px;"/>
+gzip_buffers 4 16k; #压缩缓冲区<br style="padding:0px;margin:0px;"/>
+gzip_http_version 1.0; #压缩版本（默认1.1，前端如果是squid2.5请使用1.0）<br style="padding:0px;margin:0px;"/>
+gzip_comp_level 2; #压缩等级<br style="padding:0px;margin:0px;"/>
+gzip_types text/plain application/x-<a href="http://www.ha97.com/tag/javascript" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="javascript">javascript</a> text/css application/xml;<br style="padding:0px;margin:0px;"/>
+#压缩类型，默认就已经包含text/html，所以下面就不用再写了，写上去也不会有问题，但是会有一个warn。<br style="padding:0px;margin:0px;"/>
+gzip_vary on;<br style="padding:0px;margin:0px;"/>
+#limit_zone crawler $binary_remote_addr 10m; #开启限制IP连接数的时候需要使用</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">upstream blog.ha97.com {<br style="padding:0px;margin:0px;"/>
+#upstream的负载均衡，weight是权重，可以根据机器配置定义权重。weigth参数表示权值，权值越高被分配到的几率越大。<br style="padding:0px;margin:0px;"/>
+server 192.168.80.121:80 weight=3;<br style="padding:0px;margin:0px;"/>
+server 192.168.80.122:80 weight=2;<br style="padding:0px;margin:0px;"/>
+server 192.168.80.123:80 weight=3;<br style="padding:0px;margin:0px;"/>
+}</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#虚拟主机的配置<br style="padding:0px;margin:0px;"/>
+server<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+#监听端口<br style="padding:0px;margin:0px;"/>
+listen 80;<br style="padding:0px;margin:0px;"/>
+#域名可以有多个，用空格隔开<br style="padding:0px;margin:0px;"/>
+server_name www.ha97.com ha97.com;<br style="padding:0px;margin:0px;"/>
+index index.html index.htm index.php;<br style="padding:0px;margin:0px;"/>
+root /data/www/ha97;<br style="padding:0px;margin:0px;"/>
+location ~ .*.(php|php5)?$<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+fastcgi_pass 127.0.0.1:9000;<br style="padding:0px;margin:0px;"/>
+fastcgi_index index.php;<br style="padding:0px;margin:0px;"/>
+include fastcgi.conf;<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/>
+#图片缓存时间设置<br style="padding:0px;margin:0px;"/>
+location ~ .*.(gif|jpg|jpeg|png|bmp|swf)$<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+expires 10d;<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/>
+#JS和CSS缓存时间设置<br style="padding:0px;margin:0px;"/>
+location ~ .*.(js|css)?$<br style="padding:0px;margin:0px;"/>
+{<br style="padding:0px;margin:0px;"/>
+expires 1h;<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/>
+#日志格式设定<br style="padding:0px;margin:0px;"/><a href="http://www.ha97.com/tag/log_format" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="log_format">log_format</a> access '$remote_addr - $remote_user [$time_local] &quot;$request&quot; '<br style="padding:0px;margin:0px;"/>
+'$status $body_bytes_sent &quot;$http_referer&quot; '<br style="padding:0px;margin:0px;"/>
+'&quot;$http_user_agent&quot; $http_x_forwarded_for';<br style="padding:0px;margin:0px;"/>
+#定义本虚拟主机的访问日志<br style="padding:0px;margin:0px;"/>
+access_log /var/log/nginx/ha97access.log access;</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#对 &quot;/&quot; 启用反向代理<br style="padding:0px;margin:0px;"/>
+location / {<br style="padding:0px;margin:0px;"/>
+proxy_pass http://127.0.0.1:88;<br style="padding:0px;margin:0px;"/>
+proxy_redirect off;<br style="padding:0px;margin:0px;"/>
+proxy_set_header X-Real-IP $remote_addr;<br style="padding:0px;margin:0px;"/>
+#后端的Web服务器可以通过X-Forwarded-For获取用户真实IP<br style="padding:0px;margin:0px;"/>
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;<br style="padding:0px;margin:0px;"/>
+#以下是一些反向代理的配置，可选。<br style="padding:0px;margin:0px;"/>
+proxy_set_header Host $host;<br style="padding:0px;margin:0px;"/>
+client_max_body_size 10m; #允许客户端请求的最大单文件字节数<br style="padding:0px;margin:0px;"/>
+client_body_buffer_size 128k; #缓冲区代理缓冲用户端请求的最大字节数，<br style="padding:0px;margin:0px;"/>
+proxy_connect_timeout 90; #nginx跟后端服务器连接超时时间(代理连接超时)<br style="padding:0px;margin:0px;"/>
+proxy_send_timeout 90; #后端服务器数据回传时间(代理发送超时)<br style="padding:0px;margin:0px;"/>
+proxy_read_timeout 90; #连接成功后，后端服务器响应时间(代理接收超时)<br style="padding:0px;margin:0px;"/>
+proxy_buffer_size 4k; #设置代理服务器（nginx）保存用户头信息的缓冲区大小<br style="padding:0px;margin:0px;"/>
+proxy_buffers 4 32k; #proxy_buffers缓冲区，网页平均在32k以下的设置<br style="padding:0px;margin:0px;"/>
+proxy_busy_buffers_size 64k; #高负荷下缓冲大小（proxy_buffers*2）<br style="padding:0px;margin:0px;"/>
+proxy_temp_file_write_size 64k;<br style="padding:0px;margin:0px;"/>
+#设定缓存文件夹大小，大于这个值，将从upstream服务器传<br style="padding:0px;margin:0px;"/>
+}</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#设定查看Nginx状态的地址<br style="padding:0px;margin:0px;"/>
+location /NginxStatus {<br style="padding:0px;margin:0px;"/>
+stub_status on;<br style="padding:0px;margin:0px;"/>
+access_log on;<br style="padding:0px;margin:0px;"/>
+auth_basic &quot;NginxStatus&quot;;<br style="padding:0px;margin:0px;"/>
+auth_basic_user_file conf/htpasswd;<br style="padding:0px;margin:0px;"/>
+#htpasswd文件的内容可以用<a href="http://www.ha97.com/category/web-server/apache" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="apache">apache</a>提供的htpasswd工具来产生。<br style="padding:0px;margin:0px;"/>
+}</code></p><p style="padding:0px;margin:1.2em 0px;line-height:1.5em;"><code style="padding:0px;margin:0px;font-family:monospace;font-size:12px;background-color:rgb(238, 238, 238);">#本地动静分离反向代理配置<br style="padding:0px;margin:0px;"/>
+#所有jsp的页面均交由<a href="http://www.ha97.com/category/web-server/tomcat" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="tomcat">tomcat</a>或<a href="http://www.ha97.com/category/web-server/resin" style="padding:0px;margin:0px;text-decoration:none;color:rgb(0, 102, 0);border-bottom-width:1px;border-bottom-style:dashed;border-bottom-color:rgb(0, 102, 0);" title="resin">resin</a>处理<br style="padding:0px;margin:0px;"/>
+location ~ .(jsp|jspx|do)?$ {<br style="padding:0px;margin:0px;"/>
+proxy_set_header Host $host;<br style="padding:0px;margin:0px;"/>
+proxy_set_header X-Real-IP $remote_addr;<br style="padding:0px;margin:0px;"/>
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;<br style="padding:0px;margin:0px;"/>
+proxy_pass http://127.0.0.1:8080;<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/>
+#所有静态文件由nginx直接读取不经过tomcat或resin<br style="padding:0px;margin:0px;"/>
+location ~ .*.(htm|html|gif|jpg|jpeg|png|bmp|swf|ioc|rar|zip|txt|flv|mid|doc|ppt|pdf|xls|mp3|wma)$<br style="padding:0px;margin:0px;"/>
+{ expires 15d; }<br style="padding:0px;margin:0px;"/>
+location ~ .*.(js|css)?$<br style="padding:0px;margin:0px;"/>
+{ expires 1h; }<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/>
+}<br style="padding:0px;margin:0px;"/></code><br style="padding:0px;margin:0px;"/>
+更详细的模块参数请参考：http://wiki.nginx.org/Main</p></div></div></div></div></div></span>
+</div></body></html> 

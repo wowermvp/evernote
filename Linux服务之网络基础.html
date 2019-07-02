@@ -1,0 +1,137 @@
+<html>
+<head>
+  <title>Linux服务之网络基础</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1820"/>
+<h1>Linux服务之网络基础</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;">
+一、网络配置
+<div>     1、主机名     hostname</div><div>          查看主机名：hostname</div><div>          临时修改：hostname FQDN（完全合格域名）</div><div>          永久修改：vim /etc/sysconfig/netwrok</div><div>                         NETWORKING = YES      #启用IPv4主机名配置</div><div>                         HOSTNAME = FQDN      #更改主机名（重启生效）</div><div>     2、修改IP地址</div><div>          查看：ipconfig</div><div>          临时修改：ifconfig 网络接口 ip地址 netmask </div><div>          临时虚拟接口：ifconfig 网络接口：接口号 ip地址 netmask（需要先关闭NetworkManager）</div><div>          永久修改：vim /etc/sysconfig/network-scripts/ifcfg-eth0</div><div>                              DEVICE=eth0</div><div>                              ONBOOT=yes</div><div>                              BOOTPROTO=static/dhcp</div><div>                              IPADDR=IP地址         #设置具体IP  </div><div>                              NETMASK=子网掩码</div><div>                             *TYPE=Ethernet          #设置网卡类型</div><div>          永久修改需要重启服务或系统，使其生效：</div><div>                         service network restart</div><div>                       或ifdown eth0</div><div>                          ifup eth0</div><div>     3、修改网关</div><div>          查看：route -n</div><div>          临时修改：route add default gw ip地址</div><div>                          route add -net 目标网络 gw ip地址</div><div>          永久修改：vim /etc/sysconfig/network-scripts/ifcfg-eth0</div><div>                         ......省略前面内容......</div><div>                         GATEWAY=IP地址</div><div>           永久修改需要重启，即可生效</div><div>     4、DNS配置</div><div>          修改：vim /etc/sysconfig/network-scripts/ifcfg-eth0</div><div>                    ......省略前面内容......</div><div>                    DNS1=DNS服务器IP</div><div>                    DNS2=DNS服务器IP</div><div>                    或</div><div>                    vi /etc/resolv.conf</div><div>                    nameserver DNS服务器IP</div><div>          测试：nslookup     域名（只可解析DNS的相关记录，对HOSTS不生效）</div><div>     5、本地解析</div><div>          查看：</div><div>                    vim /etc/hosts</div><div>                    IP地址     域名</div><div>                    即时生效，不需要重启</div><div>     6、查看端口信息</div><div>          netstat     -anp</div><div>          -a     显示所有端口信息</div><div>          -n     数字形式显示</div><div>          -p     显示PID</div><div>          -t     显示TCP相关端口</div><div>          -u     显示UDP相关端口</div><div>     7、跟踪路由</div><div>          traceroute     测试到目标主机经过了多少网络设备</div><div>     8、网络测试</div><div>          ping     连通性测试</div><div>               -c     指定ping的次数</div><div>               -i     指定ping的时间间隔，单位为秒</div><div>               -W   指定等待时间</div><div>     9、ARP</div><div>          地址解析协议，将IP地址解析成MAC地址</div><div>          -a     查看所有</div><div>          -d IP地址：删除某条ARP记录</div><div>          -s IP地址 MAC地址：绑定IP地址</div><div>     10、nmap</div><div>          网络端口扫描</div><div>二、远程管理</div><div>     1、端口：tcp 22</div><div>     2、服务名称：sshd</div><div>     3、配置文件：</div><div>               服务器端：/etc/ssh/sshd_config</div><div>               客户端：/etc/ssh/shh_config（默认即可）</div><div>     4、常见的配置项</div><div>               port     端口号</div><div>               Listenaddress     监听的IP地址（服务器地址）</div><div>               PermitRootLogin     是否允许ROOT用户远程登录</div><div>               MaxAuthTries     最大登录次数</div><div>               LoginGraceTime  登录冻结时间</div>
+               PasswordAuthentication  用户名密码的认证方式<br/>
+               PubkeyAuthentication  密钥对的认证方式<br/>
+               AllowUsers  允许个别 拒绝所有<br/>
+               DenyUsers   拒绝个别 允许所有  <br/>
+               用户名@IP地址 允许或拒绝某个用户从某个IP登录<br/>
+     5、功能模块<br/>
+          ssh 远程连接        ssh -p 端口 服务器用户名@服务器地址<br/>
+          scp 远程上传/下载  <br/>
+                        上传： scp -P 端口 本地路径 服务器用户名@服务器地址:服务器存放路径<br/>
+                        下载： scp -P 端口 服务器用户名@服务器地址:服务器存放路径 本地路径<br/>
+          sftp 安全的FTP连接<br/>
+                        sftp -oPort=端口 服务器用户名@服务器地址<br/>
+                           上传  put 文件名<br/>
+                        下载  get 文件名<br/>
+     6、密钥对验证：<br/>
+          客户端用户client  服务器端用户server<br/>
+          a、客户端登录client 通过ssh-keygen -t rsa生成密钥对<br/>
+          b、将公钥文件id_rsa.pub上传给服务器<br/>
+               scp /home/client/.ssh/id_rsa.pub server@服务器IP:/tmp<br/>
+          c、服务器用root登录，将/tmp/id_rsa.pub的文件内容 导入到/home/server/.ssh/authorized_keys<br/>
+               cd /tmp<br/>
+               cat id_rsa.pub &gt;&gt; /home/server/.ssh/authorized_keys<br/>
+               开启服务器端的密钥对验证，关闭密码验证<br/>
+               vim /etc/ssh/sshd_config<br/>
+               PasswordAuthentication no  <br/>
+               PubkeyAuthentication yes <br/>
+               AuthorizedKeysFile .ssh/Authorized_keys<br/>
+              <br/>
+               service sshd restart<br/>
+          d、验证<br/>
+               客户端执行<br/>
+               ssh server@服务器地址<br/>
+               如果没有提示输出密码，则验证成功
+<div>ssh配置文件（/etc/ssh/sshd_conf）</div><div><i># 1. 关于 SSH Server 的整体设定，包含使用的 port 啦，以及使用的密码演算方式</i><br/>
+Port 22          <i># SSH 预设使用 22 这个 port，您也可以使用多的 port ！<br/>
+              # 亦即重复使用 port 这个设定项目即可！</i><br/>
+Protocol 2,1        <i># 选择的 SSH 协议版本，可以是 1 也可以是 2 ，<br/>
+              # 如果要同时支持两者，就必须要使用 2,1 这个分隔了！</i><br/>
+#ListenAddress 0.0.0.0   <i># 监听的主机适配卡！举个例子来说，如果您有两个 IP，<br/>
+              # 分别是 192.168.0.100 及 192.168.2.20 ，那么只想要<br/>
+              # 开放 192.168.0.100 时，就可以写如同下面的样式：</i><br/>
+ListenAddress 192.168.0.100          <i># 只监听来自 192.168.0.100 这个 IP 的SSH联机。<br/>
+                   # 如果不使用设定的话，则预设所有接口均接受 SSH</i><br/>
+PidFile /var/run/sshd.pid      <i># 可以放置 SSHD 这个 PID 的档案！左列为默认值</i><br/>
+LoginGraceTime 600     <i># 当使用者连上 SSH server 之后，会出现输入密码的画面，<br/>
+              # 在该画面中，在多久时间内没有成功连上 SSH server ，<br/>
+              # 就断线！时间为秒！</i><br/>
+Compression yes      <i># 是否可以使用压缩指令？当然可以啰！</i><br/><br/><i># 2. 说明主机的 Private Key 放置的档案，预设使用下面的档案即可！</i><br/>
+HostKey /etc/ssh/ssh_host_key    <i># SSH version 1 使用的私钥</i><br/>
+HostKey /etc/ssh/ssh_host_rsa_key  <i># SSH version 2 使用的 RSA 私钥</i><br/>
+HostKey /etc/ssh/ssh_host_dsa_key  <i># SSH version 2 使用的 DSA 私钥</i><br/><i># 2.1 关于 version 1 的一些设定！</i><br/>
+KeyRegenerationInterval 3600     <i># 由前面联机的说明可以知道， version 1 会使用<br/>
+                   # server 的 Public Key ，那么如果这个 Public<br/>
+                   # Key 被偷的话，岂不完蛋？所以需要每隔一段时间<br/>
+                   # 来重新建立一次！这里的时间为秒！</i><br/>
+ServerKeyBits 768           <i># 没错！这个就是 Server key 的长度！</i><br/><i># 3. 关于登录文件的讯息数据放置与 daemon 的名称！</i><br/>
+SyslogFacility AUTH         <i># 当有人使用 SSH 登入系统的时候，SSH会记录资<br/>
+                   # 讯，这个信息要记录在什么 daemon name 底下？<br/>
+                   # 预设是以 AUTH 来设定的，即是 /var/log/secure<br/>
+                   # 里面！什么？忘记了！回到 Linux 基础去翻一下<br/>
+                   # 其它可用的 daemon name 为：DAEMON,USER,AUTH,<br/>
+                   # LOCAL0,LOCAL1,LOCAL2,LOCAL3,LOCAL4,LOCAL5,</i><br/>
+LogLevel INFO            <i># 登录记录的等级！嘿嘿！任何讯息！<br/>
+                   # 同样的，忘记了就回去参考！<br/>
+# 4. 安全设定项目！极重要！<br/>
+# 4.1 登入设定部分</i><br/>
+PermitRootLogin no     <i># 是否允许 root 登入！预设是允许的，但是建议设定成 no！</i><br/>
+UserLogin no        <i># 在 SSH 底下本来就不接受 login 这个程序的登入！</i><br/>
+StrictModes yes      <i># 当使用者的 host key 改变之后，Server 就不接受联机，</i><br/>
+              <i># 可以抵挡部分的木马程序！</i><br/>
+#RSAAuthentication yes   <i># 是否使用纯的 RSA 认证！？仅针对 version 1 ！</i><br/>
+PubkeyAuthentication yes  <i># 是否允许 Public Key ？当然允许啦！只有 version 2</i><br/>
+AuthorizedKeysFile      .ssh/authorized_keys<br/>
+              <i># 上面这个在设定若要使用不需要密码登入的账号时，那么那个<br/>
+              # 账号的存放档案所在档名！</i><br/><i># 4.2 认证部分</i><br/>
+RhostsAuthentication no  <i># 本机系统不止使用 .rhosts ，因为仅使用 .rhosts 太<br/>
+              # 不安全了，所以这里一定要设定为 no ！</i><br/>
+IgnoreRhosts yes      <i># 是否取消使用 ~/.ssh/.rhosts 来做为认证！当然是！</i><br/>
+RhostsRSAAuthentication no <i># 这个选项是专门给 version 1 用的，使用 rhosts 档案在<br/>
+              # /etc/hosts.equiv配合 RSA 演算方式来进行认证！不要使用</i><br/>
+HostbasedAuthentication no <i># 这个项目与上面的项目类似，不过是给 version 2 使用的！</i><br/>
+IgnoreUserKnownHosts no  <i># 是否忽略家目录内的 ~/.ssh/known_hosts 这个档案所记录<br/>
+              # 的主机内容？当然不要忽略，所以这里就是 no 啦！</i><br/>
+PasswordAuthentication yes <i># 密码验证当然是需要的！所以这里写 yes 啰！</i><br/>
+PermitEmptyPasswords no  <i># 若上面那一项如果设定为 yes 的话，这一项就最好设定<br/>
+              # 为 no ，这个项目在是否允许以空的密码登入！当然不许！</i><br/>
+ChallengeResponseAuthentication yes  <i># 挑战任何的密码认证！所以，任何 login.conf<br/>
+                   # 规定的认证方式，均可适用！</i><br/>
+#PAMAuthenticationViaKbdInt yes      <i># 是否启用其它的 PAM 模块！启用这个模块将会<br/>
+                   # 导致 PasswordAuthentication 设定失效！</i><br/><br/><i># 4.3 与 Kerberos 有关的参数设定！因为我们没有 Kerberos 主机，所以底下不用设定！</i><br/>
+#KerberosAuthentication no<br/>
+#KerberosOrLocalPasswd yes<br/>
+#KerberosTicketCleanup yes<br/>
+#KerberosTgtPassing no<br/><br/><i># 4.4 底下是有关在 X-Window 底下使用的相关设定！</i><br/>
+X11Forwarding yes<br/>
+#X11DisplayOffset 10<br/>
+#X11UseLocalhost yes<br/>
+# 4.5 登入后的项目：<br/>
+PrintMotd no              <i># 登入后是否显示出一些信息呢？例如上次登入的时间、地点等<br/>
+             # 等，预设是 yes ，但是，如果为了安全，可以考虑改为 no ！</i><br/>
+PrintLastLog yes     <i># 显示上次登入的信息！可以啊！预设也是 yes ！</i><br/>
+KeepAlive yes       <i># 一般而言，如果设定这项目的话，那么 SSH Server 会传送</i><br/>
+             <i># KeepAlive 的讯息给 Client 端，以确保两者的联机正常！<br/>
+             # 在这个情况下，任何一端死掉后， SSH 可以立刻知道！而不会<br/>
+             # 有僵尸程序的发生！</i><br/>
+UsePrivilegeSeparation yes <i># 使用者的权限设定项目！就设定为 yes 吧！</i><br/>
+MaxStartups 10      <i># 同时允许几个尚未登入的联机画面？当我们连上 SSH ，<br/>
+             # 但是尚未输入密码时，这个时候就是我们所谓的联机画面啦！<br/>
+             # 在这个联机画面中，为了保护主机，所以需要设定最大值，<br/>
+             # 预设最多十个联机画面，而已经建立联机的不计算在这十个当中</i><br/><i># 4.6 关于使用者抵挡的设定项目：</i><br/>
+DenyUsers *        <i># 设定受抵挡的使用者名称，如果是全部的使用者，那就是全部<br/>
+             # 挡吧！若是部分使用者，可以将该账号填入！例如下列！</i><br/>
+DenyUsers test<br/>
+DenyGroups test      <i># 与 DenyUsers 相同！仅抵挡几个群组而已！</i><br/><i># 5. 关于 SFTP 服务的设定项目！</i><br/>
+Subsystem       sftp    /usr/lib/ssh/sftp-server</div></span>
+</div></body></html> 

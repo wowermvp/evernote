@@ -1,0 +1,175 @@
+<html>
+<head>
+  <title>expect spawn、linux expect 用法</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1812"/>
+<h1>expect spawn、linux expect 用法</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><div style="font-size: 16px"><div style="color:rgb(51, 51, 51);text-align:center;font-size:12px;font-family:Arial, Console, Verdana, 'Courier New';background:url(http://static.blog.csdn.net/skin/default/images/body_bg.gif) 0px 20px repeat-x;padding-bottom:initial;"><div style="background:url(http://static.blog.csdn.net/skin/default/images/head_bg.jpg) 50% 0% no-repeat;"><div style="overflow:hidden;border-radius:8px;text-align:left;background:rgb(255, 255, 255);"><div style="overflow:hidden;border-radius:4px;"><div style="display:block;margin:5px 0px;color:rgb(0, 0, 0);font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:30px;font-family:'Microsoft YaHei';"><h1 style="font-weight:normal;margin:0px;padding:0px;font-style:normal;font-variant:normal;display:inline;font-stretch:normal;font-size:20px;line-height:30px;font-family:'Microsoft YaHei';vertical-align:middle;"><span><a href="http://blog.csdn.net/ysdaniel/article/details/7059511" style="text-decoration:none;color:rgb(0, 0, 0);">expect spawn、linux expect 用法</a></span></h1><span style="color:rgb(0, 0, 0);font-style:normal;font-variant:normal;font-weight:normal;font-size:20px;line-height:30px;font-family:'Microsoft YaHei';display:block;height:0px;clear:both;visibility:hidden;">.</span></div><div style="padding:5px 0px;color:rgb(153, 153, 153);font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:24px;font-family:Arial;text-align:right;"><br/></div><div style="margin:20px 0px 0px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14px;line-height:26px;font-family:Arial;"><p>使用expect实现自动登录的脚本，网上有很多，可是都没有一个明白的说明，初学者一般都是照抄、收藏。可是为什么要这么写却不知其然。本文用一个最短的例子说明脚本的原理。<br/>
+　　脚本代码如下：<br/>
+　　##############################################<br/>
+　　#!/usr/bin/expect<br/>
+　　set timeout 30<br/>
+　　spawn ssh -l username 192.168.1.1<br/>
+　　expect &quot;password:&quot;<br/>
+　　send &quot;ispass\r&quot;<br/>
+　　interact<br/>
+　　##############################################<br/>
+　　1. ［#!/usr/bin/expect］<br/>
+　　这一行告诉操作系统脚本里的代码使用那一个shell来执行。这里的expect其实和linux下的bash、windows下的cmd是一类东西。<br/>
+　　注意：这一行需要在脚本的第一行。<br/>
+　　2. ［set timeout 30］<br/>
+　　基本上认识英文的都知道这是设置超时时间的，现在你只要记住他的计时单位是：秒<br/>
+　　3. ［spawn ssh -l username 192.168.1.1］<br/>
+　　spawn是进入expect环境后才可以执行的expect内部命令，如果没有装expect或者直接在默认的SHELL下执行是找不到spawn命令的。所以不要用 “which spawn“之类的命令去找spawn命令。好比windows里的dir就是一个内部命令，这个命令由shell自带，你无法找到一个dir.com 或 dir.exe 的可执行文件。<br/>
+　　它主要的功能是给ssh运行进程加个壳，用来传递交互指令。<br/>
+　　4. ［expect &quot;password:&quot;］<br/>
+　　这里的expect也是expect的一个内部命令，有点晕吧，expect的shell命令和内部命令是一样的，但不是一个功能，习惯就好了。这个命令的意思是判断上次输出结果里是否包含“password:”的字符串，如果有则立即返回，否则就等待一段时间后返回，这里等待时长就是前面设置的30秒<br/>
+　　5. ［send &quot;ispass\r&quot;］<br/>
+　　这里就是执行交互动作，与手工输入密码的动作等效。<br/>
+　　温馨提示： 命令字符串结尾别忘记加上“\r”，如果出现异常等待的状态可以核查一下。<br/>
+　　6. ［interact］<br/>
+　　执行完成后保持交互状态，把控制权交给控制台，这个时候就可以手工操作了。如果没有这一句登录完成后会退出，而不是留在远程终端上。如果你只是登录过去执行<br/>
+　　#!/usr/bin/expect #注意安装的路径，不确定 whereis expect 一下<br/>
+　　# Change a login shell to bash<br/>
+　　set user [lindex $argv 0]<br/>
+　　spawn bash $user<br/>
+　　expect &quot;]:&quot;<br/>
+　　send &quot;/bin/bash &quot;<br/>
+　　expect eof<br/>
+　　exit</p><p><br/></p><p>使用expect自动登录<br/><br/>
+一，什么是expect?<br/>
+在做系统管理时，我们很多时候需要输入密码，例如：连接 ssh,连接ftp,<br/>
+那么如何能做到不输入密码吗？<br/>
+我们需要有一个工具，能代替我们实现与终端的交互，<br/>
+那么，就是它：expect，管理员的最好的朋友之一<br/>
+它能够代替我们实现与终端的交互，我们不必再守候在电脑旁边输入密码，<br/>
+或是根据系统的输出再运行相应的命令，<br/>
+这些都可以由expect代替我们来完成<br/><br/>
+说明：expect到底是什么？<br/>
+expect是一种脚本语言，使用起来非常简单，我们看后面的例子即可以了解到了<br/><br/>
+三，安装expect<br/><br/>
+备注：因为expect是基于tcl的，所以需要你的系统中安装有tcl<br/>
+如何检查？<br/>
+[root@dev ~]# whereis tcl<br/>
+tcl: /usr/lib/tcl8.4 /usr/share/tcl8.4<br/>
+如果看不到结果，请先安装tcl<br/>
+安装,<br/>
+[root@dev ~]# yum install expect<br/>
+也可以从http://rpm.pbone.net下载for相应发行版的rpm包<br/><br/>
+四，使用expect自动登录的例子<br/>
+1,程序例子的内容 :<br/>
+先做功能 上的说明<br/>
+此程序ssh登录到作为参数传递过来的ip地址上<br/>
+然后执行: df -h<br/>
+free -m<br/>
+uptime<br/>
+来检查系统的情况<br/><br/><br/>
+[root@dev ~]# cat monitor_auto<br/>
+#!/usr/bin/expect -f<br/><br/>
+#-------------------------------------------------- about us<br/>
+# product: monitorone<br/>
+# Author: liuhongdi &lt;hongdi.liu@chinafotopress.com&gt;<br/>
+# Last Modified: 2008-05-13<br/>
+# version: 0.3.2<br/>
+# user:this script will help you to monitor many linux(unix) machine<br/>
+# license: this script is based GPL<br/><br/>
+#-------------------------------------------------- set the variable,you can modify the value<br/><br/>
+set loginuser &quot;root&quot;<br/>
+set loginpass {passwordonthishost}<br/><br/>
+set ipaddr [lrange $argv 0 0]<br/>
+set timeout 300<br/>
+set cmd_prompt &quot;]#|~]?&quot;<br/><br/>
+#-------------------------------------------------- login by ssh<br/>
+spawn ssh $loginuser@$ipaddr<br/>
+set timeout 300<br/>
+expect {<br/>
+-re &quot;Are you sure you want to continue connecting (yes/no)?&quot; {<br/>
+send &quot;yes\r&quot;<br/>
+} -re &quot;assword:&quot; {<br/>
+send &quot;$loginpass\r&quot;<br/>
+} -re &quot;Permission denied, please try again.&quot; {<br/>
+exit<br/>
+} -re &quot;Connection refused&quot; {<br/>
+exit<br/>
+} timeout {<br/>
+exit<br/>
+} eof {<br/>
+exit<br/>
+}<br/>
+}<br/><br/>
+expect {<br/>
+-re &quot;assword:&quot; {<br/>
+send &quot;$loginpass\r&quot;<br/>
+}<br/>
+-re $cmd_prompt {<br/>
+send &quot;\r&quot;<br/>
+}<br/>
+}<br/><br/>
+#---------------------------------------------------- now,we do some commands<br/>
+exec sleep 1<br/>
+expect {<br/>
+-re $cmd_prompt {<br/>
+send &quot;df -h\r&quot;<br/>
+}<br/>
+}<br/><br/>
+exec sleep 1<br/>
+expect {<br/>
+-re $cmd_prompt {<br/>
+send &quot;free -m\r&quot;<br/>
+}<br/>
+}<br/><br/>
+exec sleep 1<br/>
+expect {<br/>
+-re $cmd_prompt {<br/>
+send &quot;uptime\r&quot;<br/>
+}<br/>
+}<br/>
+exec sleep 1<br/><br/><br/>
+#--------------------------------------------------<br/>
+expect {<br/>
+-re $cmd_prompt {<br/>
+send &quot;exit\r&quot;<br/>
+}<br/>
+}<br/><br/><br/>
+exit<br/>
+#interact<br/><br/>
+2,程序 运行的显示结果<br/><br/>
+[root@dev ~]# ./monitor_auto 209.209.94.107<br/>
+spawn ssh root@209.209.94.107<br/>
+root@209.209.94.107's password:<br/>
+Last login: Sun Feb 15 01:42:39 2009 from 201.103.105.49<br/><br/>
+[root@ws ~]#<br/>
+[root@ws ~]# df -h<br/>
+Filesystem ÈÝ ÒÑÓÃ ¿ÉÓÃ ÒÑÓÃ% ¹ÒÔصã<br/>
+/dev/mapper/VolGroup00-LogVol00<br/>
+133G 72G 55G 57% /<br/>
+/dev/sda1 99M 13M 82M 14% /boot<br/>
+none 1014M 0 1014M 0% /dev/shm<br/>
+209.209.94.109:/www/pics<br/>
+5.9T 5.6T 138G 98% /bank/bank1<br/>
+[root@ws ~]# free -m<br/>
+total used free shared buffers cached<br/>
+Mem: 2026 1955 71 0 72 1621<br/>
+-/+ buffers/cache: 261 1764<br/>
+Swap: 1983 68 1915<br/>
+[root@ws ~]# uptime<br/>
+01:48:00 up 561 days, 8:53, 2 users, load average: 0.13, 0.09, 0.07<br/>
+[root@ws ~]# [root@dev ~]#<br/><br/><br/>
+四，对此程序的详细说明:<br/>
+1,set loginuser &quot;root&quot;<br/>
+set用来定义变量，定义之后的代码中可以使用所定义的变量<br/>
+使用时注意需添加$符号<br/>
+使用时的例子: spawn ssh $loginuser@$ipaddr <br/><br/></p></div></div></div></div></div></div></span>
+</div></body></html> 

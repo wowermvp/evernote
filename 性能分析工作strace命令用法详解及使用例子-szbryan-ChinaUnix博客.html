@@ -1,0 +1,692 @@
+<html>
+<head>
+  <title>性能分析工作strace命令用法详解及使用例子-szbryan-ChinaUnix博客</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1202"/>
+<h1>性能分析工作strace命令用法详解及使用例子-szbryan-ChinaUnix博客</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px"><div style="word-wrap:break-word;"><div style="word-wrap:break-word;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1;font-family:宋体, Arial;background:rgb(243, 247, 249);"><div style="word-wrap:break-word;text-align:left;color:rgb(86, 86, 86);"><div style="word-wrap:break-word;"><div style="word-wrap:break-word;"><div style="word-wrap:break-word;background:rgb(255, 255, 255);"><div style="word-wrap:break-word;"><div style="word-wrap:break-word;color:rgb(102, 102, 102);line-height:26px;"><div style="font-size:16px;word-wrap:break-word;">
+						转载自：http://blog.csdn.net/ym012/article/details/7199687<br style="word-wrap:break-word;"/>
+<br style="word-wrap:break-word;"/>
+<h3 style="word-wrap:break-word;margin:0px;padding:0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">1 </span><span style="word-wrap:break-word;line-height:normal;">功能说明</span>
+</h3>
+<br style="word-wrap:break-word;line-height:normal;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">strace 命令是一种强大的工具</span><span style="word-wrap:break-word;line-height:normal;">, </span><span style="word-wrap:break-word;line-height:normal;">能够显示任何由用户空间程式发出的系统调用</span><span style="word-wrap:break-word;line-height:normal;">. </span><span style="word-wrap:break-word;line-height:normal;">strace 显示这些调用的参数并返回符号形式的值</span><span style="word-wrap:break-word;line-height:normal;">. </span><span style="word-wrap:break-word;line-height:normal;">strace 从内核接收信息</span><span style="word-wrap:break-word;line-height:normal;">, </span><span style="word-wrap:break-word;line-height:normal;">而且无需以任何特别的方式来构建内核</span><span style="word-wrap:break-word;line-height:normal;">. </span><span style="word-wrap:break-word;line-height:normal;">strace 的每一行输出包括系统调用名称,</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">然后是参数和返回值.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">下面记录几个常用option</span><span style="word-wrap:break-word;line-height:normal;">:</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-f -F选项告诉strace同时跟踪fork和vfork出来的进程</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-o xxx.txt 输出到某个文档</span><span style="word-wrap:break-word;line-height:normal;">. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e execve 只记录 execve 这类系统调用</span><span style="word-wrap:break-word;line-height:normal;">.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<h3 style="word-wrap:break-word;margin:0px;padding:0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<a name="t1" style="word-wrap:break-word;text-decoration:none;color:rgb(86, 86, 86);"></a><span style="word-wrap:break-word;line-height:normal;">2 </span><span style="word-wrap:break-word;line-height:normal;">详细用法</span>
+</h3>
+<br style="word-wrap:break-word;line-height:normal;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">usage: strace [-dffhiqrtttTvVxx] [-a column] [-e expr] ... [-o file]</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">              [-p pid] ... [-s strsize] [-u username] [-E var=val] ...</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">              [command [arg ...]]</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">   or: strace -c [-e expr] ... [-O overhead] [-S sortby] [-E var=val] ...</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">              [command [arg ...]]</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-c -- count time, calls, and errors for each syscall and report summary</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-f -- follow forks, -ff -- with output into separate files</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-F -- attempt to follow vforks, -h -- print help message</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-i -- print instruction pointer at time of syscall</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-q -- suppress messages about attaching, detaching, etc.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-r -- print relative timestamp, -t -- absolute timestamp, -tt -- with usecs</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-T -- print time spent in each syscall, -V -- print version</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-v -- verbose mode: print unabbreviated argv, stat, termio[s], etc. args</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-x -- print non-ascii strings in hex, -xx -- print all strings in hex</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-a column -- alignment COLUMN for printing syscall results (default 40)</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e expr -- a qualifying expression: option=[!]all or option=[!]val1[,val2]...</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">   options: trace, abbrev, verbose, raw, signal, read, or write</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-o file -- send trace output to FILE instead of stderr</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-O overhead -- set overhead for tracing syscalls to OVERHEAD usecs</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-p pid -- trace process with process id PID, may be repeated</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-s strsize -- limit length of print strings to STRSIZE chars (default 32)</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-S sortby -- sort syscall counts by: time, calls, name, nothing (default time)</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-u username -- run command as username handling setuid and/or setgid</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-E var=val -- put var=val in the environment for command</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-E var -- remove var from the environment for command</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<h3 style="word-wrap:break-word;margin:0px;padding:0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<a name="t2" style="word-wrap:break-word;text-decoration:none;color:rgb(86, 86, 86);"></a><span style="word-wrap:break-word;line-height:normal;">3 </span><span style="word-wrap:break-word;line-height:normal;">参数说明</span>
+</h3>
+<br style="word-wrap:break-word;line-height:normal;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-c 统计每一系统调用的所执行的时间,次数和出错的次数等.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-d 输出strace关于标准错误的调试信息.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-f 跟踪由fork调用所产生的子进程.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-ff 如果提供-o filename,则所有进程的跟踪结果输出到相应的filename.pid中,pid是各进程的进程号.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-F 尝试跟踪vfork调用.在-f时,vfork不被跟踪.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-h 输出简要的帮助信息.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-i 输出系统调用的入口指针.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-q 禁止输出关于脱离的消息.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-r 打印出相对时间关于每一个系统调用.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-t 在输出中的每一行前加上时间信息.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-tt 在输出中的每一行前加上时间信息,微秒级.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-ttt 微秒级输出,以秒了表示时间.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-T 显示每一调用所耗的时间.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-v 输出所有的系统调用.一些调用关于环境变量,状态,输入输出等调用由于使用频繁,默认不输出.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-V 输出strace的版本信息.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-x 以十六进制形式输出非标准字符串</span><span style="word-wrap:break-word;line-height:normal;">.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-xx 所有字符串以十六进制形式输出.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-a column</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">设置返回值的输出位置.默认 为40.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e expr</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">指定一个表达式,用来控制如何跟踪.格式如下:</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">[qualifier=][!]value1[,value2]...</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">qualifier
+只能是 trace,abbrev,verbose,raw,signal,read,write其中之一.value是用来限定的符号或数字.默认
+的 qualifier是 trace.感叹号是否定符号.例如-eopen等价于 -e trace=open,表示只跟踪open调用.而
+-etrace!=open表示跟踪除了open以外的其它调用.有两个特殊的符号 all 和 none.</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">注意有些shell使用!来执行历史记录里的命令,所以要使用\\.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e trace=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">只跟踪指定的系统调用.例如:-e trace=open,close,rean,write表示只跟踪这四个系统调用.默认的为set=all.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e trace=file</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">只跟踪有关文件操作的系统调用.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e trace=process</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">只跟踪有关进程控制的系统调用.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e trace=network</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">跟踪与网络有关的所有系统调用.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e strace=signal</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">跟踪所有与系统信号有关的系统调用</span><span style="word-wrap:break-word;line-height:normal;">.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e trace=ipc</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">跟踪所有与进程通讯有关的系统调用</span><span style="word-wrap:break-word;line-height:normal;">.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e abbrev=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">设定strace输出的系统调用的结果集.-v 等与 abbrev=none.默认为abbrev=all.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e raw=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">将指定的系统调用的参数以十六进制显示.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e signal=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">指定跟踪的系统信号.默认为all.如 signal=!SIGIO(或者signal=!io),表示不跟踪SIGIO信号.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e read=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">输出从指定文件中读出的数据.例如-e read=3,5</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-e write=set</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">输出写入到指定文件中的数据.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-o filename</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">将strace的输出写入文件filename</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-p pid</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">跟踪指定的进程pid.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-s strsize</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">指定输出的字符串的最大长度.默认为32.文件名一直全部输出.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">-u username</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">以username 的UID和GID执行被跟踪的命令.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><span style="word-wrap:break-word;color:#333333;font-family:Arial;font-size:14px;line-height:19px;"><span style="word-wrap:break-word;line-height:normal;"><span style="word-wrap:break-word;line-height:normal;">1 </span><span style="word-wrap:break-word;line-height:normal;">用<span style="word-wrap:break-word;font-family:宋体;line-height:normal;">strace</span><span style="word-wrap:break-word;font-family:黑体;line-height:normal;">调试程序</span></span></span><br style="word-wrap:break-word;line-height:normal;"/>
+<br style="word-wrap:break-word;line-height:normal;"/>
+</span></span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">在
+理想世界里, 每当一个程序不能正常执行一个功能 
+时, 它就会给出一个有用的错误提示, 告诉在足够的改正错误的线索. 但遗憾的是, 我们不是生活在理想世界里, 起码不总是生活在理想世界里. 有时
+候一个程序出现了问题, 无法找到原因. 这就是调试程序出现的原因. strace是一个必不可少的调试工具, strace用来监视系统调用. 不仅
+ 可以调试一个新开始的程序, 也可以调试一个已经在运行的程序(把strace绑定到一个已有的PID上 面). </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">首先让我们看一个真实的例子: </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">启动KDE时出现问题</span><span style="word-wrap:break-word;line-height:normal;">, </span><span style="word-wrap:break-word;line-height:normal;">前一段时间, 我在启动KDE的时候出了问题, KDE 的错误信息无法给我任何有帮助的线索. </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:5.15pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:584.25pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="779">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">_KDE_IceTransSocketCreateListener: failed to bind listener</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">_KDE_IceTransSocketUNIXCreateListener: ...SocketCreateListener() failed</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">_KDE_IceTransMakeAllCOTSServerListeners: failed to create listener for local</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">Cannot establish any listening sockets DCOPServer self-test failed.</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">对
+我来说这个错误信息没有太多意义, 只是一个对KDE 
+来说至关重要的负责进程间通信的程序无法启动. 我还可以知道这个错误和ICE协议(Inter Client Exchange)有关, 除此之 
+外, 我不知道什么是KDE启动出错的原因. 我决定采用strace看一下在启动 dcopserver时到底程序做了什么: </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:4.4pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:585pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="780">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">strace -f -F -o ~/dcop-strace.txt dcopserver</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">这
+里 -f -F选项告诉strace同时跟踪fork 
+和vfork出来的进程, -o选项把所有strace输出写到~/dcop-strace.txt里 面, dcopserver是要启动和调试的程 
+序. 再次出现错误之后, 我检查了错误输出文件dcop-strace.txt, 文件里有很多系统调用的记录. 在程序运行出错前的有关记录如下: </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">其
+中第一行显示程序试图创建/tmp/.ICE- 
+unix目录, 权限为0777, 这个操作因为目录已经存在而失败了. 第二个系统调用(lstat64)检查了目录状态, 并显示这个目录的权限是 
+0755, 这里出现了第一个程序运行错误的线索: 程序试图创建属性为0777的目录, 但是已经存在了一个属性为 0755的目录. 第三个系统调用
+ (unlink)试图删除一个文件, 但是这个文件并不存在. 这并不奇怪, 因为这个操作只是试图删掉可能存在的老文件. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">但
+是, 第四行确认了错误所在. 它试图绑定到/tmp 
+/.ICE-unix/dcop27207-1066844596, 但是出现了拒绝访问错误. ICE_unix目录的用户和组都是root, 并且只
+有所有者具有写权限. 一个非root用户无法在这个目录下面建立文件, 如果把目录属性改成0777,  则前面的操作有可能可以执行, 而这正是第一
+ 步错误出现时进行过的操作. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">所以我运行了chmod 0777 /tmp /.ICE-unix之后KDE就可以正常启动了, 问题解决了, 用strace进行跟踪调试只需要花很短的几分钟时间跟踪程序运行, 然后检查并分析 输出文件. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">说
+明: 运行chmod 0777只是一个测试, 一般 
+不要把一个目录设置成所有用户可读写, 同时不设置粘滞位(sticky bit). 给目录设置粘滞位可以阻止一个用户随意删除可写目录下面其它人的文
+ 件. 一般会发现/tmp目录因为这个原因设置了粘滞位. KDE可以正常启动之后, 运行chmod +t /tmp/.ICE-unix
+ 给.ICE_unix设置粘滞位. <br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<h3 style="word-wrap:break-word;margin:0px;padding:0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<a name="t3" style="word-wrap:break-word;text-decoration:none;color:rgb(86, 86, 86);"></a><span style="word-wrap:break-word;line-height:normal;">2 </span><span style="word-wrap:break-word;line-height:normal;">用</span><span style="word-wrap:break-word;line-height:normal;">strace</span><span style="word-wrap:break-word;line-height:normal;">解决库依赖问题</span>
+</h3>
+<br style="word-wrap:break-word;line-height:normal;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">starce 的
+另一个用处是解决和动态库相关的问题. 当对一个可执行文件运行ldd 
+时, 它会告诉程序使用的动态库和找到动态库的位置. 但是如果正在使用一个比较老的glibc版本(2.2或更早), 可能会有一个有bug的ldd程
+序, 它可能会报告在一个目录下发现一个动态库, 但是真正运行程序时动态连接程序 (/lib/ld-linux.so.2)却可能到另外一个目录去找
+动态连接库. 这通常因为/etc/ld.so.conf和 /etc/ld.so.cache文件不一致, 或者/etc/ld.so.cache被破
+ 坏. 在glibc 2.3.2版本上这个错误不会出现, 可能ld-linux的这个bug已经被解决了. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">尽
+管这样, ldd并不能把所有程序依赖的动态库列出 
+来, 系统调用dlopen可以在需要的时候自动调入需要的动态库, 而这些库可能不会被ldd列出来. 作为glibc的一部分的 
+NSS(Name Server Switch)库就是一个典型的例子, NSS的一个作用就是告诉应用程序到哪里去寻找系统帐号数据库. 应用程序不会
+直接连接到NSS库, glibc则会通 过dlopen自动调入NSS库. 如果这样的库偶然丢失, 不会被告知存在库依赖问题, 但这样的程序就无法
+ 通过用户名解析得到用户ID了. </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">让我 们看一个例子: </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">whoami程序会给出自己的用户名, 这个程序在一些 需要知道运行程序的真正用户的脚本程序里面非常有用, whoami的一个示 例输出如下:  </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:5.15pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:584.25pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="779">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 mkdir(&quot;/tmp/.ICE-unix&quot;, 0777) = -1 EEXIST (File exists)</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207</span><span style="word-wrap:break-word;line-height:normal;"> </span><span style="word-wrap:break-word;line-height:normal;">lstat64(&quot;/tmp/.ICE-unix&quot;, {st_mode=S_IFDIR|S_ISVTX|0755, st_size=4096, ...}) = 0</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 unlink(&quot;/tmp/.ICE-unix/dcop27207-1066844596&quot;) = -1 ENOENT (No such file or directory)</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 bind(3, {sin_family=AF_UNIX, path=&quot;/tmp/.ICE-unix/dcop27207-1066844596&quot;}, 38) = -1 EACCES (Permission denied)</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 write(2, &quot;_KDE_IceTrans&quot;, 13) = 13</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 write(2, &quot;SocketCreateListener: failed to &quot;..., 46) = 46</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 close(3) = 0 27207 write(2, &quot;_KDE_IceTrans&quot;, 13) = 13</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 write(2, &quot;SocketUNIXCreateListener: ...Soc&quot;..., 59) = 59</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 umask(0) = 0 27207 write(2, &quot;_KDE_IceTrans&quot;, 13) = 13</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 write(2, &quot;MakeAllCOTSServerListeners: fail&quot;..., 64) = 64</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">27207 write(2, &quot;Cannot establish any listening s&quot;..., 39) = 39</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">假设因为某种原因在升级 glibc的过程中负责用户名 和用户ID转换的库NSS丢失, 我们可以通过把nss库改名来模拟这个环境:  </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:4.4pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:583.5pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="778">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;"># whoami</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">root</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">这里可以看到, 运行whoami时出现了错 误, ldd程序的输出不会提供有用的帮助:  </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">只会看到whoami依赖Libc.so.6和ld-linux.so.2, 它没有给出运行 whoami所必须的其它库. 这里时用strace跟踪 whoami时的输出:  </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:4.4pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:583.5pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="778">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;"># mv /lib/libnss_files.so.2 /lib/libnss_files.so.2.backup</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;"># whoami</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">whoami: cannot find username for UID 0</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">可以发现在不同目录下面查找libnss.so.2的尝 试, 但是都失败了. 如果没有strace这样的工具, 很难发现这个错误是由于缺少动态库造成的. 现在只需要找到libnss.so.2并把它放回 到正确的位置就可以了. <br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span>
+</p>
+<h3 style="word-wrap:break-word;margin:0px;padding:0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<a name="t4" style="word-wrap:break-word;text-decoration:none;color:rgb(86, 86, 86);"></a><span style="word-wrap:break-word;line-height:normal;">3 </span><span style="word-wrap:break-word;line-height:normal;">限制<span style="word-wrap:break-word;font-family:宋体;line-height:normal;">strace</span><span style="word-wrap:break-word;font-family:黑体;line-height:normal;">只跟踪特定的系统调用</span></span>
+</h3>
+<br style="word-wrap:break-word;line-height:normal;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">如果 已经知道要找什么, 可以让strace只跟踪一些类型的系统调用. 例如, 需要看看在configure脚本里面执行的程序, 需要监视的系统调用就 是execve. 让strace只记录execve的调用用这个命令:  </span>
+</p>
+<table style="line-height:normal;font-size:inherit;font-style:inherit;font-variant:inherit;word-wrap:break-word;table-layout:auto!important;font-weight:inherit;border-collapse:collapse;margin-left:3.65pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;">
+	<tbody style="word-wrap:break-word;line-height:normal;">
+		<tr style="word-wrap:break-word;line-height:normal;">
+			<td style="line-height:normal;margin:0px;word-wrap:break-word;font-family:Arial;word-break:break-all;visibility:visible!important;zoom:1!important;padding:0px;width:584.25pt;padding-top:0pt;padding-right:5.4pt;padding-bottom:0pt;padding-left:5.4pt;background-color:#EDF4F8;" valign="center" width="779">
+				<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+					<span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;"># ldd /usr/bin/whoami</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">libc.so.6 =&gt; /lib/libc.so.6 (0x4001f000)</span><span style="word-wrap:break-word;line-height:normal;"><br style="word-wrap:break-word;line-height:normal;"/>
+</span><span style="word-wrap:break-word;line-height:normal;">/lib/ld-linux.so.2 =&gt; /lib/ld-linux.so.2 (0x40000000)</span>
+				</p>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">部分输出结果为:  </span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">已
+经看到了, strace不仅可以被程序员使用, 普 
+通系统管理员和用户也可以使用strace来调试系统错误. 必须承认, strace的输出不总是容易理解, 但是很多输出对大多数人来说是不重要 
+的. 会慢慢学会从大量输出中找到可能需要的信息, 像权限错误, 文件未找到之类的, 那时strace就会成为一个有力的工具了.</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;">使用例子(来自网络)</span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;line-height:normal;margin-bottom:0pt;margin-top:0pt;">
+	<span style="word-wrap:break-word;line-height:normal;"><span style="word-wrap:break-word;color:#333333;font-family:Verdana,Arial,Tahoma;font-size:14px;line-height:25px;"></span></span>
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	strace是一个有用的小工具 – 大多数Linux系统默认已经安装 – 
+可以通过跟踪系统调用来让你知道一个程序在后台所做的事情。Strace是一个基础的调试工具；但是即便你不是在跟踪一个问题的时候它也是一个极好的软
+件。它能告诉你很多关于一个Linux程序怎样工作的信息。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　一个系统调用就是一个从应用程序到内核的消息。现代计算机系统中的用户程序都是运行在一个沙箱里面：它们不允许直接与计算机交互（因此你不能像以前那
+样往寄存器里面塞一些数据来完成某些工作）。取而代之的是，每当程序需要与系统交互的时候，他就发送一个请求（系统调用）到内核。Strace就是用来跟
+踪这些消息的。因此请记住，如果你有一会儿看不到任何strace的输出，这也并不代表你的程序发生了阻塞。很有可能是程序在自己的沙箱里面做某些事情，
+而这些事情并不需要与系统的其它部分发生通信。
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+<span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;">用法(详细可见第二页):</span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　Strace程序固然能做这些事情，但它总是直接将所有的东西输出到标准错误文件（也就是屏幕）。就像你将看到的那样，它会产生大量的输出；因此通常来说你最好用-o选项来设置一个输出文件：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　strace -o outputfile.txt program<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　有一些编辑器（如vim）能够对strace的输出进行语法高亮显示。这意味着文件的不同部分，以及每一行的不同部分都会用不同的颜色来显示。这个功能相当有用，我强烈建议你使用一个这样的编辑器来查看strace的输出。
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+<span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;">命令输出解释:</span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　试一试strace -o strace.out ls –l，然后用你喜欢的编辑器打开strace.out，并且启用语法高亮。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　在深入探索细节之前，先来看看每一行的基本结构。Strace记录了程序所发出的每一次系统调用，并且各自显示在单独的一行中。系统调用的名字出现在
+每一行的起始，参数出现在括号里面，返回值则在等号后面，是一行的终结。命令ls –l的头几行输出基本上是如下这个样子：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　execve(&quot;/bin/ls&quot;, [&quot;ls&quot;, &quot;-l&quot;], [/* 21 vars */])      = 0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　brk(0)                                                = 0x619000<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x2b412f2b9000<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　uname({sys=&quot;Linux&quot;, node=&quot;juliet.example.com&quot;, ...})  = 0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　第一行显示的是一个execve的系统调用，其参数如下：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　·当前可执行程序的位置 (/bin/ls)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　·一个从命令行传递过来的参数数组 (ls与-l)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　·一个指向21个环境变量的指针，也是传递给该程序的。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　返回值为0，表示执行成功。这就是所有系统调用都相同的基本结构。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　所有在后台的内幕<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　接下来的几行跟内存管理有关。Brk改变数据段的大小，而mmap用来返回一个进程可用的内存位置。（如需要更多信息，请尝试man 2 mmap。）<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　再下面一行是uname系统调用，用来显示系统的详细信息。Uname所返回的是一个指针，它指向存储这些信息的一个数据结构。系统调用经常会返回指
+针：这是一个内存引用，告诉你到哪里去寻找这些信息。如果你是一台计算机，这非常有用，但如果你是一个人就未必了；因此为了方便起见，每当
+__strace__看到一个指针的时候，它就自动帮你进行查找，然后返回（一部分）指针指向的内容。这正是上面在uname系统调用那里所发生的事情。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　如果你继续查看strace的输出，你就会看到很多access和open的调用。Access查找一个文件（如果没找到就返回-1和一个错误码），
+然后检查当前程序是否有访问权限。Open试图打开一个文件，如果成功的话就会将其连接到一个文件句柄（从3开始，因为0-2被用于STDIN、
+STDOUT和STDERR）并返回这个句柄。然后，fstat会获取连接到该句柄的文件的有关信息，句柄通过第一个参数传递而来，就像这样（注意第二个
+参数是一个指针！）：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　fstat(3, {st_mode=S_IFREG|0644, st_size=53482, ...}) = 0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　在另一个mmap调用以后，文件将会被关闭。在ls的输出中，你会看到这个序列在库文件上面重复许多遍。而在那以后，对于每一个列出的文件还有
+lstat、lgetxattr和getxattr等调用。这都是对每个文件获取信息用的。最后，每个文件都会按这种方式写到输出文件：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　stat(&quot;/etc/localtime&quot;, {st_mode=S_IFREG|0644, st_size=3661, ...}) = 0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　write(1, &quot;-rw-------  1 juliet juliet    10&quot;..., 72) = 72<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　编号为1和2的文件句柄 (STDOUT和STDERR)将会关闭，于是一切都完成了。
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　这只是一个关于阅读strace输出的非常快速的介绍。要深入理解的话，最好的建议是去查看每个系统调用的手册页（man 2 
+&lt;系统调用名&gt;），并且尝试着在各种程序中使用strace跟踪输出。在各种语言的‘Hello, 
+World’程序上使用strace是一件非常有趣的事情。你还可以检查某个已经在运行的程序，然后用strace的-p 
+PID选项来实时连接到其中的某一个。祝你在使用strace深入解剖你的程序时其乐无穷！
+</p>
+<span style="word-wrap:break-word;color:#333333;font-family:Verdana,Arial,Tahoma;font-size:14px;line-height:25px;"></span> 
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	<span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;">linux的strace命令(详解)</span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+下文详细讲述linux下的strace命令的用法。
+</p>
+<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	强大的strace 命令工具，它能够显示所有由用户空间程序发出的系统调用。
+</p>
+<p style="word-wrap:break-word;padding:0px;margin:5px 0px;padding-top:0px;padding-bottom:0px;margin-top:0px;margin-bottom:0px;">
+	　　strace 显示这些调用的参数并返回符号形式的值。strace 从内核接收信息，而且不需要以任何特殊的方式来构建内核。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　下面记录几个常用 option .<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　1 -f -F选项告诉strace同时跟踪fork和vfork出来的进程<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　2 -o xxx.txt 输出到某个文件。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　3 -e execve 只记录 execve 这类系统调用<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　—————————————————<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　进程无法启动，软件运行速度突然变慢，程序的”SegmentFault”等等都是让每个Unix系统用户头痛的问题，<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　本文通过三个实际案例演示如何使用truss、strace和ltrace这三个常用的调试工具来快速诊断软件的”疑难杂症”。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　truss和strace用来跟踪一个进程的系统调用或信号产生的情况，而 ltrace用来跟踪进程调用库函数的情况。truss是早期为System V R4开发的调试程序，包括Aix、FreeBSD在内的大部分Unix系统都自带了这个工具；<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　而strace最初是为SunOS系统编写的，ltrace最早出现在GNU/DebianLinux中。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　这两个工具现在也已被移植到了大部分Unix系统中，大多数Linux发行版都自带了strace和ltrace，而FreeBSD也可通过Ports安装它们。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　你不仅可以从命令行调试一个新开始的程序，也可以把truss、strace或ltrace绑定到一个已有的PID上来调试一个正在运行的程序。三个调试工具的基本使用方法大体相同，下面仅介绍三者共有，而且是最常用的三个命令行参数：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　-f ：除了跟踪当前进程外，还跟踪其子进程。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　-o file ：将输出信息写到文件file中，而不是显示到标准错误输出（stderr）。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　-p pid ：绑定到一个由pid对应的正在运行的进程。此参数常用来调试后台进程。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 使用上述三个参数基本上就可以完成大多数调试任务了，下面举几个命令行例子：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　truss -o ls.truss ls -al： 跟踪ls -al的运行，将输出信息写到文件/tmp/ls.truss中。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　strace -f -o vim.strace vim： 跟踪vim及其子进程的运行，将输出信息写到文件vim.strace。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　ltrace -p 234： 跟踪一个pid为234的已经在运行的进程。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 三个调试工具的输出结果格式也很相似，以strace为例：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　brk(0) = 0×8062aa8<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　brk(0×8063000) = 0×8063000<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　mmap2(NULL, 4096, PROT_READ, MAP_PRIVATE, 3, 0×92f) = 0×40016000<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　每一行都是一条系统调用，等号左边是系统调用的函数名及其参数，右边是该调用的返回值。 truss、strace和ltrace的工作原理大同小异，都是使用ptrace系统调用跟踪调试运行中的进程，详细原理不在本文讨论范围内，有兴趣可以参考它们的源代码。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　举两个实例演示如何利用这三个调试工具诊断软件的”疑难杂症”：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+<span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"><span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;background-color:#AFEEEE;">案例一：运行clint出现Segment
+ Fault错误</span></span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　操作系统：FreeBSD-5.2.1-release<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　clint是一个C++静态源代码分析工具，通过Ports安装好之后，运行：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# clint foo.cpp<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　Segmentation fault (core dumped)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 在Unix系统中遇见”Segmentation Fault”就像在MS Windows中弹出”非法操作”对话框一样令人讨厌。OK，我们用truss给clint”把把脉”：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# truss -f -o clint.truss clint<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　Segmentation fault (core dumped)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# tail clint.truss<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: read(0×6,0×806f000,0×1000) = 4096 (0×1000)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: fstat(6,0xbfbfe4d0) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: fcntl(0×6,0×3,0×0) = 4 (0×4)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: fcntl(0×6,0×4,0×0) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: close(6) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 739: stat(”/root/.clint/plugins”,0xbfbfe680) ERR#2 ‘No such file or directory’<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　SIGNAL 11<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　SIGNAL 11<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　Process stopped because of: 16<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　process exit, rval = 139<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　我们用truss跟踪clint的系统调用执行情况，并把结果输出到文件clint.truss，然后用tail查看最后几行。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　注意看clint执行的最后一条系统调用（倒数第五行）：stat(”/root/.clint/plugins”,0xbfbfe680) 
+ERR#2 ‘No such file or 
+directory’，问题就出在这里：clint找不到目录”/root/.clint/plugins”，从而引发了段错误。怎样解决？很简单： 
+mkdir -p /root/.clint/plugins，不过这次运行clint还是会”Segmentation 
+Fault”9。继续用truss跟踪，发现clint还需要这个目录”/root/.clint/plugins/python”，建好这个目录后
+ clint终于能够正常运行了。
+</p>
+<span style="word-wrap:break-word;color:#333333;font-family:Verdana,Arial,Tahoma;font-size:14px;line-height:25px;"><span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"><span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;background-color:#AFEEEE;">案例二：vim启动速度明显变慢</span></span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　操作系统：FreeBSD-5.2.1-release<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　vim版本为6.2.154，从命令行运行vim后，要等待近半分钟才能进入编辑界面，而且没有任何错误输出。仔细检查了.vimrc和所有的vim
+脚本都没有错误配置，在网上也找不到类似问题的解决办法，难不成要hacking source code？没有必要，用truss就能找到问题所在：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# truss -f -D -o vim.truss vim<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　这里-D参数的作用是：在每行输出前加上相对时间戳，即每执行一条系统调用所耗费的时间。我们只要关注哪些系统调用耗费的时间比较长就可以了，用less仔细查看输出文件vim.truss，很快就找到了疑点：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000021511 socket(0×2,0×1,0×0) = 4 (0×4)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000014248 setsockopt(0×4,0×6,0×1,0xbfbfe3c8,0×4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000013688 setsockopt(0×4,0xffff,0×8,0xbfbfe2ec,0×4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000203657 connect(0×4,{ AF_INET 10.57.18.27:6000 },16) ERR#61 ‘Connection refused’<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000017042 close(4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 1.009366553 nanosleep(0xbfbfe468,0xbfbfe460) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000019556 socket(0×2,0×1,0×0) = 4 (0×4)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000013409 setsockopt(0×4,0×6,0×1,0xbfbfe3c8,0×4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000013130 setsockopt(0×4,0xffff,0×8,0xbfbfe2ec,0×4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000272102 connect(0×4,{ AF_INET 10.57.18.27:6000 },16) ERR#61 ‘Connection refused’<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 0.000015924 close(4) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　735: 1.009338338 nanosleep(0xbfbfe468,0xbfbfe460) = 0 (0×0)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　vim试图连接10.57.18.27这台主机的6000端口（第四行的connect（）），连接失败后，睡眠一秒钟继续重试（第6行的 
+nanosleep（））。以上片断循环出现了十几次，每次都要耗费一秒多钟的时间，这就是vim明显变慢的原因。可是，你肯定会纳闷：”vim怎么会无
+缘无故连接其它计算机的6000端口呢？”。问得好，那么请你回想一下6000是什么服务的端口？没错，就是X 
+Server。看来vim是要把输出定向到一个远程X 
+Server，那么Shell中肯定定义了DISPLAY变量，查看.cshrc，果然有这么一行：setenv
+ DISPLAY ${REMOTEHOST}:0，把它注释掉，再重新登录，问题就解决了。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+<span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"><span style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;background-color:#AFEEEE;">案例三：用调试工具掌握软件的工作原理</span></span><br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+ 　　操作系统：Red Hat Linux 9.0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　用调试工具实时跟踪软件的运行情况不仅是诊断软件”疑难杂症”的有效的手段，也可帮助我们理清软件的”脉络”，即快速掌握软件的运行流程和工作原理，
+不失为一种学习源代码的辅助方法。下面这个案例展现了如何使用strace通过跟踪别的软件来”触发灵感”，从而解决软件开发中的难题的。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　大家都知道，在进程内打开一个文件，都有唯一一个文件描述符（fd：file descriptor）与这个文件对应。而本人在开发一个软件过程中遇到这样一个问题：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　已知一个fd，如何获取这个fd所对应文件的完整路径？不管是Linux、FreeBSD或是其它Unix系统都没有提供这样的API，怎么办呢？我
+们换个角度思考：Unix下有没有什么软件可以获取进程打开了哪些文件？如果你经验足够丰富，很容易想到lsof，使用它既可以知道进程打开了哪些文件，
+也可以了解一个文件被哪个进程打开。好，我们用一个小程序来试验一下lsof，看它是如何获取进程打开了哪些文件。lsof： 显示进程打开的文件。<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　/* testlsof.c */<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　#include #include #include #include #include<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　int main(void)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　{<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 open(”/tmp/foo”, O_CREAT|O_RDONLY); /* 打开文件/tmp/foo */<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 sleep(1200); /* 睡眠1200秒，以便进行后续操作 */<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 return 0;<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　}<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　将testlsof放入后台运行，其pid为3125。命令lsof -p 3125查看进程3125打开了哪些文件，我们用strace跟踪lsof的运行，输出结果保存在lsof.strace中：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# gcc testlsof.c -o testlsof<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# ./testlsof &amp;<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　[1] 3125<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# strace -o lsof.strace lsof -p 3125<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　我们以”/tmp/foo”为关键字搜索输出文件lsof.strace，结果只有一条：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# grep ‘/tmp/foo’ lsof.strace<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　readlink(”/proc/3125/fd/3″, “/tmp/foo”, 4096) = 8<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　原来lsof巧妙的利用了/proc/nnnn/fd/目录（nnnn为pid）：Linux内核会为每一个进程在/proc/建立一个以其pid为
+名的目录用来保存进程的相关信息，而其子目录fd保存的是该进程打开的所有文件的fd。目标离我们很近了。好，我们到/proc/3125/fd/看个究
+竟：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# cd /proc/3125/fd/<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# ls -l<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　total 0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　lrwx—— 1 root root 64 Nov 5 09:50 0 -&gt; /dev/pts/0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　lrwx—— 1 root root 64 Nov 5 09:50 1 -&gt; /dev/pts/0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　lrwx—— 1 root root 64 Nov 5 09:50 2 -&gt; /dev/pts/0<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　lr-x—— 1 root root 64 Nov 5 09:50 3 -&gt; /tmp/foo<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　# readlink /proc/3125/fd/3<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　/tmp/foo<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　答案已经很明显了：/proc/nnnn/fd/目录下的每一个fd文件都是符号链接，而此链接就指向被该进程打开的一个文件。我们只要用readlink()系统调用就可以获取某个fd对应的文件了，代码如下：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　#include #include #include #include #include #include<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　int get_pathname_from_fd(int fd, char pathname[], int n)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　{<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 char buf[1024];<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 pid_t pid;<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 bzero(buf, 1024);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 pid = getpid();<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 snprintf(buf, 1024, “/proc/%i/fd/%i”, pid, fd);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 return readlink(buf, pathname, n);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　}<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　int main(void)<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　{<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 int fd;<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 char pathname[4096];<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 bzero(pathname, 4096);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 fd = open(”/tmp/foo”, O_CREAT|O_RDONLY);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 get_pathname_from_fd(fd, pathname, 4096);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 printf(”fd=%d; pathname=%sn”, fd, pathname);<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　 return 0;<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　}<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　出于安全方面的考虑，在FreeBSD 5 
+之后系统默认已经不再自动装载proc文件系统，因此，要想使用truss或strace跟踪程序，你必须手工装载proc文件系统：mount -t 
+procfs proc /proc；或者在/etc/fstab中加上一行：<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　<br style="word-wrap:break-word;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px;margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;"/>
+　　proc /proc procfs rw 0 0 <br style="word-wrap:break-word;"/>
+</span>                                   </div></div></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

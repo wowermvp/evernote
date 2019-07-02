@@ -1,0 +1,137 @@
+<html>
+<head>
+  <title>mysql读写分离</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1432"/>
+<h1>mysql读写分离</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><font color="#DE5700">一、环境介绍</font><div>Master-IP：10.0.0.201</div><div>Slave-IP：10.0.0.202</div><div>Amoeba-IP：10.0.0.203</div><div><font color="#A74500">二、安装JDK</font></div><div># mkdir /Amoeba</div><div># tar -zxf jdk-7u40-linux-x64.tar.gz -C /Amoeba/</div><div># vim /etc/profile</div><div>JAVA_HOME=/Amoeba/jdk.7.0_40</div><div>export JAVA_HOME</div><div>PATH=$JAVA_HOME/bin:$PATH</div><div>export PATH</div><div>CLASSPATH=.:$JAVA_HOME/lib/tools.jar:$JAVA_HOME/lib/dt.jar:$CLASSPATH</div><div>export CLASSPATH</div><div># java -version</div><div>java version &quot;1.7.0_40&quot;</div><div>Java(TM) SE Runtime Environment (build 1.7.0_40-b43)<br/>
+Java HotSpot(TM) 64-Bit Server VM (build 24.0-b56, mixed mode)</div><div><font color="#DE5700">三、安装Amoeba</font><br/>
+# unzip amoeba-mysql-1.3.1-BETA.zip -d /usr/local/amoeba/<br/>
+# chmod -R +x /usr/local/amoeba/bin/</div><div><font color="#DE5700">四、主从授权</font><br/>
+mysql&gt;grant all privileges on *.* to 'amobea'@'%' identified by 'amoeba123';<br/>
+mysql&gt;flush privileges;</div><div><font color="#DE5700">五、配置Amoeba文件</font><br/>
+# cd /usr/local/amoeba/conf<br/>
+# vim amoeba.xml<br/><font color="#DE5700">更改的第一个区域</font><br/>
+#========================================================<br/><font color="#DE5700">&lt;!-- proxy server绑定的端口 --&gt;</font><br/>
+               &lt;property name=&quot;port&quot;&gt;9006&lt;/property&gt;<br/><br/>
+               <font color="#DE5700">&lt;!-- proxy server绑定的IP --&gt;</font><br/><br/>
+               &lt;property name=&quot;ipAddress&quot;&gt;<font color="#E30000">10.0.0.203</font>&lt;/property&gt;<br/><br/>
+               &lt;!-- proxy server net IO Read thread size --&gt;<br/>
+               &lt;property name=&quot;readThreadPoolSize&quot;&gt;20&lt;/property&gt;<br/><br/>
+               &lt;!-- proxy server client process thread size --&gt;<br/>
+               &lt;property name=&quot;clientSideThreadPoolSize&quot;&gt;30&lt;/property&gt;<br/><br/>
+               &lt;!-- mysql server data packet process thread size --&gt;<br/>
+               &lt;property name=&quot;serverSideThreadPoolSize&quot;&gt;30&lt;/property&gt;<br/><br/>
+               &lt;!-- socket Send and receive BufferSize(unit:K)  --&gt;<br/>
+               &lt;property name=&quot;netBufferSize&quot;&gt;128&lt;/property&gt;<br/><br/>
+               &lt;!-- Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm). --&gt;<br/>
+               &lt;property name=&quot;tcpNoDelay&quot;&gt;true&lt;/property&gt;<br/><br/>
+               <font color="#DE5700">&lt;!-- 对外验证的用户名 --&gt;</font><br/>
+               &lt;property name=&quot;user&quot;&gt;<font color="#E30000">root</font>&lt;/property&gt;<br/><br/>
+               <font color="#DE5700">&lt;!-- 对外验证的密码 --&gt;</font><br/><br/>
+               &lt;property name=&quot;password&quot;&gt;<font color="#E30000">123456</font>&lt;/property&gt;<br/><br/><font color="#DE5700">更改的第二个区域《配置master端登录的信息》</font><br/>
+#========================================================            <br/>
+               &lt;dbServer name=&quot;server1&quot;&gt;<br/><br/>
+                       <font color="#DE5700">&lt;!-- PoolableObjectFactory实现类 --&gt;</font><br/>
+                       &lt;factoryConfig class=&quot;com.meidusa.amoeba.mysql.net.MysqlServerConnectionFactory&quot;&gt;<br/>
+                               &lt;property name=&quot;manager&quot;&gt;defaultManager&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 真实mysql数据库端口 --&gt;</font><br/>
+                               &lt;property name=&quot;port&quot;&gt;<font color="#E30000">3306</font>&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 真实mysql数据库IP --&gt;</font><br/>
+                               &lt;property name=&quot;ipAddress&quot;&gt;<font color="#E30000">10.0.0.201</font>&lt;/property&gt;<br/>
+                               &lt;property name=&quot;schema&quot;&gt;test&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 用于登陆mysql的用户名 --&gt;</font><br/>
+                               &lt;property name=&quot;user&quot;&gt;<font color="#E30000">amobea</font>&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 用于登陆mysql的密码 --&gt;</font><br/><br/><br/>
+                               &lt;property name=&quot;password&quot;&gt;<font color="#E30000">amoeba123</font>&lt;/property&gt;<br/><br/><br/>
+                       &lt;/factoryConfig&gt;<br/><br/>
+                       <font color="#DE5700">&lt;!-- ObjectPool实现类 --&gt;</font><br/>
+                       &lt;poolConfig class=&quot;com.meidusa.amoeba.net.poolable.PoolableObjectPool&quot;&gt;<br/>
+                               &lt;property name=&quot;maxActive&quot;&gt;200&lt;/property&gt;<br/>
+                               &lt;property name=&quot;maxIdle&quot;&gt;200&lt;/property&gt;<br/>
+                               &lt;property name=&quot;minIdle&quot;&gt;10&lt;/property&gt;<br/>
+                               &lt;property name=&quot;minEvictableIdleTimeMillis&quot;&gt;600000&lt;/property&gt;<br/>
+                               &lt;property name=&quot;timeBetweenEvictionRunsMillis&quot;&gt;600000&lt;/property&gt;<br/>
+                               &lt;property name=&quot;testOnBorrow&quot;&gt;true&lt;/property&gt;<br/>
+                               &lt;property name=&quot;testWhileIdle&quot;&gt;true&lt;/property&gt;<br/>
+                       &lt;/poolConfig&gt;<br/>
+               &lt;/dbServer&gt;<br/><br/><font color="#DE5700">更改的第三个区域《配置slave端登录的信息》</font><br/>
+#========================================================                 <br/><br/>
+&lt;dbServer name=&quot;server2&quot;&gt;<br/><br/>
+                       <font color="#DE5700">&lt;!-- PoolableObjectFactory实现类 --&gt;</font><br/>
+                       &lt;factoryConfig class=&quot;com.meidusa.amoeba.mysql.net.MysqlServerConnectionFactory&quot;&gt;<br/>
+                               &lt;property name=&quot;manager&quot;&gt;defaultManager&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 真实mysql数据库端口 --&gt;</font><br/>
+                               &lt;property name=&quot;port&quot;&gt;<font color="#E30000">3306</font>&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 真实mysql数据库IP --&gt;</font><br/>
+                               &lt;property name=&quot;ipAddress&quot;&gt;<font color="#E30000">10.0.0.202</font>&lt;/property&gt;<br/>
+                               &lt;property name=&quot;schema&quot;&gt;test&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 用于登陆mysql的用户名 --&gt;</font><br/>
+                               &lt;property name=&quot;user&quot;&gt;<font color="#E30000">amobea</font>&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 用于登陆mysql的密码 --&gt;</font><br/><br/><br/>
+                               &lt;property name=&quot;password&quot;&gt;<font color="#E30000">amoeba123</font>&lt;/property&gt;<br/><br/><br/>
+                       &lt;/factoryConfig&gt;<br/><br/>
+                       <font color="#DE5700">&lt;!-- ObjectPool实现类 --&gt;</font><br/>
+                       &lt;poolConfig class=&quot;com.meidusa.amoeba.net.poolable.PoolableObjectPool&quot;&gt;<br/>
+                               &lt;property name=&quot;maxActive&quot;&gt;200&lt;/property&gt;<br/>
+                               &lt;property name=&quot;maxIdle&quot;&gt;200&lt;/property&gt;<br/>
+                               &lt;property name=&quot;minIdle&quot;&gt;10&lt;/property&gt;<br/>
+                               &lt;property name=&quot;minEvictableIdleTimeMillis&quot;&gt;600000&lt;/property&gt;<br/>
+                               &lt;property name=&quot;timeBetweenEvictionRunsMillis&quot;&gt;600000&lt;/property&gt;<br/>
+                               &lt;property name=&quot;testOnBorrow&quot;&gt;true&lt;/property&gt;<br/>
+                               &lt;property name=&quot;testWhileIdle&quot;&gt;true&lt;/property&gt;<br/>
+                       &lt;/poolConfig&gt;<br/>
+               &lt;/dbServer&gt;               <br/><br/><font color="#DE5700">更改的第四个区域《配置master和slave负载均衡池(pool)》</font><br/>
+#=======================================================     <br/>
+               &lt;dbServer name=&quot;<font color="#E30000">master</font>&quot; virtual=&quot;true&quot;&gt;<br/>
+                       &lt;poolConfig class=&quot;com.meidusa.amoeba.server.MultipleServerPool&quot;&gt;<br/>
+                               <font color="#DE5700">&lt;!-- 负载均衡参数 1=ROUNDROBIN , 2=WEIGHTBASED , 3=HA--&gt;</font><br/>
+                               &lt;property name=&quot;loadbalance&quot;&gt;1&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 参与该pool负载均衡的poolName列表以逗号分割 --&gt;</font><br/>
+                               &lt;property name=&quot;poolNames&quot;&gt;server1&lt;/property&gt;<br/>
+                       &lt;/poolConfig&gt;<br/>
+               &lt;/dbServer&gt;<br/><br/><br/>
+               &lt;dbServer name=&quot;<font color="#E30000">slave</font>&quot; virtual=&quot;true&quot;&gt;<br/>
+                       &lt;poolConfig class=&quot;com.meidusa.amoeba.server.MultipleServerPool&quot;&gt;<br/>
+                               <font color="#DE5700">&lt;!-- 负载均衡参数 1=ROUNDROBIN , 2=WEIGHTBASED , 3=HA--&gt;</font><br/>
+                               &lt;property name=&quot;loadbalance&quot;&gt;1&lt;/property&gt;<br/><br/>
+                               <font color="#DE5700">&lt;!-- 参与该pool负载均衡的poolName列表以逗号分割 --&gt;</font><br/>
+                               &lt;property name=&quot;poolNames&quot;&gt;<font color="#E30000">server1,server2</font>&lt;/property&gt;<br/>
+                       &lt;/poolConfig&gt;<br/>
+               &lt;/dbServer&gt;<br/><br/><font color="#DE5700">更改的第五个区域《配置master和slave读写分离》</font><br/>
+#=======================================================                <br/>
+&lt;queryRouter class=&quot;com.meidusa.amoeba.mysql.parser.MysqlQueryRouter&quot;&gt;<br/>
+               &lt;property name=&quot;ruleConfig&quot;&gt;${amoeba.home}/conf/rule.xml&lt;/property&gt;<br/>
+               &lt;property name=&quot;functionConfig&quot;&gt;${amoeba.home}/conf/functionMap.xml&lt;/property&gt;<br/>
+               &lt;property name=&quot;ruleFunctionConfig&quot;&gt;${amoeba.home}/conf/ruleFunctionMap.xml&lt;/property&gt;<br/>
+               &lt;property name=&quot;LRUMapSize&quot;&gt;1500&lt;/property&gt;<br/>
+               <font color="#DE5700">&lt;!-- 配置master和slave读写分离 Begin--&gt;</font><br/>
+               &lt;property name=&quot;defaultPool&quot;&gt;<font color="#E30000">master</font>&lt;/property&gt;<br/>
+               &lt;property name=&quot;writePool&quot;&gt;<font color="#E30000">master</font>&lt;/property&gt;<br/>
+               &lt;property name=&quot;readPool&quot;&gt;<font color="#E30000">slave</font>&lt;/property&gt;<br/>
+              <font color="#DE5700">&lt;!-- 配置master和slave读写分离  End--&gt;</font><br/>
+               &lt;property name=&quot;needParse&quot;&gt;true&lt;/property&gt;<br/>
+       &lt;/queryRouter&gt;<br/><br/><font color="#DE5700">六、修改log4j.xml 取消日志文件生成（太大了，磁盘很容易满）</font><br/>
+&lt;param name=&quot;file&quot; value=&quot;${amoeba.home}/logs/project.log&quot;/&gt;<br/>
+改成<br/>
+&lt;param name=&quot;file&quot; value=&quot;&lt;![CDATA[${amoeba.home}/logs/project.log&gt;/dev/null]]&gt;&quot;/&gt;<br/><br/><font color="#DE5700">七、修改Amoeba启动脚本</font><br/>
+# vim /usr/local/amoeba/bin/amoeba<br/>
+#DEFAULT_OPTS=&quot;-server -Xms256m -Xmx256m -Xss128k&quot; 将此行注释掉，增加一下行<br/>
+DEFAULT_OPTS=&quot;-server -Xms256m -Xmx256m -Xss256k&quot;  增加这一行</div><div><font color="#DE5700">八、启动Amoeba脚本</font><br/>
+# nohup bash -x /usr/local/amoeba/bin/amoeba &amp;<br/>
+# cat nohup.out 日志是否成功？<br/>
+# ps -ef | grep amoeba   查看进程是否启动成功<br/>
+root      1896  1637  1 03:28 pts/3    00:00:06 /Amoeba/jdk1.7.0_40/bin/java -server -Xms256m -Xmx256m -Xss256k -Damoeba.home=/usr/local/amoeba - Dclassworlds.conf=/usr/local/amoeba/bin/amoeba.classworlds -classpath /usr/local/amoeba/lib/classworlds-1.0.jar org.codehaus.classworlds.Launcher</div><div><br/></div></span>
+</div></body></html> 

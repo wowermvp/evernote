@@ -1,0 +1,213 @@
+<html>
+<head>
+  <title>CISCO动态VLAN配置</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1793"/>
+<h1>CISCO动态VLAN配置</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="font-size: 16px"><div style="font-family:Verdana, Arial, Helvetica, sans-serif;font-size:13px;line-height:1.6;background:url(http://www.cnblogs.com/skins/arrow/images/bg.gif) 0% 0% fixed rgb(255, 255, 255);box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;"><div style="box-sizing:border-box;color:rgb(75, 75, 75);font-size:13px;background-image:url(http://www.cnblogs.com/skins/arrow/images/day_bg.gif);background-position:100% 0%;background-repeat:no-repeat;"><div style="box-sizing:border-box;font-size:14.7px;font-weight:bold;margin-bottom:10px;"><h1 style="margin:10px 0px 5px;color:rgb(102, 102, 102);text-align:left;box-sizing:border-box;font-size:14.7px;font-weight:bold;margin-bottom:10px;"><a href="http://www.cnblogs.com/fangbo/archive/2010/12/29/1920707.html" style="box-sizing:border-box;text-decoration:none;color:rgb(52, 104, 164);">CISCO动态VLAN配置</a></h1></div><div style="box-sizing:border-box;margin-bottom:20px;word-break:break-word;"><p style="box-sizing:border-box;margin:10px auto;text-indent:0px;">一．基于VMPS的动态VLAN配置实例<br style="box-sizing:border-box;"/>
+　　网络中VLAN实现分为静态VLAN和动态VLAN。静态VLAN又被称为是基于端口的VLAN。顾名思义，就是明确指定各端口属于哪个VLAN的设定方法，交换机中某个端口属于哪个VLAN是相对固定的。动态VLAN则是根据每个端口所连的计算机，随时改变端口所属VLAN。<br style="box-sizing:border-box;"/>
+　　静态VLAN在这里我们就不讲了，由于网络中的计算机需要变更所连端口时，就必须同时更改所连端口所属VLAN的设定-----这是不适合那些需要频繁改变拓扑结构的客户需求的。<br style="box-sizing:border-box;"/>
+　　而动态VLAN则不同，由于它可以根据每个端口所属的计算机，随时改变端口所属的VLAN，所以当网络中计算机变更所连端口或交换机时，VLAN不用重新配置。而它基于MAC地址或用户的认证方式，也可以杜绝非法接入网络的问题。动态VLAN实现技术主要有两种：<br style="box-sizing:border-box;"/>
+　　一是基于用户的动态VLAN，<br style="box-sizing:border-box;"/>
+　　二是基于MAC地址的动态VLAN。<br style="box-sizing:border-box;"/>
+　　基于用户的动态VLAN，则是根据交换机各端口所连的计算机上当前登录的用户，来决定该端口属于哪个VLAN。这里的用户识别信息，一般是计算机操作系统登录的用户，比如可以是域中使用的用户名。也就是说用户只要通过自己在域中的用户名，不管在那台电脑上都能够接入到自己所属的VLAN当中。<br style="box-sizing:border-box;"/>
+　　基于MAC地址的动态VLAN，就是通过查询并记录端口所连计算机上的MAC地址来决定端口所属VLAN。当分配给动态VLAN的交换机端口被激活后，交换机就缓存初始帧的源MAC地址。随后，交换机便向一个称为VMPS（VLAN管理策略服务器）的外部服务器发出请求，VMPS中包含一个文本文件，文件中存有进行VLAN映射的MAC地址。交换机<br style="box-sizing:border-box;"/>
+　　对这个文件进行下载，然后对文件中的MAC地址进行校验。<br style="box-sizing:border-box;"/>
+　　如果在文件列表中找到MAC地址，交换机就将端口分配给列表中该MAC所对应的VLAN。所有列表中没有的话，交换机就会将该端口分配给默认VLAN（假设已经定义了默认VLAN）。如果在列表中没有MAC地址，而且也没有默认VLAN，端口将不会被激活。<br style="box-sizing:border-box;"/>
+　　本实例将述的就是基于MAC地址的动态VLAN。<br style="box-sizing:border-box;"/>
+　　网络环境：<br style="box-sizing:border-box;"/>
+　　核心是一台CISCO3560G三层交换机，配置为VTP Server模式。CISCO 3560G中定义了两个VLAN，通过Trunk端口（Gi0/1，GI0/2端口）与两台Cisco 2960交换机相连。<br style="box-sizing:border-box;"/>
+　　VMPS服务器是基于Scientific Linux平台下的OpenVMPS构建的，连接至Cisco3560G的GI0/24端口。两台CISCO2960配置为客户端模式，通过GI0/1端口接受来自核心交换机的VLAN信息，并将其余端口链路类型设置为Access,端口所属VLAN设为Dynamic(动态)。合法的用户计算机接入任意端口，都可以加入到相应的VLAN。<br style="box-sizing:border-box;"/>
+　　VMPS服务器配置<br style="box-sizing:border-box;"/>
+　　VMPS服务器需CISCO5000以上高端交换机才支持，因此这里选用的是第三方的开源软件-OpenVMPS，基于Scientific Linux 5.3架设的VMPS服务器。<br style="box-sizing:border-box;"/>
+　　下载安装<br style="box-sizing:border-box;"/>
+　　OpenVMPS最新版本为1.4.01.可通过“http://sourceforge.net/projects/vmps/”下载OpenVMPS，将下载的VMPSd-1.4.01.tar.gz文件上传至Linux服务器，以root用户运行下面的命令进行安装。<br style="box-sizing:border-box;"/>
+　　# tar -v z x f vmpsd-1.01.tar.gz<br style="box-sizing:border-box;"/>
+　　#cd vmpsd<br style="box-sizing:border-box;"/>
+　　# ./configrure<br style="box-sizing:border-box;"/>
+　　#make<br style="box-sizing:border-box;"/>
+　　#make install<br style="box-sizing:border-box;"/>
+　　配置VMPS数据库<br style="box-sizing:border-box;"/>
+　　OpenVMPS安装好之后，会自动生成VMPS数据库配置文件/usr/local/etc/vlan.db,这个文件时是个文本文件，下面是配置内容：<br style="box-sizing:border-box;"/>
+　　vmps domain cisco ////////指定VTP域名为cisco<br style="box-sizing:border-box;"/>
+　　Vmps mode open //////////指定VMPS运行模式为OPEN。Vmps能够以OPEN或者secure的模式工作，OPEN时，VMPS会对未授权的MAC地址返回拒绝，对没有列在VMPS数据库中的MAC地址返回一个fallback（后备VLAN）。在secure模式，VMPS对于未授权的或者没有列在数据库的MAC地址都会关闭相应的端口。<br style="box-sizing:border-box;"/>
+　　Vmps fallback ----none-----////////指定一个后备VLAN，none时表示没有。<br style="box-sizing:border-box;"/>
+　　Vmps no-domain-req deny /指定VMPS客户端交换机如果不属于VTP域，将不提供任何映射<br style="box-sizing:border-box;"/>
+　　Vmps-mac-address //////与Address之间的关联。对指定的MAC地址使用关键字--NONE--关键字表示，阻止该主机加入到任何VLAN。在VLAN。Db中还有很多参数，感兴趣的可以自己研究。<br style="box-sizing:border-box;"/>
+　　Address 0001.2201.88cd.vlan-name accout<br style="box-sizing:border-box;"/>
+　　Address 0001.2201.88ce.vlan-name accout<br style="box-sizing:border-box;"/>
+　　Address 0001.2201.75ca.vlan-name sale<br style="box-sizing:border-box;"/>
+　　运行VMPS<br style="box-sizing:border-box;"/>
+　　以root用户执行下面命令，可以启动VMPS：<br style="box-sizing:border-box;"/>
+　　#/usr/local/bin/vmpsd<br style="box-sizing:border-box;"/>
+　　OpenVMPS默认端口时UDP1589，用netstat -an grep 1589可以查看vmpsd进程是否运行。<br style="box-sizing:border-box;"/>
+　　如果需要在开启Liunx服务器是就加载vmpsd.可以在/etc/rc.local中加入/usr/local/bin/vmpsd/<br style="box-sizing:border-box;"/>
+　　其他VMPSD的配置信息如下：<br style="box-sizing:border-box;"/>
+　　Vpmsd [-d] [-a address] [-f file] [-l level] [-p port]<br style="box-sizing:border-box;"/>
+　　-d: 在前台运行VMPSD，可以很清楚的看到对MAC地址与VLAN的关联<br style="box-sizing:border-box;"/>
+　　-a address 设置绑定到VMPSD的IP地址<br style="box-sizing:border-box;"/>
+　　-f file 设置VMPSD数据库配置文件，默认为/usr/local/etc/vlan.db<br style="box-sizing:border-box;"/>
+　　-l level 设置日志级别<br style="box-sizing:border-box;"/>
+　　-p port 设置VMPSD的监听端口，默认为1589<br style="box-sizing:border-box;"/>
+　　CISCO3560G配置<br style="box-sizing:border-box;"/>
+　　#vtp domain cisco<br style="box-sizing:border-box;"/>
+　　#vtp mode server<br style="box-sizing:border-box;"/>
+　　#interface rang gi0/1 -2<br style="box-sizing:border-box;"/>
+　　#switchport trunk encapsulation dot1q<br style="box-sizing:border-box;"/>
+　　#switchport mode trunk<br style="box-sizing:border-box;"/>
+　　定义VLAN，设置VLAN IP地址。<br style="box-sizing:border-box;"/>
+　　#VLAN 133<br style="box-sizing:border-box;"/>
+　　# name sale<br style="box-sizing:border-box;"/>
+　　#vlan 168<br style="box-sizing:border-box;"/>
+　　#name accout<br style="box-sizing:border-box;"/>
+　　#interface vlan 133<br style="box-sizing:border-box;"/>
+　　#ip address 172.16.1.1 255.255.255.0<br style="box-sizing:border-box;"/>
+　　#no shu<br style="box-sizing:border-box;"/>
+　　#interface vlan 168<br style="box-sizing:border-box;"/>
+　　#ip address 172.16.2.1 255.255.255.0<br style="box-sizing:border-box;"/>
+　　#no shu<br style="box-sizing:border-box;"/>
+　　设置gi0/24为访问口，连接VMPSD服务器<br style="box-sizing:border-box;"/>
+　　#interface gi0/24<br style="box-sizing:border-box;"/>
+　　#switchport mode access<br style="box-sizing:border-box;"/>
+　　#no shu<br style="box-sizing:border-box;"/>
+　　#ip routing<br style="box-sizing:border-box;"/>
+　　#write<br style="box-sizing:border-box;"/>
+　　Cisco2960配置<br style="box-sizing:border-box;"/>
+　　#VTP domain cisco<br style="box-sizing:border-box;"/>
+　　#vtp mode client<br style="box-sizing:border-box;"/>
+　　#interface gi0/1<br style="box-sizing:border-box;"/>
+　　#switchport mode trunk<br style="box-sizing:border-box;"/>
+　　#no shu<br style="box-sizing:border-box;"/>
+　　#exit<br style="box-sizing:border-box;"/>
+　　设置fa0/1-24为访问口，所属VLAN为动态获取<br style="box-sizing:border-box;"/>
+　　#interface rang fa0/1 -24<br style="box-sizing:border-box;"/>
+　　#switchport mode access<br style="box-sizing:border-box;"/>
+　　#switchport access vlan dynam<br style="box-sizing:border-box;"/>
+　　#no shu<br style="box-sizing:border-box;"/>
+　　设置主VMPS，另外可以设置3个备用的VMPS服务器。<br style="box-sizing:border-box;"/>
+　　CISCO2960<br style="box-sizing:border-box;"/>
+　　#vmps server 172.16.1.100 primary<br style="box-sizing:border-box;"/>
+　　#end<br style="box-sizing:border-box;"/>
+　　#write<br style="box-sizing:border-box;"/>
+　　#<br style="box-sizing:border-box;"/>
+　　开启VQPC（VLAN查询协议客户端）调试，将会看到ＭＡＣ地址与VLAN关联的过程。<br style="box-sizing:border-box;"/>
+　　#debug vqpc all</p><p style="box-sizing:border-box;margin:10px auto;text-indent:0px;">VMPS介绍:<br style="box-sizing:border-box;"/>
+　　VMPS介绍的是VLAN Membership Policy Server的简称.顾名思义,它是一种基于端口MAC地址动态选择VLAN的集中化管理服务器.当某个端口的主机移动到另一个端口后,VMPS动态的为其指定VLAN.不过基于CISCO IOS的CATALYST 4500系列交换不支持VMPS的功能。<br style="box-sizing:border-box;"/>
+　　它只能做为VLAN查询协议(VLAN Query Protocol)的客户机,通过VQP的客户机,可以和VMPS通信.如果要让CATALYST 4500系列交换机支持VMPS的功能,那你应当使用CatOS(或选择CATALYST 6500系列交换机hoho).<br style="box-sizing:border-box;"/>
+　　VMPS介绍使用UDP端口监听来自VQP客户机的请求,因此,VPMS客户机也没必要知道VMPS到底是位于本地网络还是远程网络.当VMPS服务器收到来自VMPS客户机的请求后,它将在本地数据库里查找MAC地址到VLAN的映射条目信息.<br style="box-sizing:border-box;"/>
+　　VMPS介绍将对请求进行响应.如果被指定的VLAN局限于一组端口,VMPS将验证对发出请求的端口进行验证:<br style="box-sizing:border-box;"/>
+　　◆如果请求端口的VLAN被许可,VMPS向客户发送VLAN做为响应.<br style="box-sizing:border-box;"/>
+　　◆如果请求端口的VLAN不被许可,并且VMPS不是处于安全模式(secure mode),VMPS将发送&quot;access-denied&quot;(访问被拒绝)的信息做为响应.<br style="box-sizing:border-box;"/>
+　　◆如果请求端口的VLAN不被许可,但VMPS处于安全模式,VMPS将发送&quot;port-shutdown&quot;(端口关闭)的信息做为响应.<br style="box-sizing:border-box;"/>
+　　但如果数据库里的VLAN信息和端口的当前VLAN信息不匹配,并且该端口连接的有活动主机,VMPS将发送&quot;access-denied&quot;,&quot;fallback VLAN name&quot;(后退VLAN名),&quot;port-shutdown&quot;或&quot;new VLAN name&quot;(新VLAN名)信息.至于发送何种信息取决于VMPS模式的设置.<br style="box-sizing:border-box;"/>
+　　如果交换机从VMPS那里收到&quot;access-denied&quot;的信息,交换机将堵塞来自该MAC地址,前往或从该端口返回的流量.交换机将继续监视去往该端口的数据包,并且当交换机识别到一个新的地址后,它会向VMPS发出查询信息.如果交换机从VMPS那里收到&quot;port-shutdown&quot;信息,交换机将禁用该端口,该端口必须通过命令行或SNMP重新启用.<br style="box-sizing:border-box;"/>
+　　VMPS介绍有三种模式(但User Registration Tool,即URT,只支持open模式):<br style="box-sizing:border-box;"/>
+　　◆open模式.<br style="box-sizing:border-box;"/>
+　　◆secure模式.<br style="box-sizing:border-box;"/>
+　　◆multiple模式.<br style="box-sizing:border-box;"/>
+　　◆open模式:<br style="box-sizing:border-box;"/>
+　　当端口未指定VLAN:<br style="box-sizing:border-box;"/>
+　　◆如果该端口的MAC地址与之相关联的VLAN信息被许可,VMPS将向客户返回VLAN名.<br style="box-sizing:border-box;"/>
+　　◆如果该端口的MAC地址与之相关联的VLAN信息不被许可,VMPS将向客户返回&quot;access-denied&quot;信息.<br style="box-sizing:border-box;"/>
+　　当端口已经指定VLAN:<br style="box-sizing:border-box;"/>
+　　◆如果数据库里的VLAN与MAC地址相关联的信息和端口的当前VLAN关联信息不匹配,并配置的有fallback VLAN名,那么VMPS将返回fallback VLAN名给客户机.<br style="box-sizing:border-box;"/>
+　　◆如果数据库里的VLAN与MAC地址相关联的信息和端口的当前VLAN关联信息不匹配,并没有配置fallback VLAN名,那么VMPS将返回&quot;access-denied&quot;信息给客户机.<br style="box-sizing:border-box;"/>
+　　secure模式当端口未指定VLAN:<br style="box-sizing:border-box;"/>
+　　◆如果该端口的MAC地址与之相关联的VLAN信息被许可,VMPS将向客户返回VLAN名.<br style="box-sizing:border-box;"/>
+　　◆如果该端口的MAC地址与之相关联的VLAN信息不被许可,端口将被关闭.<br style="box-sizing:border-box;"/>
+　　当端口已经指定VLAN:<br style="box-sizing:border-box;"/>
+　　如果数据库里的VLAN与MAC地址相关联的信息和端口的当前VLAN关联信息不匹配,即使有配置fallback VLAN名,端口仍将被关闭.<br style="box-sizing:border-box;"/>
+　　multiple模式:<br style="box-sizing:border-box;"/>
+　　当多个MAC地址(主机)处于同一VLAN的时候,多个MAC地址可以对应一个动态端口.如果动态端口的链路down掉,端口将被还原成未指定状态,并且在指定VLAN之前,VMPS将对这些地址重新检查;如果这些主机位于不同的VLAN,VMPS将向客户返回最新的MAC地址到VLAN映射的信息.当然,你也可以在VMPS上指定fallback VLAN名.如果该端口未指定任何VLAN,VMPS将把端口和发起请求的MAC地址进行比较:<br style="box-sizing:border-box;"/>
+　　◆如果主机的MAC地址在数据库中不存在,并且VMPS上指定的有fallback VLAN名,那么将向客户机返回fallback VLAN名信息.<br style="box-sizing:border-box;"/>
+　　◆如果主机的MAC地址在数据库中不存在,但VMPS上未指定fallback VLAN名,那么将向客户机返回&quot;access-denied&quot;信息.<br style="box-sizing:border-box;"/>
+　　如果该端口已经指定任何VLAN,VMPS将把端口和发起请求的MAC地址进行比较:不管VMPS上有没有配置fallback VLAN名,只要VMPS处于secure模式,那么它就将反馈&quot;port-shutdown&quot;信息给客户机.有的时候我们也可能看到非法的VMPS客户机请求,如下两种:<br style="box-sizing:border-box;"/>
+　　◆当VMPS上未配置fallback VLAN名,并且数据库里没有相应的MAC地址到VLAN的映射信息.<br style="box-sizing:border-box;"/>
+　　◆当端口已经被指定了VLAN,并且VMPS不处于multiple模式,但是VMPS收到了第二个不同MAC地址的VMPS客户机请求信息.<br style="box-sizing:border-box;"/>
+　　===============================================<br style="box-sizing:border-box;"/>
+　　配置VMPS数据库<br style="box-sizing:border-box;"/>
+　　VMPS的用途就是用来创建动态的VLAN。而要创建动态VLAN，首先就是要配置VMPS数据库，然后依次配置VMPS服务器和客户机。<br style="box-sizing:border-box;"/>
+　　为了使用VMPS，你首先要建立VMPS的数据库（也就是一个文本文件）并把它保存在一个TFTP服务器上。VMPS的格式是基于行的。每一行都是一个开始。VMPS数据库文件包含如下五个部分：全局设置（Global settings）、MAC地址到VLAN的映射（MAC address-to-VLAN name mappings）、端口组（Port groups）、VLAN组（VLAN groups）和VLAN端口策略（VLAN port policies）。具体解释如下：<br style="box-sizing:border-box;"/>
+　　n 第一部分：全局设置（Global settings）<br style="box-sizing:border-box;"/>
+　　第一部分是列出VMPS域名、安全模式、Fallback VLAN名称，以及VMPS和VTP域名不匹配的策略。VMPS数据库文件是以“VMPS”开头的，以防止VMPS服务器错误地读取交换机上其他的配置文件。<br style="box-sizing:border-box;"/>
+　　在定义VMPS域时，应当正确输入在交换机上配置的VTP域名。<br style="box-sizing:border-box;"/>
+　　在定义安全模式时，VMPS可以工作于安全模式或者开放模式。如果你设置为开放模式，VMPS就会对未知的MAC地址返回一个拒绝访问的响应消息，而对于一个不在VMPS数据中的MAC地址，则返回一个Fallback VLAN名的消息进行响应。在安全模式中，VMPS会对未知，或者不在VMPS数据库中的MAC地址会关闭所访问的端口。<br style="box-sizing:border-box;"/>
+　　Fallback VLAN的定义是个可选项。它是为在连接主机的MAC地址不在数据库中，且VMPS工作于开放模式时准备的。<br style="box-sizing:border-box;"/>
+　　下面是本部分的一个示例：VMPS域名为GRFW，VMPS模式为开放模式，Fallback VLAN为默认设置，VMPS策略中在VTP域名与VMPS域名不匹配时发送访问拒绝（access-denied）消息进行响应。<br style="box-sizing:border-box;"/>
+　　vmps domain GRFW<br style="box-sizing:border-box;"/>
+　　vmps mode open<br style="box-sizing:border-box;"/>
+　　vmps Fallback default<br style="box-sizing:border-box;"/>
+　　vmps no-domain-req deny<br style="box-sizing:border-box;"/>
+　　n 第二部分：MAC地址到VLAN的映射（MAC address-to-VLAN name mappings）<br style="box-sizing:border-box;"/>
+　　本部分列出MAC地址，以及每个MAC地址对应的VLAN名。可以使用“NONE”关键字作为VLAN名，以拒绝该MAC地址的主机与网络连接。在一个VMPS数据库中，你可以键入最多21,051条MAC地址。<br style="box-sizing:border-box;"/>
+　　下面是本部分的一个示例。MAC地址是在MAC地址表中一出的，注意其中的“fedc.ba98.7654”MAC地址对应的VLAN名为“NONE”，也就是拒绝该MAC地址主机访问网络。<br style="box-sizing:border-box;"/>
+　　vmps-mac-addrs<br style="box-sizing:border-box;"/>
+　　address 0012.2233.4455 vlan-name hardware<br style="box-sizing:border-box;"/>
+　　address 0000.6509.a080 vlan-name hardware<br style="box-sizing:border-box;"/>
+　　address aabb.ccdd.eeff vlan-name Green<br style="box-sizing:border-box;"/>
+　　address 1223.5678.9abc vlan-name ExecStaff<br style="box-sizing:border-box;"/>
+　　address fedc.ba98.7654 vlan-name --NONE-<br style="box-sizing:border-box;"/>
+　　address fedc.ba23.1245 vlan-name Purple<br style="box-sizing:border-box;"/>
+　　n 第三部分：端口组（Port groups）<br style="box-sizing:border-box;"/>
+　　本部分列出了在你的网络中，你想要组合的不同交换机上的端口组。一相端口组就是一个端口的逻辑组合。你可以应用VLAN策略到一个个具体的端口上，或者端口组上。这在后面第五部分，定义VLAN策略时要用到。<br style="box-sizing:border-box;"/>
+　　要为每个端口组定义一个名称，然后列出所有包括在这个端口组中的端口，每条以“device”开头。端口是由交换机IP地址和模块/端口号定义的。在端口号中不允许使用范围。但可以使用“all-ports”关键字来指定特定交换机上的所有端口。<br style="box-sizing:border-box;"/>
+　　下面是本部分的一个示例，包括两个端口组portgroup1和portgroup2。端口组portgroup1包括两个端口，一个是在IP地址为198.92.30.32的VMPS客户机上的3/2端口，另一个是在IP地址为172.20.26.141的VMPS客户机上的2/8端口。<br style="box-sizing:border-box;"/>
+　　端口组portgroup2包括三个端口：其中两个是在IP地址为198.4.254.222的VMPS客户机上的1/2端口和1/3端口，另一个是在IP地址为198.4.254.223的VMPS客户机上的所有端口。<br style="box-sizing:border-box;"/>
+　　vmps-port-group portgroup1<br style="box-sizing:border-box;"/>
+　　device 198.92.30.32 port 3/2<br style="box-sizing:border-box;"/>
+　　device 172.20.26.141 port 2/8<br style="box-sizing:border-box;"/>
+　　vmps-port-group portgroup2<br style="box-sizing:border-box;"/>
+　　device 198.4.254.222 port 1/2<br style="box-sizing:border-box;"/>
+　　device 198.4.254.222 port 1/3<br style="box-sizing:border-box;"/>
+　　device 198.4.254.223 all-ports</p><p style="box-sizing:border-box;margin:10px auto;text-indent:0px;">第四部分：VLAN组（VLAN groups）<br style="box-sizing:border-box;"/>
+　　本部分列出的是你想关联在一起的VLAN组。一个VLAN组也是一个VLAN的逻辑组合。VLAN策略可以应用到一个个具体的VLAN上，也可以应用互这些VLAN组上。这在后面第五部分，定义VLAN端口策略时也要用到。<br style="box-sizing:border-box;"/>
+　　首先定义VLAN组名，然后列出在VLAN组中的每个端口。你可以在一个VMPS服务器中键入最多256个VLAN。<br style="box-sizing:border-box;"/>
+　　下面是本部分的一个示例。示例中的VLAN组“Engineering”包含名为“hardware”和“software”的两个VLAN。<br style="box-sizing:border-box;"/>
+　　vmps-vlan-group Engineering<br style="box-sizing:border-box;"/>
+　　vlan-name hardware<br style="box-sizing:border-box;"/>
+　　vlan-name software<br style="box-sizing:border-box;"/>
+　　n 第五部分：VLAN端口策略（VLAN port policies）<br style="box-sizing:border-box;"/>
+　　本部分列出了在本VMPS数据库文件中所定义的VLAN端口策略。它使用前面介绍的端口组和VLAN组来进一步限制对网络的访问，可以使用MAC地址和端口组，或者VLAN组来配置限制访问。每条策略都是以“vmps-port-policies”开头。<br style="box-sizing:border-box;"/>
+　　以下是本部分的一个示例。在这个示例中包含了三个VLAN端口策略：在第一个VLAN端口策略中，在VLAN hardware或者VLAN software（都是名为Engineering的VLAN组成员）中的成员在IP地址为198.92.30.32的VMPS客户机3/2端口和IP地址为172.20.23.141的VMPS客户机2/8端口上是限制访问的。<br style="box-sizing:border-box;"/>
+　　第二个VLAN端口策略是指定在VLAN Green中的设备仅可以连接到IP地址为198.92.30.32的VMPS客户机的4/8端口上。<br style="box-sizing:border-box;"/>
+　　第三个VLAN端口策略是指定在VLAN Purple中的设备仅可以连接到IP地址为198.4.254.22的VMPS客户机的1/2端口和在portgroup2端口组中的端口。<br style="box-sizing:border-box;"/>
+　　vmps-port-policies vlan-group Engineering<br style="box-sizing:border-box;"/>
+　　port-group portgroup1<br style="box-sizing:border-box;"/>
+　　vmps-port-policies vlan-name Green<br style="box-sizing:border-box;"/>
+　　device 198.92.30.32 port 4/8<br style="box-sizing:border-box;"/>
+　　vmps-port-policies vlan-name Purple<br style="box-sizing:border-box;"/>
+　　device 198.4.254.22 port 1/2<br style="box-sizing:border-box;"/>
+　　port-group portgroup2<br style="box-sizing:border-box;"/>
+　　以下是思科网站上的一个VMPS数据库文件示例，编辑一下就可以成为自己VMPS数据库文件。<br style="box-sizing:border-box;"/>
+　　!vmps domain<br style="box-sizing:border-box;"/>
+　　! The VMPS domain must be defined.<br style="box-sizing:border-box;"/>
+　　!vmps mode { open secure }<br style="box-sizing:border-box;"/>
+　　! The default mode is open.<br style="box-sizing:border-box;"/>
+　　!vmps Fallback<br style="box-sizing:border-box;"/>
+　　!vmps no-domain-req { allow deny }<br style="box-sizing:border-box;"/>
+　　!<br style="box-sizing:border-box;"/>
+　　! The default value is allow.<br style="box-sizing:border-box;"/>
+　　vmps domain WBU<br style="box-sizing:border-box;"/>
+　　vmps mode open<br style="box-sizing:border-box;"/>
+　　vmps Fallback default<br style="box-sizing:border-box;"/>
+　　vmps no-domain-req deny<br style="box-sizing:border-box;"/>
+　　!<br style="box-sizing:border-box;"/>
+　　!<br style="box-sizing:border-box;"/>
+　　!MAC Addresses<br style="box-sizing:border-box;"/>
+　　!<br style="box-sizing:border-box;"/>
+　　vmps-mac-addrs<br style="box-sizing:border-box;"/>
+　　!<br style="box-sizing:border-box;"/>
+　　! address vlan-name !address 0012.2233.4455 vlan-name hardwareaddress 0000.6509.a080 vlan-name hardwareaddress aabb.ccdd.eeff vlan-name Greenaddress 1223.5678.9abc vlan-name ExecStaffaddress fedc.ba98.7654 vlan-name --NONE--address fedc.ba23.1245 vlan-name Purple!!Port Groups!!vmps-port-group ! device { port all-ports }!vmps-port-group WiringCloset1device 198.92.30.32 port Fa1/3device 172.20.26.141 port Fa1/4vmps-port-group &quot;Executive Row&quot;device 198.4.254.222 port es5%Fa0/1device 198.4.254.222 port es5%Fa0/2device 198.4.254.223 all-ports!!VLAN groups!!vmps-vlan-group ! vlan-name !vmps-vlan-group Engineeringvlan-name hardwarevlan-name software!!VLAN port Policies!!vmps-port-policies {vlan-name vlan-group }! { port-group device port }!vmps-port-policies vlan-group Engineeringport-group WiringCloset1vmps-port-policies vlan-name Greendevice 198.92.30.32 port Fa0/9vmps-port-policies vlan-name Purpledevice 198.4.254.22 port Fa0/10port-group &quot;Executive Row&quot;VMPS数据库文件创建好后，通过本书第一章介绍TFTP或者RCP方式上传该文件到一个TFTP或者RCP服务器上，然后再下载到担当VMPS服务器的交换机的闪存中即可。</p></div><div style="box-sizing:border-box;margin-top:20px;"><div style="box-sizing:border-box;margin-bottom:10px;"><br/></div></div></div></div></div></div></div></span>
+</div></body></html> 

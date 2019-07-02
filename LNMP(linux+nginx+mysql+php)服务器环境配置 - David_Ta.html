@@ -1,0 +1,453 @@
+<html>
+<head>
+  <title>LNMP(linux+nginx+mysql+php)服务器环境配置 - David_Tang - 博客园</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1435"/>
+<h1>LNMP(linux+nginx+mysql+php)服务器环境配置 - David_Tang - 博客园</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="font-size: 16px"><div style="font-family:verdana, Arial, Helvetica, sans-serif;color:rgb(51, 51, 51);font-size:10pt;line-height:1.8em;background:rgb(222, 231, 222);"><div style="background:rgb(222, 231, 222);"><div style="background:rgb(255, 255, 255);"><h1 style="margin:20px 0px 10px;padding:0px;font-weight:bold;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:solid;border-bottom-color:rgb(221, 221, 221);font-size:14px;margin-top:10px;"><a href="http://www.cnblogs.com/mchina/archive/2012/05/17/2507102.html" style="margin:0px;padding:0px;text-decoration:none;color:rgb(57, 154, 178);">LNMP(linux+nginx+mysql+php)服务器环境配置</a></h1><div style="margin:0px;padding:0px;font-size:14px;line-height:1.8;"><div style="margin:0px;padding:0px;margin-bottom:20px;word-break:break-word;"><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">一、简介</strong><br style="margin:0px;padding:0px;"/>
+　　Nginx是俄罗斯人编写的十分轻量级的HTTP服务器,Nginx，它的发音为 “engine X”， 是一个高性能的HTTP和反向代理服务器，同时也是一个IMAP/POP3/SMTP 代理服务器．Nginx是由俄罗斯人 Igor Sysoev为俄罗斯访问量第二的 Rambler.ru站点开发的，它已经在该站点运行超过三年了。Igor Sysoev在建立的项目时,使用基于BSD许可。<br style="margin:0px;padding:0px;"/>
+　　在高并发连接的情况下，Nginx是Apache服务器不错的替代品。Nginx同时也可以作为7层负载均衡服务器来使用。Nginx 0.8.46 + PHP 5.2.14 (FastCGI) 可以承受3万以上的并发连接数，相当于同等环境下Apache的10倍。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">　　Nginx 超越 Apache 的高性能和稳定性，使得国内使用 Nginx 作为 Web 服务器的网站也越来越多，其中包括新浪博客、新浪播客、网易新闻、腾讯网、搜狐博客等门户网站频道，六间房、56.com等视频分享网站，Discuz!官方论坛、水木社区等知名论坛，盛大在线、金山逍遥网等网络游戏网站，豆瓣、人人网、YUPOO相册、金山爱词霸、迅雷在线等新兴Web 2.0网站。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">　 　为什么Nginx的性能要比Apache高得多？这得益于Nginx使用了最新的epoll（Linux 2.6内核）和kqueue（freebsd）网络I/O模型，而Apache则使用的是传统的select模型。目前Linux下能够承受高并发访问的 Squid、Memcached都采用的是epoll网络I/O模型。<br style="margin:0px;padding:0px;"/>
+　　 处理大量的连接的读写，Apache所采用的select网络I/O模型非常低效。下面用一个比喻来解析Apache采用的select模型和Nginx采用的epoll模型进行之间的区别：<br style="margin:0px;padding:0px;"/>
+　 　假设你在大学读书，住的宿舍楼有很多间房间，你的朋友要来找你。select版宿管大妈就会带着你的朋友挨个房间去找，直到找到你为止。而epoll版 宿管大妈会先记下每位同学的房间号，你的朋友来时，只需告诉你的朋友你住在哪个房间即可，不用亲自带着你的朋友满大楼找人。如果来了10000个人，都要 找自己住这栋楼的同学时，select版和epoll版宿管大妈，谁的效率更高，不言自明。同理，在高并发服务器中，轮询I/O是最耗时间的操作之 一，select和epoll的性能谁的性能更高，同样十分明了。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">   <img src="LNMP(linux+nginx+mysql+php)服务器环境配置 - David_Ta_files/2012051814510992.gif" type="image/gif" data-filename="2012051814510992.gif" height="50" style="margin:0px;padding:0px;border:0px;cursor: default;" width="150"/></p><p style="margin:10px auto;padding:0px;text-indent:0px;">　　Nginx 的官方中文维基：<a href="http://wiki.nginx.org/NginxChs" style="margin:0px;padding:0px;text-decoration:none;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:dotted;border-bottom-color:rgb(51, 51, 51);" target="_blank">http://wiki.nginx.org/NginxChs</a></p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">二、系统环境</strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;">系统平台：RHEL 5.4（系统要求：Linux 2.6+ 内核）</p><p style="margin:10px auto;padding:0px;text-indent:0px;">Nginx版本：nginx/1.0.15</p><p style="margin:10px auto;padding:0px;text-indent:0px;">Mysql 版本：5.1.35-log Source distribution</p><p style="margin:10px auto;padding:0px;text-indent:0px;">Php版本：php-5.2.10</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">三、安装准备</strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;">1、获取相关开源程序并安装</p><p style="margin:10px auto;padding:0px;text-indent:0px;">RedHat等其他Linux发行版可从安装光盘中找到这些程序库的RPM包RedHat可以直接利用CentOS的RPM包安装。<br style="margin:0px;padding:0px;"/>
+可以用rpm安装以下包，如有关联包，安装时一起安装。<br style="margin:0px;padding:0px;"/>
+gcc gcc-c++ autoconf libjpeg libjpeg-devel libpng libpng-devel freetype freetype-devel libxml2 libxml2-devel zlib zlib-devel glibc glibc-devel glib2 glib2-devel bzip2 bzip2-devel ncurses ncurses-devel curl curl-devel e2fsprogs e2fsprogs-devel krb5 krb5-devel libidn libidn-devel openssl openssl-devel openldap openldap-devel nss_ldap openldap-clients openldap-servers<br style="margin:0px;padding:0px;"/>
+以上包如果安装了的话，不需要再安装了。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2、RPM包搜索网站<br style="margin:0px;padding:0px;"/><a style="margin:0px;padding:0px;text-decoration:none;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:dotted;border-bottom-color:rgb(51, 51, 51);">http://rpm.pbone.net/</a><br style="margin:0px;padding:0px;"/><a href="http://www.rpmfind.net/" rel="nofollow" style="margin:0px;padding:0px;text-decoration:none;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:dotted;border-bottom-color:rgb(51, 51, 51);">http://www.rpmfind.net/</a></p><p style="margin:10px auto;padding:0px;text-indent:0px;"><a href="http://www.rpmfind.net/" rel="nofollow" style="margin:0px;padding:0px;text-decoration:none;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:dotted;border-bottom-color:rgb(51, 51, 51);">http://code.google.com/p/zed-lnmp/</a></p><p style="margin:10px auto;padding:0px;text-indent:0px;">3、nginx软件包准备</p><p style="margin:10px auto;padding:0px;text-indent:0px;">Nginx所需要的软件包可以从下面位置获取，也可以记住名字在google中搜索。<br style="margin:0px;padding:0px;"/>
+nginx-0.7.61.tar.gz<br style="margin:0px;padding:0px;"/>
+php-5.2.10.tar.gz<br style="margin:0px;padding:0px;"/>
+php-5.2.10-fpm-0.5.11.diff.gz<br style="margin:0px;padding:0px;"/>
+mysql-5.1.35.tar.gz<br style="margin:0px;padding:0px;"/>
+libiconv-1.13.tar.gz<br style="margin:0px;padding:0px;"/>
+libmcrypt-2.5.8.tar.gz<br style="margin:0px;padding:0px;"/>
+mcrypt-2.6.8.tar.gz<br style="margin:0px;padding:0px;"/>
+memcache-2.2.5.tgz<br style="margin:0px;padding:0px;"/>
+mhash-0.9.9.9.tar.gz<br style="margin:0px;padding:0px;"/>
+pcre-7.9.tar.gz<br style="margin:0px;padding:0px;"/>
+eaccelerator-0.9.5.3.tar.bz2<br style="margin:0px;padding:0px;"/>
+PDO_MYSQL-1.0.2.tgz<br style="margin:0px;padding:0px;"/>
+ImageMagick.tar.gz<br style="margin:0px;padding:0px;"/>
+imagick-2.2.2.tgz</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">四、安装PHP 5.2.10（FastCGI模式）</strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;">编译安装PHP 5.2.10所需的支持库：</p><p style="margin:10px auto;padding:0px;text-indent:0px;">1.安装libiconv<br style="margin:0px;padding:0px;"/>
+对文本进行编码间的转换，用它来处理中文各种编码之间的转换。<br style="margin:0px;padding:0px;"/>
+#tar zxvf libiconv-1.13.tar.gz<br style="margin:0px;padding:0px;"/>
+#cd libiconv-1.13/<br style="margin:0px;padding:0px;"/>
+#./configure --prefix=/usr/local<br style="margin:0px;padding:0px;"/>
+#make<br style="margin:0px;padding:0px;"/>
+#make install<br style="margin:0px;padding:0px;"/>
+cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2.安装libmcrypt 实现加密功能的库。<br style="margin:0px;padding:0px;"/>
+# tar zxvf libmcrypt-2.5.8.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd libmcrypt-2.5.8/<br style="margin:0px;padding:0px;"/>
+# ./configure<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# /sbin/ldconfig<br style="margin:0px;padding:0px;"/>
+# 注：这里不要退出去了。<br style="margin:0px;padding:0px;"/>
+# cd libltdl/<br style="margin:0px;padding:0px;"/>
+# ./configure --enable-ltdl-install<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# cd http://www.cnblogs.com/</p><p style="margin:10px auto;padding:0px;text-indent:0px;">3. 安装mhash(哈稀函数库)<br style="margin:0px;padding:0px;"/>
+# tar zxvf mhash-0.9.9.9.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd mhash-0.9.9.9/<br style="margin:0px;padding:0px;"/>
+# ./configure<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">ln -s /usr/local/lib/libmcrypt.la /usr/lib/libmcrypt.la<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmcrypt.so /usr/lib/libmcrypt.so<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmcrypt.so.4 /usr/lib/libmcrypt.so.4<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmcrypt.so.4.4.8 /usr/lib/libmcrypt.so.4.4.8<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmhash.a /usr/lib/libmhash.a<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmhash.la /usr/lib/libmhash.la<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmhash.so /usr/lib/libmhash.so<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmhash.so.2 /usr/lib/libmhash.so.2<br style="margin:0px;padding:0px;"/>
+ln -s /usr/local/lib/libmhash.so.2.0.1 /usr/lib/libmhash.so.2.0.1</p><p style="margin:10px auto;padding:0px;text-indent:0px;">4. 安装mcrypt<br style="margin:0px;padding:0px;"/>
+# tar zxvf mcrypt-2.6.8.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd mcrypt-2.6.8/<br style="margin:0px;padding:0px;"/>
+# /sbin/ldconfig<br style="margin:0px;padding:0px;"/>
+#./configure<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">注：DG库所需要安装包，可以采用rpm包来安装，减少时间，由于php已经集成GD库，但前提支持包应事先安装，如zlib,png,jpeg,freetype等。如果完全想采用tar包安装的话，请参考lamp相关内容。</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">五、编译安装MySQL</strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;">建立mysql组，建立mysql用户并且加入到mysql组中<br style="margin:0px;padding:0px;"/>
+# groupadd mysql<br style="margin:0px;padding:0px;"/>
+# useradd mysql -g mysql<br style="margin:0px;padding:0px;"/>
+[root@linux lnmp]# tar zxvf mysql-5.1.35.tar.gz<br style="margin:0px;padding:0px;"/>
+[root@linux lnmp]# cd mysql-5.1.35<br style="margin:0px;padding:0px;"/>
+# ./configure --prefix=/usr/local/mysql<br style="margin:0px;padding:0px;"/>
+--without-debug<br style="margin:0px;padding:0px;"/>
+--with-extra-charsets=gbk<br style="margin:0px;padding:0px;"/>
+--with-extra-charsets=all<br style="margin:0px;padding:0px;"/>
+--enable-assembler<br style="margin:0px;padding:0px;"/>
+--with-pthread<br style="margin:0px;padding:0px;"/>
+--enable-thread-safe-client<br style="margin:0px;padding:0px;"/>
+--with-mysqld-ldflags=-all-static  /*不带共享库的形式编译mysqld*/<br style="margin:0px;padding:0px;"/>
+--with-client-ldflags=-all-static<br style="margin:0px;padding:0px;"/>
+--with-big-tables<br style="margin:0px;padding:0px;"/>
+--with-readline    /*要采用rpm方式安装ncurses或tar包安装*/<br style="margin:0px;padding:0px;"/>
+--with-ssl            /*要采用rpm方式安装openssl*/<br style="margin:0px;padding:0px;"/>
+--with-embedded-server<br style="margin:0px;padding:0px;"/>
+--enable-local-infile<br style="margin:0px;padding:0px;"/>
+--with-plugins=innobase<br style="margin:0px;padding:0px;"/>
+# make &amp;&amp; make install</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># /usr/local/mysql/bin/mysql_install_db --user=mysql<br style="margin:0px;padding:0px;"/>
+#以mysql身份初始化数据库<br style="margin:0px;padding:0px;"/>
+# cp ./support-files/mysql.server /etc/init.d/mysql<br style="margin:0px;padding:0px;"/>
+#复制Mysql启动服务至系统<br style="margin:0px;padding:0px;"/>
+# cp ./support-files/my-medium.cnf /etc/my.cnf<br style="margin:0px;padding:0px;"/>
+# chmod 755 /etc/init.d/mysql</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># cd /usr/local/mysql/   #切换到cd /usr/local/mysql/目录下<br style="margin:0px;padding:0px;"/>
+# chown -R mysql .       #改变当前目录下的所有者为mysql用户<br style="margin:0px;padding:0px;"/>
+# chown -R mysql var     #修改数据库目录的权限<br style="margin:0px;padding:0px;"/>
+# chgrp -R mysql .       #改变当前目录下的mysql用户的文件为mysql组</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># /usr/local/mysql/bin/mysqld_safe --user=mysql&amp;<br style="margin:0px;padding:0px;"/>
+# /usr/local/mysql/bin/mysqladmin -u root password 'admin' #设置管理员密码</p><p style="margin:10px auto;padding:0px;text-indent:0px;">[root@linux html]# /usr/local/mysql/bin/mysql -u root -p   #测试密码输入<br style="margin:0px;padding:0px;"/>
+Enter password:<br style="margin:0px;padding:0px;"/>
+Welcome to the MySQL monitor.  Commands end with ; or \g.<br style="margin:0px;padding:0px;"/>
+Your MySQL connection id is 5<br style="margin:0px;padding:0px;"/>
+Server version: 5.1.35-log Source distribution<br style="margin:0px;padding:0px;"/>
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.</p><p style="margin:10px auto;padding:0px;text-indent:0px;">mysql&gt; \q       /*退出mysql*/</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># chkconfig --add mysql  #添加mysqld服务到系统<br style="margin:0px;padding:0px;"/>
+# chkconfig mysql on     #打开myslqd服务<br style="margin:0px;padding:0px;"/>
+# service mysql start    #启动Mysql<br style="margin:0px;padding:0px;"/>
+#/usr/local/mysql/bin/mysqladmin shutdown  #关闭数据库</p><p style="margin:10px auto;padding:0px;text-indent:0px;">#查看mysql端口的打开情况<br style="margin:0px;padding:0px;"/>
+# netstat -tunlp<br style="margin:0px;padding:0px;"/>
+Active Internet connections (only servers)<br style="margin:0px;padding:0px;"/>
+Proto Recv-Q Send-Q Local Address   Foreign Address  State   PID/P name<br style="margin:0px;padding:0px;"/>
+tcp        0      0 0.0.0.0:3306    0.0.0.0:*        LISTEN  2936/   <br style="margin:0px;padding:0px;"/>
+#查看是否启动：<br style="margin:0px;padding:0px;"/>
+#ps -ef ｜ grep mysql<br style="margin:0px;padding:0px;"/>
+注：在配置过程中，整体的配置思路从上往下，其中的一些功能可以用在实际的配置过程中，主要用于测试环节中。<br style="margin:0px;padding:0px;"/>
+Mysql的优化部分这里没有给出，需要参考其它资料。</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">六、编译安装PHP</strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;">这 个地方是最重要的，因为默认情况下Nginx和PHP他俩之间是一点感觉没有的。在之前搭建过Apache+PHP，Apache+PHP编译后生成的是 模块文件，而Nginx+PHP需要PHP生成可执行文件才可以，所以要利用fastcgi技术来实现Nginx与PHP的整合，这个只要我们安装时启用 FastCGI即可。此次我们安装PHP不仅使用了FastCGI，而且还使用了PHP-FPM这么一个东东，PHP-FPM说白了是一个管理 FastCGI的一个管理器，它作为PHP的插件存在，在安装PHP时要想使用PHP-FPM就需要把PHP-FPM以补丁的形式安装到PHP中，而且 PHP要与PHP-FPM版本一致，这是必须的，切记！</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># tar zxvf php-5.2.10.tar.gz<br style="margin:0px;padding:0px;"/>
+# gzip -cd php-5.2.10-fpm-0.5.11.diff.gz | patch -d php-5.2.10 -p1</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># 将php-5.2.10-fpm-0.5.11.diff.gz以补丁形式加到php-5.2.10里面</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># cd php-5.2.10/<br style="margin:0px;padding:0px;"/>
+# ./configure --prefix=/usr/local/php<br style="margin:0px;padding:0px;"/>
+--with-config-file-path=/usr/local/php/etc<br style="margin:0px;padding:0px;"/>
+--with-mysql=/usr/local/mysql<br style="margin:0px;padding:0px;"/>
+--with-mysqli=/usr/local/mysql/bin/mysql_config<br style="margin:0px;padding:0px;"/>
+--with-iconv-dir=/usr/local<br style="margin:0px;padding:0px;"/>
+--with-freetype-dir<br style="margin:0px;padding:0px;"/>
+--with-jpeg-dir<br style="margin:0px;padding:0px;"/>
+--with-png-dir<br style="margin:0px;padding:0px;"/>
+--with-zlib<br style="margin:0px;padding:0px;"/>
+--with-gd<br style="margin:0px;padding:0px;"/>
+--enable-gd-native-ttf<br style="margin:0px;padding:0px;"/>
+--with-libxml-dir=/usr<br style="margin:0px;padding:0px;"/>
+--enable-xml<br style="margin:0px;padding:0px;"/>
+--disable-rpath<br style="margin:0px;padding:0px;"/>
+--enable-discard-path<br style="margin:0px;padding:0px;"/>
+--enable-safe-mode<br style="margin:0px;padding:0px;"/>
+--enable-bcmath<br style="margin:0px;padding:0px;"/>
+--enable-shmop<br style="margin:0px;padding:0px;"/>
+--enable-sysvsem<br style="margin:0px;padding:0px;"/>
+--enable-inline-optimization<br style="margin:0px;padding:0px;"/>
+--with-curl<br style="margin:0px;padding:0px;"/>
+--with-curlwrappers<br style="margin:0px;padding:0px;"/>
+--enable-mbregex<br style="margin:0px;padding:0px;"/>
+--enable-fastcgi<br style="margin:0px;padding:0px;"/>
+--enable-fpm<br style="margin:0px;padding:0px;"/>
+--enable-force-cgi-redirect<br style="margin:0px;padding:0px;"/>
+--enable-mbstring<br style="margin:0px;padding:0px;"/>
+--with-mcrypt<br style="margin:0px;padding:0px;"/>
+--with-openssl<br style="margin:0px;padding:0px;"/>
+--with-mhash<br style="margin:0px;padding:0px;"/>
+--enable-pcntl<br style="margin:0px;padding:0px;"/>
+--enable-sockets<br style="margin:0px;padding:0px;"/>
+--with-ldap<br style="margin:0px;padding:0px;"/>
+--with-ldap-sasl<br style="margin:0px;padding:0px;"/>
+--with-xmlrpc<br style="margin:0px;padding:0px;"/>
+--enable-zip<br style="margin:0px;padding:0px;"/>
+--enable-soap<br style="margin:0px;padding:0px;"/>
+--without-pear</p><p style="margin:10px auto;padding:0px;text-indent:0px;">注：Nginx+PHP整合，在安装时必须启用-–enable-fastcgi和--enable-fpm，这两个选项是做什么的上面已经描述。执行完后系统会提示-–enable-fastcgi是一个未知选项，我们不必理会。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">#注：make的时候一定要加上后面的参数，才能成功。<br style="margin:0px;padding:0px;"/>
+# make ZEND_EXTRA_LIBS='-liconv'<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# cp php.ini-dist /usr/local/php/etc/php.ini<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">注：在安装过程中采用了tar包与rpm混合安装的情况，对于库的指定确实出现了很大的麻烦。如果采用rpm安装的话，不需要指定支持包的位置就可以了，tar安装的话，需要指定安装位置。</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">七、编译安装PHP5扩展模块</strong><br style="margin:0px;padding:0px;"/>
+1.安装memcache<br style="margin:0px;padding:0px;"/>
+# tar zxvf memcache-2.2.5.tgz<br style="margin:0px;padding:0px;"/>
+# cd memcache-2.2.5/<br style="margin:0px;padding:0px;"/>
+# /usr/local/php/bin/phpize<br style="margin:0px;padding:0px;"/>
+# ./configure --with-php-config=/usr/local/php/bin/php-config<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# 说明：memcache库的位置<br style="margin:0px;padding:0px;"/>
+Installing shared extensions:<br style="margin:0px;padding:0px;"/>
+/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/<br style="margin:0px;padding:0px;"/>
+# cd ..</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2.安装eaccelerator php加速<br style="margin:0px;padding:0px;"/>
+# tar jxvf eaccelerator-0.9.5.3.tar.bz2<br style="margin:0px;padding:0px;"/>
+# cd eaccelerator-0.9.5.3/<br style="margin:0px;padding:0px;"/>
+# /usr/local/php/bin/phpize<br style="margin:0px;padding:0px;"/>
+# ./configure --enable-eaccelerator=shared  --with-php-config=/usr/local/php/bin/php-config<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+Installing shared extensions:<br style="margin:0px;padding:0px;"/>
+/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">3.安装PDO_MYSQL(数据库连接的支持)<br style="margin:0px;padding:0px;"/>
+# tar zxvf PDO_MYSQL-1.0.2.tgz<br style="margin:0px;padding:0px;"/>
+# cd PDO_MYSQL-1.0.2/<br style="margin:0px;padding:0px;"/>
+# /usr/local/php/bin/phpize<br style="margin:0px;padding:0px;"/>
+#./configure --with-php-config=/usr/local/php/bin/php-config<br style="margin:0px;padding:0px;"/>
+--with-pdo-mysql=/usr/local/mysql<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+Installing shared extensions:<br style="margin:0px;padding:0px;"/>
+/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">4.安装ImageMagick是Linux下非常强大的图象处理函数与GD类似.<br style="margin:0px;padding:0px;"/>
+# tar zxvf ImageMagick.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd ImageMagick-6.5.1-2/<br style="margin:0px;padding:0px;"/>
+#./configure<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">5.安装imagick(连接PHP和ImageMagick的通道)<br style="margin:0px;padding:0px;"/>
+# tar zxvf imagick-2.2.2.tgz<br style="margin:0px;padding:0px;"/>
+# cd imagick-2.2.2/<br style="margin:0px;padding:0px;"/>
+# /usr/local/php/bin/phpize<br style="margin:0px;padding:0px;"/>
+# ./configure --with-php-config=/usr/local/php/bin/php-config<br style="margin:0px;padding:0px;"/>
+# make<br style="margin:0px;padding:0px;"/>
+# make install<br style="margin:0px;padding:0px;"/>
+Installing shared extensions:<br style="margin:0px;padding:0px;"/>
+/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">6.修改php.ini文件,已使php支持扩展的功能<br style="margin:0px;padding:0px;"/>
+vi /usr/local/php/etc/php.ini<br style="margin:0px;padding:0px;"/>
+查找<br style="margin:0px;padding:0px;"/>
+extension_dir = &quot;./&quot;<br style="margin:0px;padding:0px;"/>
+修改为<br style="margin:0px;padding:0px;"/>
+extension_dir=&quot;/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/&quot;<br style="margin:0px;padding:0px;"/>
+并在此行后增加以下几行，然后保存：<br style="margin:0px;padding:0px;"/>
+extension = &quot;memcache.so&quot;<br style="margin:0px;padding:0px;"/>
+extension = &quot;pdo_mysql.so&quot;<br style="margin:0px;padding:0px;"/>
+extension = &quot;imagick.so&quot;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">再查找output_buffering = Off<br style="margin:0px;padding:0px;"/>
+修改为output_buffering = On</p><p style="margin:10px auto;padding:0px;text-indent:0px;">7.配置eAccelerator加速PHP：<br style="margin:0px;padding:0px;"/>
+mkdir -p /usr/local/eaccelerator_cache<br style="margin:0px;padding:0px;"/>
+vi /usr/local/php/etc/php.ini</p><p style="margin:10px auto;padding:0px;text-indent:0px;">到配置文件的最末尾，粘上以下内容:<br style="margin:0px;padding:0px;"/>
+[eaccelerator]<br style="margin:0px;padding:0px;"/>
+zend_extension=&quot;/usr/local/php/lib/php/extensions/no-debug-non-zts-20060613/eaccelerator.so&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.shm_size=&quot;64&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.cache_dir=&quot;/usr/local/eaccelerator_cache&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.enable=&quot;1&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.optimizer=&quot;1&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.check_mtime=&quot;1&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.debug=&quot;0&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.filter=&quot;&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.shm_max=&quot;0&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.shm_ttl=&quot;3600&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.shm_prune_period=&quot;3600&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.shm_only=&quot;0&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.compress=&quot;1&quot;<br style="margin:0px;padding:0px;"/>
+eaccelerator.compress_level=&quot;9&quot;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">八、PHP-fpm配置</strong><br style="margin:0px;padding:0px;"/>
+1.创建php-fpm配置文件<br style="margin:0px;padding:0px;"/>
+php-fpm是为PHP打的一个FastCGI管理补丁，可以平滑变更php.ini配置而无需重启php-cgi:<br style="margin:0px;padding:0px;"/>
+在/usr/local/php/etc/目录中创建php-fpm.conf文件，也可以在原有的基础上进行修改。<br style="margin:0px;padding:0px;"/>
+如果您安装 Nginx + PHP 用于程序调试<br style="margin:0px;padding:0px;"/>
+请将以下的<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;display_errors&quot;&gt;0&lt;/value&gt;改为<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;display_errors&quot;&gt;1&lt;/value&gt;，以便显示PHP错误信息，否则，Nginx 会报状态为500的空白错误页。<br style="margin:0px;padding:0px;"/>
+说明：创建www用户与组，这里创建了下面就不用创建了。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">#/usr/sbin/groupadd www -g 48<br style="margin:0px;padding:0px;"/>
+#/usr/sbin/useradd -u 48 -g www www</p><p style="margin:10px auto;padding:0px;text-indent:0px;">rm -f /usr/local/php/etc/php-fpm.conf<br style="margin:0px;padding:0px;"/>
+vi /usr/local/php/etc/php-fpm.conf<br style="margin:0px;padding:0px;"/>
+###############################<br style="margin:0px;padding:0px;"/>
+#输入或者是修改为以下内容:<br style="margin:0px;padding:0px;"/>
+###############################<br style="margin:0px;padding:0px;"/>
+&lt;?xml version=&quot;1.0&quot; ?&gt;<br style="margin:0px;padding:0px;"/>
+&lt;configuration&gt;<br style="margin:0px;padding:0px;"/>
+&lt;section name=&quot;global_options&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;pid_file&quot;&gt;/usr/local/php/logs/php-fpm.pid&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;error_log&quot;&gt;/usr/local/php/logs/php-fpm.log&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;log_level&quot;&gt;notice&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;emergency_restart_threshold&quot;&gt;10&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;emergency_restart_interval&quot;&gt;1m&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;process_control_timeout&quot;&gt;5s&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;daemonize&quot;&gt;yes&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/section&gt;<br style="margin:0px;padding:0px;"/>
+&lt;workers&gt;<br style="margin:0px;padding:0px;"/>
+&lt;section name=&quot;pool&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;name&quot;&gt;default&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;listen_address&quot;&gt;127.0.0.1:9000&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;listen_options&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;backlog&quot;&gt;-1&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;owner&quot;&gt;&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;group&quot;&gt;&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;mode&quot;&gt;0666&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;php_defines&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;sendmail_path&quot;&gt;/usr/sbin/sendmail -t -i&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;display_errors&quot;&gt;1&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;user&quot;&gt;www&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;group&quot;&gt;www&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;pm&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;style&quot;&gt;static&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;max_children&quot;&gt;128&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;apache_like&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;StartServers&quot;&gt;20&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;MinSpareServers&quot;&gt;5&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;MaxSpareServers&quot;&gt;35&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;request_terminate_timeout&quot;&gt;0s&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;request_slowlog_timeout&quot;&gt;0s&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;slowlog&quot;&gt;logs/slow.log&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;rlimit_files&quot;&gt;51200&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;rlimit_core&quot;&gt;0&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;chroot&quot;&gt;&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;chdir&quot;&gt;&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;catch_workers_output&quot;&gt;yes&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;max_requests&quot;&gt;500&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;allowed_clients&quot;&gt;127.0.0.1&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;environment&quot;&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;HOSTNAME&quot;&gt;$HOSTNAME&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;PATH&quot;&gt;/usr/local/bin:/usr/bin:/bin&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;TMP&quot;&gt;/tmp&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;TMPDIR&quot;&gt;/tmp&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;TEMP&quot;&gt;/tmp&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;OSTYPE&quot;&gt;$OSTYPE&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;MACHTYPE&quot;&gt;$MACHTYPE&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;value name=&quot;MALLOC_CHECK_&quot;&gt;2&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/value&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/section&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/workers&gt;<br style="margin:0px;padding:0px;"/>
+&lt;/configuration&gt;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2.php-fpm启动与管理<br style="margin:0px;padding:0px;"/>
+/usr/local/php/sbin/php-fpm start<br style="margin:0px;padding:0px;"/>
+注：/usr/local/php/sbin/php-fpm还有其他参数，包括：<br style="margin:0px;padding:0px;"/>
+start|stop|quit|restart|reload|logrotate，修改php.ini后不重启php-cgi，重新加载配置文件使用reload，就保持了在php的fastcgi进程持续运行的状态下，又重新加载了php.ini。</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">九、Nginx安装</strong><br style="margin:0px;padding:0px;"/>
+1.nginx安装<br style="margin:0px;padding:0px;"/>
+Nginx只是web服务器，配合php技术实现的fastcgi来提高性能。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">1、安装rewrite模块支持包pcre库：</p><p style="margin:10px auto;padding:0px;text-indent:0px;">pcre是perl所用到的正则表达式，目的是让所装的软件支持正则表达式。默认情况下，Nginx只处理静态的网页请求，也就是html.如果是来自动态的网页请求，比如*.php，那么Nginx就要根据正则表达式查询路径，然后把*.PHP交给PHP去处理。</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># tar zxvf pcre-7.8.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd pcre-7.8/<br style="margin:0px;padding:0px;"/>
+# ./configure<br style="margin:0px;padding:0px;"/>
+# make &amp;&amp; make install<br style="margin:0px;padding:0px;"/>
+cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2.安装Nginx<br style="margin:0px;padding:0px;"/>
+说明:创建www用户组及www用户，如果之前php-fpm没有创建，这里要创建。<br style="margin:0px;padding:0px;"/>
+# /usr/sbin/groupadd www<br style="margin:0px;padding:0px;"/>
+# /usr/sbin/useradd -g www www</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># tar zxvf nginx-1.0.15.tar.gz<br style="margin:0px;padding:0px;"/>
+# cd nginx-1.0.15/<br style="margin:0px;padding:0px;"/>
+#./configure --user=www --group=www --prefix=/usr/local/nginx --with-http_stub_status_module --with-http_ssl_module</p><p style="margin:10px auto;padding:0px;text-indent:0px;">  nginx path prefix: &quot;/usr/local/nginx&quot;<br style="margin:0px;padding:0px;"/>
+  nginx binary file: &quot;/usr/local/nginx/sbin/nginx&quot;<br style="margin:0px;padding:0px;"/>
+  nginx configuration prefix: &quot;/usr/local/nginx/conf&quot;<br style="margin:0px;padding:0px;"/>
+  nginx configuration file: &quot;/usr/local/nginx/conf/nginx.conf&quot;<br style="margin:0px;padding:0px;"/>
+  nginx pid file: &quot;/usr/local/nginx/logs/nginx.pid&quot;<br style="margin:0px;padding:0px;"/>
+  nginx error log file: &quot;/usr/local/nginx/logs/error.log&quot;<br style="margin:0px;padding:0px;"/>
+  nginx http access log file: &quot;/usr/local/nginx/logs/access.log&quot;<br style="margin:0px;padding:0px;"/>
+  nginx http client request body temporary files: &quot;client_body_temp&quot;<br style="margin:0px;padding:0px;"/>
+  nginx http proxy temporary files: &quot;proxy_temp&quot;<br style="margin:0px;padding:0px;"/>
+  nginx http fastcgi temporary files: &quot;fastcgi_temp&quot;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><br style="margin:0px;padding:0px;"/>
+# make &amp;&amp; make install<br style="margin:0px;padding:0px;"/>
+# cd ../</p><p style="margin:10px auto;padding:0px;text-indent:0px;">3．Nginx 安装后只有一个程序文件，本身并不提供各种管理程序，它是使用参数和系统信号机制对 Nginx 进程本身进行控制的。<br style="margin:0px;padding:0px;"/>
+Nginx 的参数包括有如下几个：<br style="margin:0px;padding:0px;"/>
+-c &lt;path_to_config&gt;：使用指定的配置文件而不是 conf 目录下的 nginx.conf 。<br style="margin:0px;padding:0px;"/>
+-t：测试配置文件是否正确，在运行时需要重新加载配置的时候，此命令非常重要，用来检测所修改的配置文件是否有语法错误。<br style="margin:0px;padding:0px;"/>
+-v：显示 nginx 版本号。<br style="margin:0px;padding:0px;"/>
+-V：显示 nginx 的版本号以及编译环境信息以及编译时的参数。<br style="margin:0px;padding:0px;"/>
+例如我们要测试某个配置文件是否书写正确，我们可以使用以下命令<br style="margin:0px;padding:0px;"/>
+sbin/nginx -t -c conf/nginx.conf</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">十、nginx配置</strong><br style="margin:0px;padding:0px;"/>
+1.在/usr/local/nginx/conf/目录中创建nginx.conf文件：<br style="margin:0px;padding:0px;"/>
+rm -f /usr/local/nginx/conf/nginx.conf<br style="margin:0px;padding:0px;"/>
+vi /usr/local/nginx/conf/nginx.conf<br style="margin:0px;padding:0px;"/>
+=======================================<br style="margin:0px;padding:0px;"/>
+nginx.conf才是nginx web服务器的配置文件<br style="margin:0px;padding:0px;"/>
+=======================================<br style="margin:0px;padding:0px;"/>
+user  www www;        /*启动nginx服务的用户与组*/<br style="margin:0px;padding:0px;"/>
+worker_processes 1;   /*启动nginx服务的工作进程*/<br style="margin:0px;padding:0px;"/>
+error_log  logs/nginx_error.log  crit; /*错误日志，以及等级*/<br style="margin:0px;padding:0px;"/>
+pid        /usr/local/nginx/nginx.pid;  /*nginx服务进程PID*/</p><p style="margin:10px auto;padding:0px;text-indent:0px;">worker_rlimit_nofile 51200; </p><p style="margin:10px auto;padding:0px;text-indent:0px;">events<br style="margin:0px;padding:0px;"/>
+{<br style="margin:0px;padding:0px;"/>
+ use epoll;                /*工作模式*/<br style="margin:0px;padding:0px;"/>
+ worker_connections 51200; /*每进程允许最大的同时连接数*/<br style="margin:0px;padding:0px;"/>
+}</p><p style="margin:10px auto;padding:0px;text-indent:0px;">http<br style="margin:0px;padding:0px;"/>
+{<br style="margin:0px;padding:0px;"/>
+ include       mime.types;<br style="margin:0px;padding:0px;"/>
+ default_type  application/octet-stream;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"> #charset  gb2312;<br style="margin:0px;padding:0px;"/>
+ server_names_hash_bucket_size 128;<br style="margin:0px;padding:0px;"/>
+ client_header_buffer_size 32k;<br style="margin:0px;padding:0px;"/>
+ large_client_header_buffers 4 32k;<br style="margin:0px;padding:0px;"/>
+ <br style="margin:0px;padding:0px;"/>
+ sendfile on;<br style="margin:0px;padding:0px;"/>
+ tcp_nopush     on;<br style="margin:0px;padding:0px;"/>
+ keepalive_timeout 60;<br style="margin:0px;padding:0px;"/>
+ tcp_nodelay on;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"> fastcgi_connect_timeout 300;<br style="margin:0px;padding:0px;"/>
+ fastcgi_send_timeout 300;<br style="margin:0px;padding:0px;"/>
+ fastcgi_read_timeout 300;<br style="margin:0px;padding:0px;"/>
+ fastcgi_buffer_size 64k;<br style="margin:0px;padding:0px;"/>
+ fastcgi_buffers 4 64k;<br style="margin:0px;padding:0px;"/>
+ fastcgi_busy_buffers_size 128k;<br style="margin:0px;padding:0px;"/>
+ fastcgi_temp_file_write_size 128k;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"> gzip on;<br style="margin:0px;padding:0px;"/>
+ gzip_min_length  1k;<br style="margin:0px;padding:0px;"/>
+ gzip_buffers     4 16k;<br style="margin:0px;padding:0px;"/>
+ gzip_http_version 1.0;<br style="margin:0px;padding:0px;"/>
+ gzip_comp_level 2;<br style="margin:0px;padding:0px;"/>
+ gzip_types text/plain application/x-javascript text/css application/xml;<br style="margin:0px;padding:0px;"/>
+ gzip_vary on;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"> #limit_zone  crawler  $binary_remote_addr  10m;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"> server<br style="margin:0px;padding:0px;"/>
+ {<br style="margin:0px;padding:0px;"/>
+   listen       80;               /*监听端口*/<br style="margin:0px;padding:0px;"/>
+   server_name  localhost;        /*服务器名称*/<br style="margin:0px;padding:0px;"/>
+   index index.html index.htm index.php;  /*缺省主页名称*/<br style="margin:0px;padding:0px;"/>
+   root  /usr/local/nginx/html;   /*网站根目录，也可以采用下面内容*/<br style="margin:0px;padding:0px;"/>
+#也可以采用相对路径,下面注释部分*/<br style="margin:0px;padding:0px;"/>
+   #location / {<br style="margin:0px;padding:0px;"/>
+   #         root   html;<br style="margin:0px;padding:0px;"/>
+   #         index  index.html index.htm;<br style="margin:0px;padding:0px;"/>
+   # }</p><p style="margin:10px auto;padding:0px;text-indent:0px;">   #limit_conn   crawler  20;   <br style="margin:0px;padding:0px;"/>
+  <br style="margin:0px;padding:0px;"/>
+   #通过FastCGI方式支持PHP，php页面由fastcgi代理处理，这也是反向代理的一个应用，这里可以是jsp/asp等脚本。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">   #Nginx是通过本机的9000端口将PHP请求转发给PHP的，PHP自己是从本机的9000端口侦听数据，Nginx与PHP通过本机的9000端口完成了数据请求。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">   location ~ .*\.(php|php5)?$<br style="margin:0px;padding:0px;"/>
+   {     <br style="margin:0px;padding:0px;"/>
+     #fastcgi_pass  unix:/tmp/php-cgi.sock;<br style="margin:0px;padding:0px;"/>
+     fastcgi_pass  127.0.0.1:9000;   /*fastcgi监听端口*/<br style="margin:0px;padding:0px;"/>
+     fastcgi_index index.php;<br style="margin:0px;padding:0px;"/>
+     include fcgi.conf;       /*fastcgi配置文件，修改为以下内容*/<br style="margin:0px;padding:0px;"/>
+   }<br style="margin:0px;padding:0px;"/>
+  <br style="margin:0px;padding:0px;"/>
+   #对于某一类型的文件，设置过期时间，静态的页面通常设置长一点。<br style="margin:0px;padding:0px;"/>
+   #静态文件，nginx自己处理<br style="margin:0px;padding:0px;"/>
+   location ~ .*\.(gif|jpg|jpeg|png|bmp|swf|js|css)$<br style="margin:0px;padding:0px;"/>
+   {<br style="margin:0px;padding:0px;"/>
+     expires      30d;<br style="margin:0px;padding:0px;"/>
+   }</p><p style="margin:10px auto;padding:0px;text-indent:0px;">#日志的格式<br style="margin:0px;padding:0px;"/>
+   log_format  access  '$remote_addr - $remote_user [$time_local] &quot;$request&quot; '<br style="margin:0px;padding:0px;"/>
+             '$status $body_bytes_sent &quot;$http_referer&quot; '<br style="margin:0px;padding:0px;"/>
+             '&quot;$http_user_agent&quot; $http_x_forwarded_for';<br style="margin:0px;padding:0px;"/>
+   access_log  logs/access.log  access;<br style="margin:0px;padding:0px;"/>
+     }<br style="margin:0px;padding:0px;"/>
+}<br style="margin:0px;padding:0px;"/>
+说明:以上配置文件只是基本配置文件，要实现其它功能的话，需要在此基础上进行修改。</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2.在/usr/local/nginx/conf/目录中创建fcgi.conf文件：<br style="margin:0px;padding:0px;"/>
+说明：可以直接粘贴以下内容。<br style="margin:0px;padding:0px;"/>
+vi /usr/local/nginx/conf/fcgi.conf<br style="margin:0px;padding:0px;"/>
+fastcgi_param  GATEWAY_INTERFACE  CGI/1.1;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SERVER_SOFTWARE    nginx;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">fastcgi_param  QUERY_STRING       $query_string;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  REQUEST_METHOD     $request_method;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  CONTENT_TYPE       $content_type;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  CONTENT_LENGTH     $content_length;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SCRIPT_NAME        $fastcgi_script_name;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  REQUEST_URI        $request_uri;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  DOCUMENT_URI       $document_uri;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  DOCUMENT_ROOT      $document_root;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SERVER_PROTOCOL    $server_protocol;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">fastcgi_param  REMOTE_ADDR        $remote_addr;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  REMOTE_PORT        $remote_port;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SERVER_ADDR        $server_addr;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SERVER_PORT        $server_port;<br style="margin:0px;padding:0px;"/>
+fastcgi_param  SERVER_NAME        $server_name;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"># PHP only, required if PHP was built with --enable-force-cgi-redirect<br style="margin:0px;padding:0px;"/>
+fastcgi_param  REDIRECT_STATUS    200;</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;">十一、nginx启动与管理</strong><br style="margin:0px;padding:0px;"/>
+1．启动nginx<br style="margin:0px;padding:0px;"/>
+/usr/local/nginx/sbin/nginx</p><p style="margin:10px auto;padding:0px;text-indent:0px;">2．测试nginx配置文件<br style="margin:0px;padding:0px;"/>
+修改/usr/local/nginx/conf/nginx.conf配置文件后，请执行以下命令检查配置文件是否正确：<br style="margin:0px;padding:0px;"/>
+# /usr/local/nginx/sbin/nginx -t<br style="margin:0px;padding:0px;"/>
+如果屏幕显示以下两行信息，说明配置文件正确：<br style="margin:0px;padding:0px;"/>
+the configuration file /usr/local/nginx/conf/nginx.conf syntax is ok<br style="margin:0px;padding:0px;"/>
+the configuration file /usr/local/nginx/conf/nginx.conf was tested successfully</p><p style="margin:10px auto;padding:0px;text-indent:0px;">3．查看Nginx主进程号<br style="margin:0px;padding:0px;"/>
+ps -ef | grep &quot;nginx: master process&quot; | grep -v &quot;grep&quot; | awk -F ' ' '{print $2}'<br style="margin:0px;padding:0px;"/>
+屏幕显示的即为Nginx主进程号，例如：<br style="margin:0px;padding:0px;"/>
+6302<br style="margin:0px;padding:0px;"/>
+这时，执行以下命令即可使修改过的Nginx配置文件生效：<br style="margin:0px;padding:0px;"/>
+kill -HUP 6302<br style="margin:0px;padding:0px;"/>
+或者无需这么麻烦，找到Nginx的Pid文件：<br style="margin:0px;padding:0px;"/>
+kill -HUP `cat /usr/local/nginx/logs/nginx.pid`</p><p style="margin:10px auto;padding:0px;text-indent:0px;">4．配置开机自动启动Nginx + PHP<br style="margin:0px;padding:0px;"/>
+vi /etc/rc.local<br style="margin:0px;padding:0px;"/>
+加入以下内容:<br style="margin:0px;padding:0px;"/>
+ulimit -SHn 51200<br style="margin:0px;padding:0px;"/>
+/usr/local/php/sbin/php-fpm start<br style="margin:0px;padding:0px;"/>
+/usr/local/nginx/sbin/nginx</p><p style="margin:10px auto;padding:0px;text-indent:0px;">5.测试nginx<br style="margin:0px;padding:0px;"/>
+vi /usr/local/nginx/html/phpinfo.php<br style="margin:0px;padding:0px;"/>
+&lt;?<br style="margin:0px;padding:0px;"/>
+phpinfo();</p><p style="margin:10px auto;padding:0px;text-indent:0px;">?&gt;</p><p style="margin:10px auto;padding:0px;text-indent:0px;">6.测试结果</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><img src="LNMP(linux+nginx+mysql+php)服务器环境配置 - David_Ta_files/2012051809551936.jpg" type="image/jpeg" data-filename="2012051809551936.jpg" alt="nginx" height="142" style="margin:0px;padding:0px;border:0px;cursor: default;" width="1024"/></p><p style="margin:10px auto;padding:0px;text-indent:0px;">phpinfo()</p><p style="margin:10px auto;padding:0px;text-indent:0px;"><img src="LNMP(linux+nginx+mysql+php)服务器环境配置 - David_Ta_files/2012051809560453.jpg" type="image/jpeg" data-filename="2012051809560453.jpg" alt="phpinfo" height="608" style="margin:0px;padding:0px;border:0px;cursor: default;" width="1024"/></p><p style="margin:10px auto;padding:0px;text-indent:0px;"> </p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;line-height:1.8;color:#800000;">CentOS 6.3下源码安装LAMP(Linux+Apache+Mysql+Php)环境</span></strong></p><p style="margin:10px auto;padding:0px;text-indent:0px;"><strong style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;line-height:1.8;color:#800000;"><span style="text-decoration: none; border-bottom-width: 1px; border-bottom-style: dotted; border-bottom-color: rgb(51, 51, 51); margin: 0px; padding: 0px; line-height: 1.8; color: rgb(128, 0, 0);"><a href="http://www.cnblogs.com/mchina/archive/2012/11/28/2778779.html" style="margin:0px;padding:0px;text-decoration:none;color:rgb(0, 0, 0);border-bottom-width:1px;border-bottom-style:dotted;border-bottom-color:rgb(51, 51, 51);" target="_blank">http://www.cnblogs.com/mchina/archive/2012/11/28/2778779.html</a></span></span></strong></p></div></div></div></div></div></div></span>
+</div></body></html> 

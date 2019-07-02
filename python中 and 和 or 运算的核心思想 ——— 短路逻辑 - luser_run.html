@@ -1,0 +1,208 @@
+<html>
+<head>
+  <title>python中 and 和 or 运算的核心思想 ——— 短路逻辑 - luser_run - 博客园</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="600"/>
+<h1>python中 and 和 or 运算的核心思想 ——— 短路逻辑 - luser_run - 博客园</h1>
+
+<div><span><div style="-evernote-webclip:true"><br/><div style="font-size: 16px; display: inline-block;"><div><div style="font-family:&quot;PingFang SC&quot;, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;color:rgb(0, 0, 0);background:rgb(210, 216, 222);font-size:14px;"><div><div style="min-width:auto;text-align:left;overflow:hidden;"><div style="text-overflow:ellipsis;overflow:hidden;word-break:break-all;"><div><div><div style="text-overflow:ellipsis;overflow:hidden;word-break:break-all;background:rgb(255, 255, 255);border-radius:7px;box-shadow:rgb(167, 168, 173) 1px 1px 2px;"><div><div style="line-height:1.5;color:rgb(0, 0, 0);"><div style="word-break:break-word;"><h2 style="padding:0px;font-size:21px;font-weight:bold;line-height:1.5;margin:10px 0px;">python中 and 和 or 运算的核心思想 ——— 短路逻辑</h2>
+<h3 style="padding:0px;font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;">1. 包含一个逻辑运算符</h3>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　首先从基本的概念着手，python中哪些对象会被当成 False 呢？而哪些又是 True 呢？</p>
+<blockquote style="margin:0px;background:none;border:2px solid rgb(239, 239, 239);padding:5px 10px;margin-top:10px;margin-bottom:10px;line-height:1.6;color:rgb(51, 51, 51);">
+<p style="padding:0px;margin:10px auto;text-indent:0px;">在Python中，None、任何数值类型中的0、空字符串“”、空元组()、空列表[]、空字典{}都被当作False，还有自定义类型，如果实现了 　__ nonzero __ ()　或　__ len __ () 方法且方法返回 0 或False，则其实例也被当作False，其他对象均为True。</p>
+</blockquote>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　下面是最简单的逻辑运算：</p>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>  <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>    ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>                  <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>  <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>    ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>
+    <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>  <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>   ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>                 <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>  <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>   ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>
+    <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>    ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>                 <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>    ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">True</span>
+    <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>   ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>                 <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span>   ==&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">False</span></code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　利用上面两点我们就可以举一些例子：</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 1</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;color:rgb(43, 145, 175);">&gt;&gt;&gt; </span>a = [<span style="margin:0px;padding:0px;">0</span>, <span style="margin:0px;padding:0px;">1</span>, <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">''</span> ,<span style="margin:0px;padding:0px;">3</span>]
+    <span style="margin:0px;padding:0px;color:rgb(43, 145, 175);">&gt;&gt;&gt; </span>a[<span style="margin:0px;padding:0px;">0</span>] and a[<span style="margin:0px;padding:0px;">1</span>]
+    <span style="margin:0px;padding:0px;">0</span></code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　a[0] = 0 , a[1] = 1 , 所以 a[0] and a[1] 就变成了 0 and 1 （False and True），所以为 0 （False）。</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 2</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;color:rgb(43, 145, 175);">&gt;&gt;&gt; </span>a = [<span style="margin:0px;padding:0px;">0</span>, <span style="margin:0px;padding:0px;">1</span>, <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">''</span> ,<span style="margin:0px;padding:0px;">3</span>]
+    <span style="margin:0px;padding:0px;color:rgb(43, 145, 175);">&gt;&gt;&gt; </span>a[<span style="margin:0px;padding:0px;">2</span>] and a[<span style="margin:0px;padding:0px;">1</span>]
+    <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">''</span></code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　两个同时为 False ，返回左边的值。</p>
+<h3 style="padding:0px;font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;">2. 包含两个及以上的逻辑运算符</h3>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　逻辑运算符 and / or 一旦不止一个，其运算规则的核心思想就是短路逻辑。好的，那我们就来了解一下短路思想（本人归纳，可能与网上其他人的有些出入，且听我慢慢分析）：</p>
+<blockquote style="margin:0px;background:none;border:2px solid rgb(239, 239, 239);padding:5px 10px;margin-top:10px;margin-bottom:10px;line-height:1.6;color:rgb(51, 51, 51);">
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><strong style="margin:0px;padding:0px;">表达式从左至右运算，若 or 的左侧逻辑值为 True ，则短路 or 后所有的表达式（不管是 and 还是 or），直接输出 or 左侧表达式 。</strong></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><strong style="margin:0px;padding:0px;">表达式从左至右运算，若 and 的左侧逻辑值为 False ，则短路其后所有 and 表达式，直到有 or 出现，输出 and 左侧表达式到 or 的左侧，参与接下来的逻辑运算。</strong></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><strong style="margin:0px;padding:0px;">若 or 的左侧为 False ，或者 and 的左侧为 True 则不能使用短路逻辑。</strong></p>
+</blockquote>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　可能有点抽象，没关系，我们接下来就举一些例子。</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　这里有一个巧妙的方法，能让我们直观地了解 python 处理这些逻辑语句时的短路情况（我也是跟别人学的）</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　好了，就让我们从简单的开始，假设全是 and 语句 或者全是 or 语句：</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 1</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;">1</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">a</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">2</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'A'</span>
+    <span style="margin:0px;padding:0px;">3</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">4</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">b</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">5</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'B'</span>
+    <span style="margin:0px;padding:0px;">6</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">7</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">c</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">8</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'C'</span>
+    <span style="margin:0px;padding:0px;">9</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">10</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">d</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">11</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'D'</span>
+    <span style="margin:0px;padding:0px;">12</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">13</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">e</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">14</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'E'</span>
+    <span style="margin:0px;padding:0px;">15</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">16</span>&gt;
+    <span style="margin:0px;padding:0px;">17</span>&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">if</span> a() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> b() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> c() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> d() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> e():
+    <span style="margin:0px;padding:0px;">18</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'ok'</span>
+    
+    <span style="margin:0px;padding:0px;color:green;">#显示结果如下</span>
+    A
+    </code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　a() 为假 ，其后均为 and 语句，全部短路，最终只返回 a() 的表达式。<strong style="margin:0px;padding:0px;">记住，所有被短路的表达式均不会被输出。</strong>所以，此处仅仅打印 A 。</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 2</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;">1</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">a</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">2</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'A'</span>
+    <span style="margin:0px;padding:0px;">3</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">4</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">b</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">5</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'B'</span>
+    <span style="margin:0px;padding:0px;">6</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">7</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">c</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">8</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'C'</span>
+    <span style="margin:0px;padding:0px;">9</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">10</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">d</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">11</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'D'</span>
+    <span style="margin:0px;padding:0px;">12</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">13</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">e</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">14</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'E'</span>
+    <span style="margin:0px;padding:0px;">15</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">16</span>&gt;
+    <span style="margin:0px;padding:0px;">17</span>&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">if</span> a() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> b() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> c() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> d() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> e():
+    <span style="margin:0px;padding:0px;">18</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'ok'</span>
+
+    <span style="margin:0px;padding:0px;color:green;">#显示结果如下</span>
+    A
+    B
+    C</code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　python 从左至右先执行 a() ,a() 返回的逻辑值为 True，后面是 and 语句，所以不能短路其后，继续与 b() 进行逻辑运算，a() and b() 输出 b() 的逻辑值 True，接着与 c() 进行逻辑运算，b() and c() 输出 c() 的逻辑值 False，而其后均为 and 语句， 则全部短路，最终只打印了 A B C 。</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 3</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;">1</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">a</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">2</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'A'</span>
+    <span style="margin:0px;padding:0px;">3</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">4</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">b</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">5</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'B'</span>
+    <span style="margin:0px;padding:0px;">6</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">7</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">c</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">8</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'C'</span>
+    <span style="margin:0px;padding:0px;">9</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">10</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">d</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">11</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'D'</span>
+    <span style="margin:0px;padding:0px;">12</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">13</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">e</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">14</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'E'</span>
+    <span style="margin:0px;padding:0px;">15</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">16</span>&gt;
+    <span style="margin:0px;padding:0px;">17</span>&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">if</span> a() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> b() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> c() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> d() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> e():
+    <span style="margin:0px;padding:0px;">18</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'ok'</span>
+
+    <span style="margin:0px;padding:0px;color:green;">#显示结果如下</span>
+    A
+    ok</code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　a() 的逻辑值为 True ，其后均为 or 语句，全部短路，最终只打印了 A，而 if 语句为 True ，所以还要打印一个 ok。</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 4</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;">1</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">a</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">2</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'A'</span>
+    <span style="margin:0px;padding:0px;">3</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">4</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">b</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">5</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'B'</span>
+    <span style="margin:0px;padding:0px;">6</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">7</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">c</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">8</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'C'</span>
+    <span style="margin:0px;padding:0px;">9</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">10</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">d</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">11</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'D'</span>
+    <span style="margin:0px;padding:0px;">12</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">13</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">e</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">14</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'E'</span>
+    <span style="margin:0px;padding:0px;">15</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">16</span>&gt;
+    <span style="margin:0px;padding:0px;">17</span>&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">if</span> a() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> b() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> c() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> d() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> e():
+    <span style="margin:0px;padding:0px;">18</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'ok'</span>
+
+    <span style="margin:0px;padding:0px;color:green;">#显示结果如下</span>
+    A
+    B
+    C
+    ok</code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　python 从左至右先执行 a() ,a() 返回的逻辑值为 False，后面是 or 语句，所以不能短路其后，继续与 b() 进行逻辑运算，a() or b() 输出 b() 的逻辑值 False，接着与 c() 进行逻辑运算，b() or c() 输出 c() 的逻辑值 True，而其后为 or 语句， 则全部短路，最终只打印了 A B C ok。</p>
+<hr style="margin:0px;padding:0px;"/>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　下面我们就来讲一下 and 与 or 语句同时存在的情况：</p>
+<h4 style="padding:0px;color:rgb(51, 51, 51);font-size:14px;font-weight:bold;margin:10px 0px;">example 5</h4>
+<pre style="margin:0px;padding:0px;white-space:pre-wrap;word-wrap:break-word;margin-top:10px;margin-bottom:10px;"><code style="vertical-align:middle;height:auto;margin:auto;font-family:&quot;Courier New&quot;, sans-serif;background:rgb(255, 255, 255);color:rgb(0, 0, 0);overflow-x:auto;display:block;background-color:rgb(245, 245, 245);border:1px solid rgb(204, 204, 204);border-radius:3px;padding:5px;line-height:1.5;font-size:12px;">    <span style="margin:0px;padding:0px;">1</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">a</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">2</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'A'</span>
+    <span style="margin:0px;padding:0px;">3</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">4</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">b</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">5</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'B'</span>
+    <span style="margin:0px;padding:0px;">6</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">7</span>&gt;  <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">c</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">8</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'C'</span>
+    <span style="margin:0px;padding:0px;">9</span>&gt;      <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">10</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">d</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">11</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'D'</span>
+    <span style="margin:0px;padding:0px;">12</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">13</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">e</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">14</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'E'</span>
+    <span style="margin:0px;padding:0px;">15</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">16</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">f</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">17</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'F'</span>
+    <span style="margin:0px;padding:0px;">18</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">19</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">g</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">20</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'G'</span>
+    <span style="margin:0px;padding:0px;">21</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> []
+    <span style="margin:0px;padding:0px;">22</span>&gt; <span style="margin:0px;padding:0px;"><span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">def</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">h</span><span style="margin:0px;padding:0px;">()</span>:</span>
+    <span style="margin:0px;padding:0px;">23</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'H'</span>
+    <span style="margin:0px;padding:0px;">24</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">return</span> <span style="margin:0px;padding:0px;">1</span>
+    <span style="margin:0px;padding:0px;">25</span>&gt;
+    <span style="margin:0px;padding:0px;">26</span>&gt; <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">if</span> a() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> b() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span>  c() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> d() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> e() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> f() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">or</span> g() <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">and</span> h():
+    <span style="margin:0px;padding:0px;">27</span>&gt;     <span style="margin:0px;padding:0px;color:rgb(0, 0, 255);">print</span> <span style="margin:0px;padding:0px;color:rgb(163, 21, 21);">'ok'</span>
+
+    <span style="margin:0px;padding:0px;color:green;">#输出结果如下：</span>
+    A
+    E
+    F
+    ok</code></pre>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　别以为语句很长就很难，我们好好分析一下，从左至右，首先a() 的逻辑值为 False，其后到 or 语句为止有三个 and 语句： a() and b() and c() and d()，均被短路。只输出 a(), 得到 a() or e() 为True，输出 e() ,得 e() and F() 为 True ,输出 f(), 其后接 or 语句，则短路其后所有。最终只打印了A E F ok 。（<em style="margin:0px;padding:0px;">结合我总结的短路逻辑的三点好好理解，应该没问题。</em>）</p>
+<h3 style="padding:0px;font-size:16px;font-weight:bold;line-height:1.5;margin:10px 0px;">3. 三元运算操作符</h3>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　在python2.5 之前，python 是没有三元操作符的，Guido Van Rossum 认为它并不能帮助 python 更加简洁，但是那些习惯了 c 、 c++ 和 java 编程的程序员却尝试着用 and 或者 or 来模拟出三元操作符，而这利用的就是python的短路逻辑。</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　三元运算操作符 bool ? a : b ，若 bool 为真则 a ，否则为 b 。</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　转化为 python 语言为：</p>
+<blockquote style="margin:0px;background:none;border:2px solid rgb(239, 239, 239);padding:5px 10px;margin-top:10px;margin-bottom:10px;line-height:1.6;color:rgb(51, 51, 51);">
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　　　　　　　<strong style="margin:0px;padding:0px;">bool and a or b </strong></p>
+</blockquote>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　如何理解呢？ 首先 a ， b 都为真，这是默认的。如果 bool 为真， 则 bool and a 为真，输出 a ，短路 b 。如果 bool 为假，短路 a，直接 bool or b ，输出 b 。</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　换一种更简单的写法：</p>
+<blockquote style="margin:0px;background:none;border:2px solid rgb(239, 239, 239);padding:5px 10px;margin-top:10px;margin-bottom:10px;line-height:1.6;color:rgb(51, 51, 51);">
+<p style="padding:0px;margin:10px auto;text-indent:0px;">　　　　　　　　<strong style="margin:0px;padding:0px;">return a if bool else b</strong></p>
+</blockquote>
+<hr style="margin:0px;padding:0px;"/>
+<p style="padding:0px;margin:10px auto;text-indent:0px;">本文参考资料（<em style="margin:0px;padding:0px;">在此表示感谢！</em>）：</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="http://www.colabug.com/thread-1166971-1-1.html" style="margin:0px;padding:0px;color:black;text-decoration:underline;">[Python]计算闰年时候出现的and和or优先级的问题以及短路逻辑</a>　</p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="http://blog.sina.com.cn/s/blog_62dfae1e0100h3k2.html" style="margin:0px;padding:0px;color:black;text-decoration:underline;">python的“短路”效应</a></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="https://www.zhihu.com/question/20152384" style="margin:0px;padding:0px;color:black;text-decoration:underline;">Python 里 and、or 的计算规则是怎样的？</a></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="http://my.oschina.net/chuangspace/blog/410833?fromerr=JVcbDIwA" style="margin:0px;padding:0px;color:black;text-decoration:underline;">python and与or</a></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="http://www.cnblogs.com/BeginMan/p/3197123.html" style="margin:0px;padding:0px;color:black;text-decoration:underline;">深入Python(3): and、or以及and-or</a></p>
+<p style="padding:0px;margin:10px auto;text-indent:0px;"><a href="http://www.cnblogs.com/skyhacker/archive/2012/01/22/2328815.html" style="margin:0px;padding:0px;color:black;text-decoration:underline;">python 短路逻辑和条件表达式</a><br style="margin:0px;padding:0px;"/>
+</p>
+</div></div></div></div></div></div></div></div></div></div></div></div><br/></div></span>
+</div></body></html> 

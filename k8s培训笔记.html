@@ -1,0 +1,699 @@
+<html>
+<head>
+  <title>k8s培训笔记</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <meta name="content-class" content="yinxiang.markdown"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="2247"/>
+<h1>k8s培训笔记</h1>
+
+<div><span><div style="font-size: 14px; margin: 0; padding: 0; width: 100%;"><h1 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 41px; border-bottom: 3px double #999; color: #000; margin-top: 14px;">k8s</h1>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">dokcer镜像</h2>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;"><strong style="line-height: 160%; box-sizing: content-box; font-weight: 700;">持续集成（Continuous Integration, CI）</strong>：代码合并、构建、部署、测试都在一起，不断执行这个过程，并对结果反馈。<br/>
+<strong style="line-height: 160%; box-sizing: content-box; font-weight: 700;">持续部署（Continuous Deployment, CD）</strong>：部署到测试环境、预生产环境、生产环境。<br/>
+<strong style="line-height: 160%; box-sizing: content-box; font-weight: 700;">持续交付（Continuous Delivery, CD）</strong>：将最终产品发布到生产环境，给用户使用。</p>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">k8s网络模型与CNI</h2>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">一个Pod一个IP
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">每个Pod独立IP，Pod内所有容器共享网络namespace（同一个IP）</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">容器之间直接通信，不需要NAT</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Node和容器直接通信，不需要NAT</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">其他容器和容器自身看到的IP是一样的</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">集群内访问走Service，集群外访问走Ingress</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">CNI（container network interface）用于配置Pod网络
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">不支持docker网络</li>
+</ul>
+</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;"><img src="k8s培训笔记_files/k8s-run.png" type="image/png" data-filename="k8s-run.png"/></p>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">Overlay网络</h3>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;"><img src="k8s培训笔记_files/overlay.png" type="image/png" data-filename="overlay.png"/></p>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">k8s服务发现</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">环境变量
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">kubelet为每个Pod注入所有Service的环境变量信息，缺点：环境变量洪泛，docker启动参数过长直接导致启动容器失败</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">域名
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">所设Service（my-svc）在namespace（my-ns）中，暴露名为http的TCP端口：
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">A记录：my-svc.my-ns -&gt; Cluster IP</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">SRV记录：_http._tcp.my-svc.my-ns -&gt; http端口号</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">kubernetes DNS</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">解析Pod和Service的域名的，k8s集群内Pod使用<br/>
+kubelet配置--cluster-dns把DNS的静态IP传递给每个容器，--cluster-domain配置伪域名</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Kube-dns和CoreDNS</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">对Service
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">对A记录
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">普通service：my-svc.my-namespace.svc.cluster.local -&gt; Cluster IP</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">headless service：my-svc.my-namespace.svc.cluster.local -&gt; 后端Pod IP列表</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">SRV记录：
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">_my-port-name._my-port-protocol.my-svc.my-namespace.svc.cluster.local -&gt; Service Port</li>
+</ul>
+</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">对Pod
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">A记录<br/>
+pod-ip.my-namespace.pod.cluster.local -&gt; Pod IP</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">在Pod Spec指定hostname和subdomain<br/>
+hostname.subdomain.my-namespace.pod.cluster.local -&gt; Pod IP</li>
+</ul>
+</li>
+</ul>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">k8s资源配置清单</h2>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">资源清单格式：</h3>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">一级字段：apiVersion(group/version), kind, metadata(name, namespace, labels, annotations, ...), spec, status(只读)
+</code></pre>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">Pod资源：</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">spec.containers &lt;[]object&gt;</li>
+</ul>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">- name &lt;string&gt;
+  image &lt;string&gt;
+  imagePullPolicy &lt;string&gt;      Always,Never,IfNotPresent
+  
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">标签：key=value</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">key：字母、数字、_、-、.</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">value：可以为空，只能字母或数字开关及结尾，中间可使用</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">标签选择器：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">等值关系：=、==、!=</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">集合关系：KEY in (VALUE1, VALUE2...)，KEY notin (VALUE1, VALUE2...)，KEY，!KEY</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">许多资源支持内嵌字段定义其使用的标签选择器：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">matchLabels：直接给定键值</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">matchExpressions：基于给定的表达式来定义使用标签选择器，{key: &quot;KEY&quot;, operator: &quot;OPERATOR&quot;, values: [VALUE1, VALUE2,...]}
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">操作符：in, notin, exists, notexists</li>
+</ul>
+</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">nodeSelector &lt;map[string]string&gt;<br/>
+nodeName &lt;string&gt;</p>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">pod的生命周期：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">状态：Pending, Running, Failed, Succeeded, Unknown</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">创建pod：</li>
+</ul>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">service</h3>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">工作模式：userspace, iptables, ipvs</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">userspace: 1.1-</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">iptables: 1.10-</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">ipvs: 1.11+</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">类型：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">ExternalName</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">ClusterIP</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">NodePort</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">LoadBalancer</li>
+</ul>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">PersistentVolume</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">PersistentVolume(PV)：对存储资源创建和使用的抽象，使得存储作为集群中的资源管理
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">静态（static）<br/>
+集群管理员创建多个PV。 它们携带可供集群用户使用的真实存储的详细信息。</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">动态（dynamic）<br/>
+当管理员创建的静态PV都不匹配用户的PersistentVolumeClaim时，集群可能会尝试为PVC动态配置卷。此配置基于<code style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; color: #c1788b; padding: 4px 4px 2px 0; letter-spacing: -.3px;">StorageClasses</code>：PVC必须请求一个类，并且管理员必须已创建</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">PersistentVolumeClaim(PVC)：让用户不需要关心具体的Volume实现细节<br/>
+例，基于nfs的动态存储</li>
+</ul>
+<ol style="line-height: 160%; box-sizing: content-box; display: block; padding-left: 30px; margin: 6px 0 10px; color: #333; list-style-type: decimal;">
+<li style="line-height: 160%; box-sizing: content-box;">创建rbac授权</li>
+</ol>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-provisioner
+  namespace: monitoring
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+   name: nfs-provisioner-runner
+   namespace: monitoring
+rules:
+   -  apiGroups: [&quot;&quot;]
+      resources: [&quot;persistentvolumes&quot;]
+      verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;create&quot;, &quot;delete&quot;]
+   -  apiGroups: [&quot;&quot;]
+      resources: [&quot;persistentvolumeclaims&quot;]
+      verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;, &quot;update&quot;]
+   -  apiGroups: [&quot;storage.k8s.io&quot;]
+      resources: [&quot;storageclasses&quot;]
+      verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+   -  apiGroups: [&quot;&quot;]
+      resources: [&quot;events&quot;]
+      verbs: [&quot;watch&quot;, &quot;create&quot;, &quot;update&quot;, &quot;patch&quot;]
+   -  apiGroups: [&quot;&quot;]
+      resources: [&quot;services&quot;, &quot;endpoints&quot;]
+      verbs: [&quot;get&quot;,&quot;create&quot;,&quot;list&quot;, &quot;watch&quot;,&quot;update&quot;]
+   -  apiGroups: [&quot;extensions&quot;]
+      resources: [&quot;podsecuritypolicies&quot;]
+      resourceNames: [&quot;nfs-provisioner&quot;]
+      verbs: [&quot;use&quot;]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: run-nfs-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-provisioner
+    namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: nfs-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<ol start="2" style="line-height: 160%; box-sizing: content-box; display: block; padding-left: 30px; margin: 6px 0 10px; color: #333; list-style-type: decimal;">
+<li style="line-height: 160%; box-sizing: content-box;">创建nfs的nfs-client-provisioner</li>
+</ol>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+   name: nfs-client-provisioner
+   namespace: monitoring
+spec:
+   replicas: 1
+   strategy:
+     type: Recreate
+   template:
+      metadata:
+         labels:
+            app: nfs-client-provisioner
+      spec:
+         serviceAccount: nfs-provisioner
+         containers:
+            -  name: nfs-client-provisioner
+               image: quay.io/external_storage/nfs-client-provisioner:latest
+               volumeMounts:
+                 -  name: nfs-client-root
+                    mountPath:  /persistentvolumes
+               env:
+                 -  name: PROVISIONER_NAME
+                    value: fuseim.pri/ifs
+                 -  name: NFS_SERVER
+                    value: 10.2.68.77
+                 -  name: NFS_PATH
+                    value: /data/opv
+         volumes:
+           - name: nfs-client-root
+             nfs:
+               server: 192.168.1.1
+               path: /data/opv
+</code></pre>
+<ol start="3" style="line-height: 160%; box-sizing: content-box; display: block; padding-left: 30px; margin: 6px 0 10px; color: #333; list-style-type: decimal;">
+<li style="line-height: 160%; box-sizing: content-box;">创建StorageClass</li>
+</ol>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: grafana-nfs
+  namespace: monitoring
+provisioner: fuseim.pri/ifs                 #fuseim.pri/ifs为上面deployment上创建的PROVISIONER_NAME
+reclaimPolicy: Retain
+</code></pre>
+<ol start="4" style="line-height: 160%; box-sizing: content-box; display: block; padding-left: 30px; margin: 6px 0 10px; color: #333; list-style-type: decimal;">
+<li style="line-height: 160%; box-sizing: content-box;">创建PersistentVolumeClaim<br/>
+在存储类被正确创建后，就可以创建PersistentVolumeClaim来请求StorageClass，而StorageClass将会为PersistentVolumeClaim自动创建一个可用PersistentVolume。PersistentVolumeClaim是对PersistentVolume的声明，即PersistentVolume为存储的提供者，而PersistentVolumeClaim为存储的消费者。</li>
+</ol>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-claim
+  namespace: monitoring
+ # annotations:
+ #   volume.beta.kubernetes.io/storage-class: &quot;grafana-nfs&quot;
+spec:  storageClassName: grafana-nfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi              #grafana-nfs为上面创建的storageclass的name，1Gi是设置的目录的大小。
+</code></pre>
+<ol start="5" style="line-height: 160%; box-sizing: content-box; display: block; padding-left: 30px; margin: 6px 0 10px; color: #333; list-style-type: decimal;">
+<li style="line-height: 160%; box-sizing: content-box;">testpod</li>
+</ol>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pod
+  namespace: monitoring
+spec:
+  containers:
+  - name: test-pod
+    image: busybox
+    command:
+      - &quot;/bin/sh&quot;
+    args:
+      - &quot;-c&quot;
+      - &quot;touch /mnt/SUCCESS &amp;&amp; exit 0 || exit 1&quot;
+    volumeMounts:
+      - name: nfs-pvc
+        mountPath: &quot;/mnt&quot;
+  restartPolicy: &quot;Never&quot;
+  volumes:
+    - name: nfs-pvc
+      persistentVolumeClaim:
+        claimName: test-claim
+</code></pre>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">Secret</h3>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">加密数据并存放在etcd中，让Pod的容器以挂载Volume方式访问。应用场景：凭据<br/>
+Pod使用secret两种方式：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">变量注入</li>
+</ul>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">echo -n 'admin' | base64                    #加密防止数据以明文显示
+YWRtaW4=
+echo -n '1f2d1e2e67df' | base64          #加密防止数据以明文显示
+MWYyZDFlMmU2N2Rm
+
+mysecret.yaml文件：
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: MWYyZDFlMmU2N2Rm
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    env:
+    - name: SECRET_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: mysecret                    #引用上文中创建的mysecret
+          key: username
+    - name: SECRET_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysecret
+          key: password
+</code></pre>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">挂载</li>
+</ul>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">echo -n 'admin' | base64                    #加密防止数据以明文显示
+YWRtaW4=
+echo -n '1f2d1e2e67df' | base64          #加密防止数据以明文显示
+MWYyZDFlMmU2N2Rm
+
+mysecret.yaml文件：
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: MWYyZDFlMmU2N2Rm
+  
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db
+  labels:
+    name: db
+spec:
+  volumes:
+  - name: secrets
+    secret:
+      secretName: mysecret                      #引用上文中创建的mysecret
+  containers:
+  - image: gcr.io/my_project_id/pg:v1
+    name: db
+    volumeMounts:
+    - name: secrets
+      mountPath: &quot;/etc/secrets&quot;
+      readOnly: true
+    ports:
+    - name: cp
+      containerPort: 5432
+      hostPort: 5432
+</code></pre>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">ConfigMap</h3>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">与Secret类似，区别在于configMap保存的是不需要加密配置的信息。应用场景：应用配置</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myconfig
+  namespace: default
+data:
+  special.level: info
+  special.type: hello
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;, &quot;echo $(LEVEL) $(TYPE)&quot;  ]
+    env:
+    - name: LEVEL
+      valueFrom:
+        configMapKeyRef:
+          name: myconfig
+          key: special.level
+    - name: TYPE
+      valueFrom:
+        configMapKeyRef:
+          name: myconfig
+          key: special.type
+  restartPolicy: Never
+</code></pre>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">RBAC</h3>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">RBAC（Role-Based Access Control，基于角色的访问控制），允许通过Kubernetes API动态配置策略。要使用RBAC授权模式，需要在API Server的启动参数中加上--authorization-mode=RBAC<br/>
+<img src="k8s培训笔记_files/rbac.png" type="image/png" data-filename="rbac.png"/><br/>
+RBAC引入了4个新的顶级资源对象：Role、ClusterRole、RoleBinding、ClusterRoleBinding。</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Role<br/>
+一个角色就是一组权限的集合，这里权限都是许可形式的，不存在拒绝的规则。在一个命名空间中，可以用角色来定义一个角色，如果是集群级别的，就需要使用ClusterRole。Role（角色）只能对命名空间内的资源进行授权。</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">例如，定义角色具备读取Pod的权限：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiversion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: default
+rules:
+- apiGroups: [&quot;&quot;]        #空字符串表示核心API群
+  resources: [&quot;pods&quot;]
+  verbs: [&quot;get&quot;, &quot;watch&quot;, &quot;list&quot;]
+  
+rules中的参数说明：
+apiGroups：支持API组列表，例如：apiVersion: batch/v1、apiVersion: extensions/v1beta1、apiVersion: apps/v1beta1等
+resources：支持资源对象列表，例如：Pods、Deployments、Jobs等
+verbs：对资源对象的操作方法列表，例如：get、watch、list、delete、replace、patch等
+</code></pre>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">ClusterRole<br/>
+集群角色除了具有和角色一致的命名空间内资源的管理能力，因其集群级别的范围，还可以用于以下特殊元素的授权。
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">集群范围的资源，例如Node</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">非资源型的路径，例如/healthz</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">包含全部命名空间的资源，例如pods</li>
+</ul>
+</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">例如，下面集群角色可以让用户有权访问任意一个或所有命名空间的secrets：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiversion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: secret-reader
+  #ClusterRole不受限于命名空间，所以省略了namespace的定义
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;secrets&quot;]
+  verbs: [&quot;get&quot;, &quot;watch&quot;, &quot;list&quot;]
+</code></pre>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">RoleBinding &amp; ClusterRoleBinding<br/>
+角色绑定或集群角色绑定用来把一个角色绑定到一个目标上，绑定目标可以是User、Group或者Service Account。使用RoleBinding为某个命名空间授权，ClusterRoleBinding为集群范围内授权。</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">例如，RoleBinding将在default命名空间中把pod-reader角色授予用户jane，可以让jane用户读取default命名空间中的Pod：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+- kind: User
+  name: jane
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">RoleBinding也可以引用ClusterRole，对属于同一命名空间内ClusterRole定义资源主体进行授权。一种常见的做法是集群管理员为集群范围预先定义好一组角色（ClusterRole），然后在多个命名空间中重复使用这些ClusterRole。</p>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">例如，使用RoleBinding绑定集群角色secret-reader，使dave只能读取development命令空间中的secret：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: read-secrets
+  namespace: development
+subjects:
+- kind: User
+  name: dave
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">集群角色绑定中的角色只能是集群角色，用于进行集群级别或者对所有命名空间都生效的授权。<br/>
+例如，允许manager组的用户读取任意namespace中的secret：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: read-secrets-global
+subjects:
+- kind: Group
+  name: manager
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">多数资源可以用其名称的字符串来表达，也就是Endpoint中的URL相对路径，例如pods。然后，某些Kubernetes API包含下级资源，例如Pod的日志logs。Pod的日志的Endpoint是GET /api/v1/namespaces/{namespaces}/pods/{name}/log。<br/>
+Pod是一个命名空间内的资源，log就是一个下级资源。要在一个RBAC角色中体现，则需要用斜线“/”来分割资源和下级资源。若想授权让某个主体同时能够读取Pod和Pod log，则可以配置resources为一个数组：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: pod-and-pod-logs-reader
+  namespace: default
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;, &quot;pods/log&quot;]
+  verbs: [&quot;get&quot;, &quot;list&quot;]
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">资源还可以通过名字（ResourceName）进行引用。在指定ResourceName后，使用get、delete、update、patch动词的请求，就会被限制在这个资源实例范围内。<br/>
+例如，下面的声明让一个主体只能对一个叫my-configmap的ConfigMap进行get和update操作：</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: configmap-updater
+  namespace: default
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;configmap&quot;]
+  resourceNames: [&quot;my-configmap&quot;]
+  verbs: [&quot;update&quot;, &quot;get&quot;]
+</code></pre>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">Admission Control（准入控制）</h2>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">Admission Control实际上是一个准入控制插件列表，发送到API Server的请求都需要经过这个列表中的每个准入控制器插件的检查，检查不通过，则拒绝请求。<br/>
+1.11版本以上推荐使用的插件：<br/>
+--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorgeClass,DefaultTolerationSeconds,ResourceQuota</p>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">监控Prometheus</h2>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">Prometheus特点：</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">多维数据模型：由度量名称和键值对标识的时间序列数据</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">PromSQL：一种灵活的查询语言，可以利用多维数据完成复杂的查询</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">不依赖分布式存储，单个服务器节点可直接工作</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">基于HTTP的pull方式采集时间序列数据</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">推送时间序列数据通过PushGateway组件支持</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">通过服务发现或静态配置发现目标</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">多种图形模式及仪表盘支持（grafana）</li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">Prometheus组成及架构</p>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Prometheus Server：收集指标和存储时间序列数据，并提供查询接口</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">ClientLibrary：客户端库</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Push Gateway：短期存储指标数据。主要用于临时性的任务</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Exporters：采集已有的第三方服务监控指标并暴露metrics</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Alertmanager：告警</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Web UI：简单的Web控制台<br/>
+<img src="k8s培训笔记_files/prometheus-structure.png" type="image/png" data-filename="prometheus-structure.png"/></li>
+</ul>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">数据模型<br/>
+prometheus将所有数据存储为时间序列；具有相同度量名称以及标签属于同一个指标。每个时间序列都由<code style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; color: #c1788b; padding: 4px 4px 2px 0; letter-spacing: -.3px;">度量标准名称和一组键值对（也成为标签）</code>唯一标识。<br/>
+时间序列格式：&lt;metric name&gt;{&lt;label name&gt;=&lt;label value&gt;, ...}</p>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">作业和实例<br/>
+实例：可以抓取的目标称为实例（Instances）<br/>
+作业：具有相同目标的实例集合称为作业（Job）</p>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">scrape_configs:
+- job_name: 'prometheus'
+  static_configs:
+  - targets: ['localhost:9090']
+- job_name: 'node'
+  static_configs:
+  - targets: ['192.168.1.10:9090']
+</code></pre>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">k8s监控指标</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Prometheus监控K8S架构<br/>
+<img src="k8s培训笔记_files/prometheus-k8s.png" type="image/png" data-filename="prometheus-k8s.png"/></li>
+</ul>
+<table style="margin: 2px 0 14px; color: #333; width: auto; border-collapse: collapse; box-sizing: border-box;"><thead style="line-height: 160%; box-sizing: content-box;"><tr style="line-height: 160%; box-sizing: content-box;"><th style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #72777b; border-top: 0; background-color: #7b8184; font-weight: 300; color: #fff; padding-top: 6px;">监控指标</th><th style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #72777b; border-top: 0; background-color: #7b8184; font-weight: 300; color: #fff; padding-top: 6px;">具体实现</th><th style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #72777b; border-top: 0; background-color: #7b8184; font-weight: 300; color: #fff; padding-top: 6px;">举例</th></tr></thead><tbody style="line-height: 160%; box-sizing: content-box;"><tr style="line-height: 160%; box-sizing: content-box;"><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">Pod性能</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">cAdvisor</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">窗口CPU，内存利用率</td></tr><tr style="line-height: 160%; box-sizing: content-box;"><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">Node性能</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">node-exporter</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">节点CPU，内存利用率</td></tr><tr style="line-height: 160%; box-sizing: content-box;"><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">K8S资源对象</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">kube-state-metrics</td><td style="line-height: 160%; box-sizing: content-box; padding: 5px 14px 5px 12px; border: 1px solid #eaeaea;">Pod/Deployment/Service</td></tr></tbody></table>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Kubernetes本身监控
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Node资源利用率</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Node数量</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Pods数量（Nodde）</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">资源对象状态</li>
+</ul>
+</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Pod监控
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333; margin-top: 0; margin-bottom: 0;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">Pod数量（项目）</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">容器资源利用率</li>
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">应用程序</li>
+</ul>
+</li>
+</ul>
+<h2 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 34px; border-bottom: 1px solid #dbdbdb; color: #333;">案例</h2>
+<h3 style="line-height: 160%; box-sizing: content-box; font-weight: 700; font-size: 27px; color: #333;">授予wower账户访问pod的权限：</h3>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">首先生成wower账户相关的证书和私钥</li>
+</ul>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">wower-kubeconfig.sh为生成wower证书密钥的脚本：
+
+cat &gt; ca-config.json &lt;&lt; - EOF
+{
+    &quot;signing&quot;: {
+        &quot;default&quot;: {
+            &quot;expiry&quot;: &quot;87600h&quot;
+        },
+        &quot;profiles&quot;: {
+            &quot;kubernetes&quot;: {
+                &quot;usages&quot;: [
+                    &quot;signing&quot;,
+                    &quot;key encipherment&quot;,
+                    &quot;server auth&quot;,
+                    &quot;client auth&quot;
+                ],
+                &quot;expiry&quot;: &quot;87600h&quot;
+            }
+        }
+    }
+}
+EOF
+
+cat &gt; wower-csr.json &lt;&lt; - EOF
+{
+    &quot;CN&quot;: &quot;wower&quot;,
+    &quot;hosts&quot;: [],
+    &quot;key&quot;: {
+        &quot;algo&quot;: &quot;rsa&quot;,
+        &quot;size&quot;: 2048
+    },
+    &quot;names&quot;: [
+        {
+            &quot;C&quot;: &quot;CN&quot;,
+            &quot;L&quot;: &quot;Shenzhen&quot;,
+            &quot;ST&quot;: &quot;Guangdong&quot;
+        }
+    ]
+}
+EOF
+
+cfssl gencert -ca=/etc/kubernetes/pki/ca.crt -ca-key=/etc/kubernetes/pki/ca.key -config=/opt/kubernetes/ssl/ca-config.json -profile=kubernetes wower-csr.json | cfssljson -bare wower
+
+kubectl config set-cluster kubernetes \
+--certificate-authority=/etc/kubernetes/pki/ca.crt \
+--embed-certs=true \
+--server=https://192.168.1.6:6443 \
+--kubeconfig=wower-kubeconfig
+
+kubectl config set-credentials wower \
+--client-key=wower-key.pem \
+--client-certificate=wower.pem \
+--embed-certs=true \
+--kubeconfig=wower-kubeconfig
+
+kubectl config set-context default \
+--cluster=kubernetes \
+--user=wower \
+--kubeconfig=wower-kubeconfig
+
+kubectl config use-context default --kubeconfig=wower-kubeconfig
+
+
+上述命令中引用的ca.crt为生成apiserver证书的CA证书，ca.key为CA密钥
+</code></pre>
+<ul style="line-height: 160%; box-sizing: content-box; display: block; list-style-type: disc; padding-left: 30px; margin: 6px 0 10px; color: #333;">
+<li style="line-height: 160%; box-sizing: content-box; position: relative;">给wower账户绑定访问pod的权限</li>
+</ul>
+<pre style="line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; margin: 2px 0 8px; background-color: #f5f7f8;"><code style="display: block; overflow-x: auto; background: #1e1e1e; line-height: 160%; box-sizing: content-box; border: 0; border-radius: 0; letter-spacing: -.3px; padding: 18px; color: #f4f4f4; white-space: pre-wrap;">wower-rbac.sh为绑定wower账户访问pod的权限的脚本：
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: default
+rules:
+- apiGroups: [&quot;&quot;]
+  resources: [&quot;pods&quot;]
+  verbs: [&quot;get&quot;, &quot;watch&quot;, &quot;list&quot;]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+- kind: User
+  name: wower                                   #为要绑定的账户
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+</code></pre>
+<p style="line-height: 160%; box-sizing: content-box; margin: 10px 0; color: #333;">经过生成相关证书和绑定相关权限后wower用户便有了访问pod的权限，可以通过“kubectl get pods --kubeconfig=wower-kubeconfig”来验证。</p>
+</div><center style="display:none !important;visibility:collapse !important;height:0 !important;white-space:nowrap;width:100%;overflow:hidden">%23%20k8s%0A%0A%23%23%20dokcer%E9%95%9C%E5%83%8F%0A**%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90%EF%BC%88Continuous%20Integration%2C%20CI%EF%BC%89**%EF%BC%9A%E4%BB%A3%E7%A0%81%E5%90%88%E5%B9%B6%E3%80%81%E6%9E%84%E5%BB%BA%E3%80%81%E9%83%A8%E7%BD%B2%E3%80%81%E6%B5%8B%E8%AF%95%E9%83%BD%E5%9C%A8%E4%B8%80%E8%B5%B7%EF%BC%8C%E4%B8%8D%E6%96%AD%E6%89%A7%E8%A1%8C%E8%BF%99%E4%B8%AA%E8%BF%87%E7%A8%8B%EF%BC%8C%E5%B9%B6%E5%AF%B9%E7%BB%93%E6%9E%9C%E5%8F%8D%E9%A6%88%E3%80%82%0A**%E6%8C%81%E7%BB%AD%E9%83%A8%E7%BD%B2%EF%BC%88Continuous%20Deployment%2C%20CD%EF%BC%89**%EF%BC%9A%E9%83%A8%E7%BD%B2%E5%88%B0%E6%B5%8B%E8%AF%95%E7%8E%AF%E5%A2%83%E3%80%81%E9%A2%84%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E3%80%81%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%E3%80%82%0A**%E6%8C%81%E7%BB%AD%E4%BA%A4%E4%BB%98%EF%BC%88Continuous%20Delivery%2C%20CD%EF%BC%89**%EF%BC%9A%E5%B0%86%E6%9C%80%E7%BB%88%E4%BA%A7%E5%93%81%E5%8F%91%E5%B8%83%E5%88%B0%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83%EF%BC%8C%E7%BB%99%E7%94%A8%E6%88%B7%E4%BD%BF%E7%94%A8%E3%80%82%0A%0A%23%23%20k8s%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B%E4%B8%8ECNI%0A-%20%E4%B8%80%E4%B8%AAPod%E4%B8%80%E4%B8%AAIP%0A%20%20%20%20-%20%E6%AF%8F%E4%B8%AAPod%E7%8B%AC%E7%AB%8BIP%EF%BC%8CPod%E5%86%85%E6%89%80%E6%9C%89%E5%AE%B9%E5%99%A8%E5%85%B1%E4%BA%AB%E7%BD%91%E7%BB%9Cnamespace%EF%BC%88%E5%90%8C%E4%B8%80%E4%B8%AAIP%EF%BC%89%0A%20%20%20%20-%20%E5%AE%B9%E5%99%A8%E4%B9%8B%E9%97%B4%E7%9B%B4%E6%8E%A5%E9%80%9A%E4%BF%A1%EF%BC%8C%E4%B8%8D%E9%9C%80%E8%A6%81NAT%0A%20%20%20%20-%20Node%E5%92%8C%E5%AE%B9%E5%99%A8%E7%9B%B4%E6%8E%A5%E9%80%9A%E4%BF%A1%EF%BC%8C%E4%B8%8D%E9%9C%80%E8%A6%81NAT%0A%20%20%20%20-%20%E5%85%B6%E4%BB%96%E5%AE%B9%E5%99%A8%E5%92%8C%E5%AE%B9%E5%99%A8%E8%87%AA%E8%BA%AB%E7%9C%8B%E5%88%B0%E7%9A%84IP%E6%98%AF%E4%B8%80%E6%A0%B7%E7%9A%84%0A-%20%E9%9B%86%E7%BE%A4%E5%86%85%E8%AE%BF%E9%97%AE%E8%B5%B0Service%EF%BC%8C%E9%9B%86%E7%BE%A4%E5%A4%96%E8%AE%BF%E9%97%AE%E8%B5%B0Ingress%0A-%20CNI%EF%BC%88container%20network%20interface%EF%BC%89%E7%94%A8%E4%BA%8E%E9%85%8D%E7%BD%AEPod%E7%BD%91%E7%BB%9C%0A%20%20%20%20-%20%E4%B8%8D%E6%94%AF%E6%8C%81docker%E7%BD%91%E7%BB%9C%0A%0A!%5Bb742d1148a847340e841c328d2c274b4.png%5D(en-resource%3A%2F%2Fdatabase%2F2277%3A0)%0A%0A%23%23%23%20Overlay%E7%BD%91%E7%BB%9C%0Aoverlay%E6%98%AF%E5%9C%A8%E7%89%A9%E7%90%86%E7%BD%91%E7%BB%9C%E4%B9%8B%E4%B8%8A%E7%9A%84%E8%99%9A%E6%8B%9F%E7%BD%91%E7%BB%9C%EF%BC%8CVXLAN%E6%98%AF%E5%BD%93%E5%89%8D%E6%9C%80%E4%B8%BB%E6%B5%81%E7%9A%84Overlay%E6%A0%87%E5%87%86%0A-%20VXLAN%E5%B0%B1%E6%98%AF%E7%94%A8UDP%E5%8C%85%E5%A4%B4%E5%B0%81%E8%A3%85%E4%BA%8C%E5%B1%82%E5%B8%A7%EF%BC%88MAC%20in%20UDP%EF%BC%89%0A!%5B89f4936a9b07801dd28bc52e65fe3bab.png%5D(en-resource%3A%2F%2Fdatabase%2F2279%3A0)%0A%0A%23%23%23%20k8s%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%0A-%20%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%0A%20%20%20%20-%20kubelet%E4%B8%BA%E6%AF%8F%E4%B8%AAPod%E6%B3%A8%E5%85%A5%E6%89%80%E6%9C%89Service%E7%9A%84%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E4%BF%A1%E6%81%AF%EF%BC%8C%E7%BC%BA%E7%82%B9%EF%BC%9A%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E6%B4%AA%E6%B3%9B%EF%BC%8Cdocker%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0%E8%BF%87%E9%95%BF%E7%9B%B4%E6%8E%A5%E5%AF%BC%E8%87%B4%E5%90%AF%E5%8A%A8%E5%AE%B9%E5%99%A8%E5%A4%B1%E8%B4%A5%0A-%20%E5%9F%9F%E5%90%8D%0A%20%20%20%20-%20%E6%89%80%E8%AE%BEService%EF%BC%88my-svc%EF%BC%89%E5%9C%A8namespace%EF%BC%88my-ns%EF%BC%89%E4%B8%AD%EF%BC%8C%E6%9A%B4%E9%9C%B2%E5%90%8D%E4%B8%BAhttp%E7%9A%84TCP%E7%AB%AF%E5%8F%A3%EF%BC%9A%0A%20%20%20%20%20%20%20%20-%20A%E8%AE%B0%E5%BD%95%EF%BC%9Amy-svc.my-ns%20-%3E%20Cluster%20IP%0A%20%20%20%20%20%20%20%20-%20SRV%E8%AE%B0%E5%BD%95%EF%BC%9A_http.%5C_tcp.my-svc.my-ns%20-%3E%20http%E7%AB%AF%E5%8F%A3%E5%8F%B7%0A%0A%23%23%23%20kubernetes%20DNS%0A-%20%E8%A7%A3%E6%9E%90Pod%E5%92%8CService%E7%9A%84%E5%9F%9F%E5%90%8D%E7%9A%84%EF%BC%8Ck8s%E9%9B%86%E7%BE%A4%E5%86%85Pod%E4%BD%BF%E7%94%A8%0Akubelet%E9%85%8D%E7%BD%AE--cluster-dns%E6%8A%8ADNS%E7%9A%84%E9%9D%99%E6%80%81IP%E4%BC%A0%E9%80%92%E7%BB%99%E6%AF%8F%E4%B8%AA%E5%AE%B9%E5%99%A8%EF%BC%8C--cluster-domain%E9%85%8D%E7%BD%AE%E4%BC%AA%E5%9F%9F%E5%90%8D%0A-%20Kube-dns%E5%92%8CCoreDNS%0A-%20%E5%AF%B9Service%0A%20%20%20%20-%20%E5%AF%B9A%E8%AE%B0%E5%BD%95%0A%20%20%20%20%20%20%20%20-%20%E6%99%AE%E9%80%9Aservice%EF%BC%9Amy-svc.my-namespace.svc.cluster.local%20-%3E%20Cluster%20IP%0A%20%20%20%20%20%20%20%20-%20headless%20service%EF%BC%9Amy-svc.my-namespace.svc.cluster.local%20-%3E%20%E5%90%8E%E7%AB%AFPod%20IP%E5%88%97%E8%A1%A8%0A%20%20%20%20-%20SRV%E8%AE%B0%E5%BD%95%EF%BC%9A%0A%20%20%20%20%20%20%20%20-%20%5C_my-port-name.%5C_my-port-protocol.my-svc.my-namespace.svc.cluster.local%20-%3E%20Service%20Port%0A-%20%E5%AF%B9Pod%0A%20%20%20%20-%20A%E8%AE%B0%E5%BD%95%0A%20%20%20%20pod-ip.my-namespace.pod.cluster.local%20-%3E%20Pod%20IP%0A%20%20%20%20-%20%E5%9C%A8Pod%20Spec%E6%8C%87%E5%AE%9Ahostname%E5%92%8Csubdomain%0A%20%20%20%20hostname.subdomain.my-namespace.pod.cluster.local%20-%3E%20Pod%20IP%0A%0A%23%23%23%20kube-dns%0Akubedns%EF%BC%9AList%2FWatch%20K8s%20Service%E5%92%8CEndpoints%E5%8F%98%E5%8C%96%E3%80%82%E6%8E%A5%E5%85%A5SkyDNS%EF%BC%8C%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%BB%B4%E6%8A%A4DNS%E8%AE%B0%E5%BD%95%EF%BC%8C%E6%98%AFdnsmasq%E7%9A%84%E4%B8%8A%E6%B8%B8%E3%80%82%0Adnsmasq%EF%BC%9ADNS%E9%85%8D%E7%BD%AE%E5%B7%A5%E5%85%B7%EF%BC%8C%E7%9B%91%E5%90%AC53%E7%AB%AF%E5%8F%A3%EF%BC%8C%E4%B8%BA%E9%9B%86%E7%BE%A4%E6%8F%90%E4%BE%9BDNS%E6%9F%A5%E8%AF%A2%E6%9C%8D%E5%8A%A1%E3%80%82%E6%8F%90%E4%BE%9BDNS%E7%BC%93%E5%AD%98%EF%BC%8C%E9%99%8D%E4%BD%8Ekubedns%E5%8E%8B%E5%8A%9B%E3%80%82%0Asidecar%EF%BC%9A%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5%EF%BC%8C%E6%A3%80%E6%9F%A5kube-dns%E5%92%8Cdnsmasq%E7%9A%84%E5%81%A5%E5%BA%B7%E3%80%82%0A!%5B6f88258f3dcdb726ff9906df9894d14a.png%5D(en-resource%3A%2F%2Fdatabase%2F2281%3A0)%0A%0A%0A%23%23%20k8s%E8%B5%84%E6%BA%90%E9%85%8D%E7%BD%AE%E6%B8%85%E5%8D%95%0A%23%23%23%20%E8%B5%84%E6%BA%90%E6%B8%85%E5%8D%95%E6%A0%BC%E5%BC%8F%EF%BC%9A%0A%20%20%20%20%E4%B8%80%E7%BA%A7%E5%AD%97%E6%AE%B5%EF%BC%9AapiVersion(group%2Fversion)%2C%20kind%2C%20metadata(name%2C%20namespace%2C%20labels%2C%20annotations%2C%20...)%2C%20spec%2C%20status(%E5%8F%AA%E8%AF%BB)%0A%0A%23%23%23%20Pod%E8%B5%84%E6%BA%90%EF%BC%9A%0A-%20spec.containers%20%3C%5B%5Dobject%3E%0A%60%60%60%0A-%20name%20%3Cstring%3E%0A%20%20image%20%3Cstring%3E%0A%20%20imagePullPolicy%20%3Cstring%3E%20%20%20%20%20%20Always%2CNever%2CIfNotPresent%0A%20%20%0A%60%60%60%0A%E6%A0%87%E7%AD%BE%EF%BC%9Akey%3Dvalue%0A-%20key%EF%BC%9A%E5%AD%97%E6%AF%8D%E3%80%81%E6%95%B0%E5%AD%97%E3%80%81_%E3%80%81-%E3%80%81.%0A-%20value%EF%BC%9A%E5%8F%AF%E4%BB%A5%E4%B8%BA%E7%A9%BA%EF%BC%8C%E5%8F%AA%E8%83%BD%E5%AD%97%E6%AF%8D%E6%88%96%E6%95%B0%E5%AD%97%E5%BC%80%E5%85%B3%E5%8F%8A%E7%BB%93%E5%B0%BE%EF%BC%8C%E4%B8%AD%E9%97%B4%E5%8F%AF%E4%BD%BF%E7%94%A8%0A%0A%E6%A0%87%E7%AD%BE%E9%80%89%E6%8B%A9%E5%99%A8%EF%BC%9A%0A-%20%E7%AD%89%E5%80%BC%E5%85%B3%E7%B3%BB%EF%BC%9A%3D%E3%80%81%3D%3D%E3%80%81!%3D%0A-%20%E9%9B%86%E5%90%88%E5%85%B3%E7%B3%BB%EF%BC%9AKEY%20in%20(VALUE1%2C%20VALUE2...)%EF%BC%8CKEY%20notin%20(VALUE1%2C%20VALUE2...)%EF%BC%8CKEY%EF%BC%8C!KEY%0A%0A%E8%AE%B8%E5%A4%9A%E8%B5%84%E6%BA%90%E6%94%AF%E6%8C%81%E5%86%85%E5%B5%8C%E5%AD%97%E6%AE%B5%E5%AE%9A%E4%B9%89%E5%85%B6%E4%BD%BF%E7%94%A8%E7%9A%84%E6%A0%87%E7%AD%BE%E9%80%89%E6%8B%A9%E5%99%A8%EF%BC%9A%0A-%20matchLabels%EF%BC%9A%E7%9B%B4%E6%8E%A5%E7%BB%99%E5%AE%9A%E9%94%AE%E5%80%BC%0A-%20matchExpressions%EF%BC%9A%E5%9F%BA%E4%BA%8E%E7%BB%99%E5%AE%9A%E7%9A%84%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E4%BD%BF%E7%94%A8%E6%A0%87%E7%AD%BE%E9%80%89%E6%8B%A9%E5%99%A8%EF%BC%8C%7Bkey%3A%20%22KEY%22%2C%20operator%3A%20%22OPERATOR%22%2C%20values%3A%20%5BVALUE1%2C%20VALUE2%2C...%5D%7D%0A%20%20%20%20-%20%E6%93%8D%E4%BD%9C%E7%AC%A6%EF%BC%9Ain%2C%20notin%2C%20exists%2C%20notexists%0A%0AnodeSelector%20%3Cmap%5Bstring%5Dstring%3E%0AnodeName%20%3Cstring%3E%0A%0Apod%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%EF%BC%9A%0A-%20%E7%8A%B6%E6%80%81%EF%BC%9APending%2C%20Running%2C%20Failed%2C%20Succeeded%2C%20Unknown%0A-%20%E5%88%9B%E5%BB%BApod%EF%BC%9A%0A%0A%23%23%23%20service%0A%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%EF%BC%9Auserspace%2C%20iptables%2C%20ipvs%0A-%20userspace%3A%201.1-%0A-%20iptables%3A%201.10-%0A-%20ipvs%3A%201.11%2B%0A%0A%E7%B1%BB%E5%9E%8B%EF%BC%9A%0A-%20ExternalName%0A-%20ClusterIP%0A-%20NodePort%0A-%20LoadBalancer%0A%0A%23%23%23%20PersistentVolume%0A-%20PersistentVolume(PV)%EF%BC%9A%E5%AF%B9%E5%AD%98%E5%82%A8%E8%B5%84%E6%BA%90%E5%88%9B%E5%BB%BA%E5%92%8C%E4%BD%BF%E7%94%A8%E7%9A%84%E6%8A%BD%E8%B1%A1%EF%BC%8C%E4%BD%BF%E5%BE%97%E5%AD%98%E5%82%A8%E4%BD%9C%E4%B8%BA%E9%9B%86%E7%BE%A4%E4%B8%AD%E7%9A%84%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86%0A%20%20%20%20-%20%E9%9D%99%E6%80%81%EF%BC%88static%EF%BC%89%0A%20%20%20%20%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86%E5%91%98%E5%88%9B%E5%BB%BA%E5%A4%9A%E4%B8%AAPV%E3%80%82%20%E5%AE%83%E4%BB%AC%E6%90%BA%E5%B8%A6%E5%8F%AF%E4%BE%9B%E9%9B%86%E7%BE%A4%E7%94%A8%E6%88%B7%E4%BD%BF%E7%94%A8%E7%9A%84%E7%9C%9F%E5%AE%9E%E5%AD%98%E5%82%A8%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF%E3%80%82%0A%20%20%20%20-%20%E5%8A%A8%E6%80%81%EF%BC%88dynamic%EF%BC%89%0A%20%20%20%20%E5%BD%93%E7%AE%A1%E7%90%86%E5%91%98%E5%88%9B%E5%BB%BA%E7%9A%84%E9%9D%99%E6%80%81PV%E9%83%BD%E4%B8%8D%E5%8C%B9%E9%85%8D%E7%94%A8%E6%88%B7%E7%9A%84PersistentVolumeClaim%E6%97%B6%EF%BC%8C%E9%9B%86%E7%BE%A4%E5%8F%AF%E8%83%BD%E4%BC%9A%E5%B0%9D%E8%AF%95%E4%B8%BAPVC%E5%8A%A8%E6%80%81%E9%85%8D%E7%BD%AE%E5%8D%B7%E3%80%82%E6%AD%A4%E9%85%8D%E7%BD%AE%E5%9F%BA%E4%BA%8E%60StorageClasses%60%EF%BC%9APVC%E5%BF%85%E9%A1%BB%E8%AF%B7%E6%B1%82%E4%B8%80%E4%B8%AA%E7%B1%BB%EF%BC%8C%E5%B9%B6%E4%B8%94%E7%AE%A1%E7%90%86%E5%91%98%E5%BF%85%E9%A1%BB%E5%B7%B2%E5%88%9B%E5%BB%BA%0A-%20PersistentVolumeClaim(PVC)%EF%BC%9A%E8%AE%A9%E7%94%A8%E6%88%B7%E4%B8%8D%E9%9C%80%E8%A6%81%E5%85%B3%E5%BF%83%E5%85%B7%E4%BD%93%E7%9A%84Volume%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%0A%E4%BE%8B%EF%BC%8C%E5%9F%BA%E4%BA%8Enfs%E7%9A%84%E5%8A%A8%E6%80%81%E5%AD%98%E5%82%A8%0A1.%20%E5%88%9B%E5%BB%BArbac%E6%8E%88%E6%9D%83%0A%60%60%60%0AapiVersion%3A%20v1%0Akind%3A%20ServiceAccount%0Ametadata%3A%0A%20%20name%3A%20nfs-provisioner%0A%20%20namespace%3A%20monitoring%0A---%0Akind%3A%20ClusterRole%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1%0Ametadata%3A%0A%20%20%20name%3A%20nfs-provisioner-runner%0A%20%20%20namespace%3A%20monitoring%0Arules%3A%0A%20%20%20-%20%20apiGroups%3A%20%5B%22%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22persistentvolumes%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22get%22%2C%20%22list%22%2C%20%22watch%22%2C%20%22create%22%2C%20%22delete%22%5D%0A%20%20%20-%20%20apiGroups%3A%20%5B%22%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22persistentvolumeclaims%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22get%22%2C%20%22list%22%2C%20%22watch%22%2C%20%22update%22%5D%0A%20%20%20-%20%20apiGroups%3A%20%5B%22storage.k8s.io%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22storageclasses%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22get%22%2C%20%22list%22%2C%20%22watch%22%5D%0A%20%20%20-%20%20apiGroups%3A%20%5B%22%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22events%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22watch%22%2C%20%22create%22%2C%20%22update%22%2C%20%22patch%22%5D%0A%20%20%20-%20%20apiGroups%3A%20%5B%22%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22services%22%2C%20%22endpoints%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22get%22%2C%22create%22%2C%22list%22%2C%20%22watch%22%2C%22update%22%5D%0A%20%20%20-%20%20apiGroups%3A%20%5B%22extensions%22%5D%0A%20%20%20%20%20%20resources%3A%20%5B%22podsecuritypolicies%22%5D%0A%20%20%20%20%20%20resourceNames%3A%20%5B%22nfs-provisioner%22%5D%0A%20%20%20%20%20%20verbs%3A%20%5B%22use%22%5D%0A---%0Akind%3A%20ClusterRoleBinding%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1%0Ametadata%3A%0A%20%20name%3A%20run-nfs-provisioner%0Asubjects%3A%0A%20%20-%20kind%3A%20ServiceAccount%0A%20%20%20%20name%3A%20nfs-provisioner%0A%20%20%20%20namespace%3A%20monitoring%0AroleRef%3A%0A%20%20kind%3A%20ClusterRole%0A%20%20name%3A%20nfs-provisioner-runner%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0A%60%60%60%0A2.%20%E5%88%9B%E5%BB%BAnfs%E7%9A%84nfs-client-provisioner%0A%60%60%60%0Akind%3A%20Deployment%0AapiVersion%3A%20extensions%2Fv1beta1%0Ametadata%3A%0A%20%20%20name%3A%20nfs-client-provisioner%0A%20%20%20namespace%3A%20monitoring%0Aspec%3A%0A%20%20%20replicas%3A%201%0A%20%20%20strategy%3A%0A%20%20%20%20%20type%3A%20Recreate%0A%20%20%20template%3A%0A%20%20%20%20%20%20metadata%3A%0A%20%20%20%20%20%20%20%20%20labels%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20app%3A%20nfs-client-provisioner%0A%20%20%20%20%20%20spec%3A%0A%20%20%20%20%20%20%20%20%20serviceAccount%3A%20nfs-provisioner%0A%20%20%20%20%20%20%20%20%20containers%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20-%20%20name%3A%20nfs-client-provisioner%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20image%3A%20quay.io%2Fexternal_storage%2Fnfs-client-provisioner%3Alatest%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20volumeMounts%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20-%20%20name%3A%20nfs-client-root%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20mountPath%3A%20%20%2Fpersistentvolumes%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20env%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20-%20%20name%3A%20PROVISIONER_NAME%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20fuseim.pri%2Fifs%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20-%20%20name%3A%20NFS_SERVER%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%2010.2.68.77%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20-%20%20name%3A%20NFS_PATH%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20%2Fdata%2Fopv%0A%20%20%20%20%20%20%20%20%20volumes%3A%0A%20%20%20%20%20%20%20%20%20%20%20-%20name%3A%20nfs-client-root%0A%20%20%20%20%20%20%20%20%20%20%20%20%20nfs%3A%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20server%3A%20192.168.1.1%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20path%3A%20%2Fdata%2Fopv%0A%60%60%60%0A3.%20%E5%88%9B%E5%BB%BAStorageClass%0A%60%60%60%0AapiVersion%3A%20storage.k8s.io%2Fv1%0Akind%3A%20StorageClass%0Ametadata%3A%0A%20%20name%3A%20grafana-nfs%0A%20%20namespace%3A%20monitoring%0Aprovisioner%3A%20fuseim.pri%2Fifs%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23fuseim.pri%2Fifs%E4%B8%BA%E4%B8%8A%E9%9D%A2deployment%E4%B8%8A%E5%88%9B%E5%BB%BA%E7%9A%84PROVISIONER_NAME%0AreclaimPolicy%3A%20Retain%0A%60%60%60%0A4.%20%E5%88%9B%E5%BB%BAPersistentVolumeClaim%0A%E5%9C%A8%E5%AD%98%E5%82%A8%E7%B1%BB%E8%A2%AB%E6%AD%A3%E7%A1%AE%E5%88%9B%E5%BB%BA%E5%90%8E%EF%BC%8C%E5%B0%B1%E5%8F%AF%E4%BB%A5%E5%88%9B%E5%BB%BAPersistentVolumeClaim%E6%9D%A5%E8%AF%B7%E6%B1%82StorageClass%EF%BC%8C%E8%80%8CStorageClass%E5%B0%86%E4%BC%9A%E4%B8%BAPersistentVolumeClaim%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%8F%AF%E7%94%A8PersistentVolume%E3%80%82PersistentVolumeClaim%E6%98%AF%E5%AF%B9PersistentVolume%E7%9A%84%E5%A3%B0%E6%98%8E%EF%BC%8C%E5%8D%B3PersistentVolume%E4%B8%BA%E5%AD%98%E5%82%A8%E7%9A%84%E6%8F%90%E4%BE%9B%E8%80%85%EF%BC%8C%E8%80%8CPersistentVolumeClaim%E4%B8%BA%E5%AD%98%E5%82%A8%E7%9A%84%E6%B6%88%E8%B4%B9%E8%80%85%E3%80%82%0A%60%60%60%0AapiVersion%3A%20v1%0Akind%3A%20PersistentVolumeClaim%0Ametadata%3A%0A%20%20name%3A%20test-claim%0A%20%20namespace%3A%20monitoring%0A%20%23%20annotations%3A%0A%20%23%20%20%20volume.beta.kubernetes.io%2Fstorage-class%3A%20%22grafana-nfs%22%0Aspec%3A%20%20storageClassName%3A%20grafana-nfs%0A%20%20accessModes%3A%0A%20%20%20%20-%20ReadWriteMany%0A%20%20resources%3A%0A%20%20%20%20requests%3A%0A%20%20%20%20%20%20storage%3A%201Gi%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23grafana-nfs%E4%B8%BA%E4%B8%8A%E9%9D%A2%E5%88%9B%E5%BB%BA%E7%9A%84storageclass%E7%9A%84name%EF%BC%8C1Gi%E6%98%AF%E8%AE%BE%E7%BD%AE%E7%9A%84%E7%9B%AE%E5%BD%95%E7%9A%84%E5%A4%A7%E5%B0%8F%E3%80%82%0A%60%60%60%0A5.%20testpod%0A%60%60%60%0Akind%3A%20Pod%0AapiVersion%3A%20v1%0Ametadata%3A%0A%20%20name%3A%20test-pod%0A%20%20namespace%3A%20monitoring%0Aspec%3A%0A%20%20containers%3A%0A%20%20-%20name%3A%20test-pod%0A%20%20%20%20image%3A%20busybox%0A%20%20%20%20command%3A%0A%20%20%20%20%20%20-%20%22%2Fbin%2Fsh%22%0A%20%20%20%20args%3A%0A%20%20%20%20%20%20-%20%22-c%22%0A%20%20%20%20%20%20-%20%22touch%20%2Fmnt%2FSUCCESS%20%26%26%20exit%200%20%7C%7C%20exit%201%22%0A%20%20%20%20volumeMounts%3A%0A%20%20%20%20%20%20-%20name%3A%20nfs-pvc%0A%20%20%20%20%20%20%20%20mountPath%3A%20%22%2Fmnt%22%0A%20%20restartPolicy%3A%20%22Never%22%0A%20%20volumes%3A%0A%20%20%20%20-%20name%3A%20nfs-pvc%0A%20%20%20%20%20%20persistentVolumeClaim%3A%0A%20%20%20%20%20%20%20%20claimName%3A%20test-claim%0A%60%60%60%0A%23%23%23%20Secret%0A%E5%8A%A0%E5%AF%86%E6%95%B0%E6%8D%AE%E5%B9%B6%E5%AD%98%E6%94%BE%E5%9C%A8etcd%E4%B8%AD%EF%BC%8C%E8%AE%A9Pod%E7%9A%84%E5%AE%B9%E5%99%A8%E4%BB%A5%E6%8C%82%E8%BD%BDVolume%E6%96%B9%E5%BC%8F%E8%AE%BF%E9%97%AE%E3%80%82%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%87%AD%E6%8D%AE%0APod%E4%BD%BF%E7%94%A8secret%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F%EF%BC%9A%0A-%20%E5%8F%98%E9%87%8F%E6%B3%A8%E5%85%A5%0A%60%60%60%0Aecho%20-n%20'admin'%20%7C%20base64%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23%E5%8A%A0%E5%AF%86%E9%98%B2%E6%AD%A2%E6%95%B0%E6%8D%AE%E4%BB%A5%E6%98%8E%E6%96%87%E6%98%BE%E7%A4%BA%0AYWRtaW4%3D%0Aecho%20-n%20'1f2d1e2e67df'%20%7C%20base64%20%20%20%20%20%20%20%20%20%20%23%E5%8A%A0%E5%AF%86%E9%98%B2%E6%AD%A2%E6%95%B0%E6%8D%AE%E4%BB%A5%E6%98%8E%E6%96%87%E6%98%BE%E7%A4%BA%0AMWYyZDFlMmU2N2Rm%0A%0Amysecret.yaml%E6%96%87%E4%BB%B6%EF%BC%9A%0AapiVersion%3A%20v1%0Akind%3A%20Secret%0Ametadata%3A%0A%20%20name%3A%20mysecret%0Atype%3A%20Opaque%0Adata%3A%0A%20%20username%3A%20YWRtaW4%3D%0A%20%20password%3A%20MWYyZDFlMmU2N2Rm%0A%20%20%0A---%0AapiVersion%3A%20v1%0Akind%3A%20Pod%0Ametadata%3A%0A%20%20name%3A%20mypod%0Aspec%3A%0A%20%20containers%3A%0A%20%20-%20name%3A%20nginx%0A%20%20%20%20image%3A%20nginx%0A%20%20%20%20env%3A%0A%20%20%20%20-%20name%3A%20SECRET_USERNAME%0A%20%20%20%20%20%20valueFrom%3A%0A%20%20%20%20%20%20%20%20secretKeyRef%3A%0A%20%20%20%20%20%20%20%20%20%20name%3A%20mysecret%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23%E5%BC%95%E7%94%A8%E4%B8%8A%E6%96%87%E4%B8%AD%E5%88%9B%E5%BB%BA%E7%9A%84mysecret%0A%20%20%20%20%20%20%20%20%20%20key%3A%20username%0A%20%20%20%20-%20name%3A%20SECRET_PASSWORD%0A%20%20%20%20%20%20valueFrom%3A%0A%20%20%20%20%20%20%20%20secretKeyRef%3A%0A%20%20%20%20%20%20%20%20%20%20name%3A%20mysecret%0A%20%20%20%20%20%20%20%20%20%20key%3A%20password%0A%60%60%60%0A-%20%E6%8C%82%E8%BD%BD%0A%60%60%60%0Aecho%20-n%20'admin'%20%7C%20base64%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23%E5%8A%A0%E5%AF%86%E9%98%B2%E6%AD%A2%E6%95%B0%E6%8D%AE%E4%BB%A5%E6%98%8E%E6%96%87%E6%98%BE%E7%A4%BA%0AYWRtaW4%3D%0Aecho%20-n%20'1f2d1e2e67df'%20%7C%20base64%20%20%20%20%20%20%20%20%20%20%23%E5%8A%A0%E5%AF%86%E9%98%B2%E6%AD%A2%E6%95%B0%E6%8D%AE%E4%BB%A5%E6%98%8E%E6%96%87%E6%98%BE%E7%A4%BA%0AMWYyZDFlMmU2N2Rm%0A%0Amysecret.yaml%E6%96%87%E4%BB%B6%EF%BC%9A%0AapiVersion%3A%20v1%0Akind%3A%20Secret%0Ametadata%3A%0A%20%20name%3A%20mysecret%0Atype%3A%20Opaque%0Adata%3A%0A%20%20username%3A%20YWRtaW4%3D%0A%20%20password%3A%20MWYyZDFlMmU2N2Rm%0A%20%20%0A---%0AapiVersion%3A%20v1%0Akind%3A%20Pod%0Ametadata%3A%0A%20%20name%3A%20db%0A%20%20labels%3A%0A%20%20%20%20name%3A%20db%0Aspec%3A%0A%20%20volumes%3A%0A%20%20-%20name%3A%20secrets%0A%20%20%20%20secret%3A%0A%20%20%20%20%20%20secretName%3A%20mysecret%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23%E5%BC%95%E7%94%A8%E4%B8%8A%E6%96%87%E4%B8%AD%E5%88%9B%E5%BB%BA%E7%9A%84mysecret%0A%20%20containers%3A%0A%20%20-%20image%3A%20gcr.io%2Fmy_project_id%2Fpg%3Av1%0A%20%20%20%20name%3A%20db%0A%20%20%20%20volumeMounts%3A%0A%20%20%20%20-%20name%3A%20secrets%0A%20%20%20%20%20%20mountPath%3A%20%22%2Fetc%2Fsecrets%22%0A%20%20%20%20%20%20readOnly%3A%20true%0A%20%20%20%20ports%3A%0A%20%20%20%20-%20name%3A%20cp%0A%20%20%20%20%20%20containerPort%3A%205432%0A%20%20%20%20%20%20hostPort%3A%205432%0A%60%60%60%0A%0A%23%23%23%20ConfigMap%0A%E4%B8%8ESecret%E7%B1%BB%E4%BC%BC%EF%BC%8C%E5%8C%BA%E5%88%AB%E5%9C%A8%E4%BA%8EconfigMap%E4%BF%9D%E5%AD%98%E7%9A%84%E6%98%AF%E4%B8%8D%E9%9C%80%E8%A6%81%E5%8A%A0%E5%AF%86%E9%85%8D%E7%BD%AE%E7%9A%84%E4%BF%A1%E6%81%AF%E3%80%82%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%BA%94%E7%94%A8%E9%85%8D%E7%BD%AE%0A%60%60%60%0AapiVersion%3A%20v1%0Akind%3A%20ConfigMap%0Ametadata%3A%0A%20%20name%3A%20myconfig%0A%20%20namespace%3A%20default%0Adata%3A%0A%20%20special.level%3A%20info%0A%20%20special.type%3A%20hello%0A%0A---%0AapiVersion%3A%20v1%0Akind%3A%20Pod%0Ametadata%3A%0A%20%20name%3A%20mypod%0Aspec%3A%0A%20%20containers%3A%0A%20%20-%20name%3A%20busybox%0A%20%20%20%20image%3A%20busybox%0A%20%20%20%20command%3A%20%5B%22%2Fbin%2Fsh%22%2C%20%22-c%22%2C%20%22echo%20%24(LEVEL)%20%24(TYPE)%22%20%20%5D%0A%20%20%20%20env%3A%0A%20%20%20%20-%20name%3A%20LEVEL%0A%20%20%20%20%20%20valueFrom%3A%0A%20%20%20%20%20%20%20%20configMapKeyRef%3A%0A%20%20%20%20%20%20%20%20%20%20name%3A%20myconfig%0A%20%20%20%20%20%20%20%20%20%20key%3A%20special.level%0A%20%20%20%20-%20name%3A%20TYPE%0A%20%20%20%20%20%20valueFrom%3A%0A%20%20%20%20%20%20%20%20configMapKeyRef%3A%0A%20%20%20%20%20%20%20%20%20%20name%3A%20myconfig%0A%20%20%20%20%20%20%20%20%20%20key%3A%20special.type%0A%20%20restartPolicy%3A%20Never%0A%60%60%60%0A%0A%23%23%23%20RBAC%0ARBAC%EF%BC%88Role-Based%20Access%20Control%EF%BC%8C%E5%9F%BA%E4%BA%8E%E8%A7%92%E8%89%B2%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%EF%BC%89%EF%BC%8C%E5%85%81%E8%AE%B8%E9%80%9A%E8%BF%87Kubernetes%20API%E5%8A%A8%E6%80%81%E9%85%8D%E7%BD%AE%E7%AD%96%E7%95%A5%E3%80%82%E8%A6%81%E4%BD%BF%E7%94%A8RBAC%E6%8E%88%E6%9D%83%E6%A8%A1%E5%BC%8F%EF%BC%8C%E9%9C%80%E8%A6%81%E5%9C%A8API%20Server%E7%9A%84%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0%E4%B8%AD%E5%8A%A0%E4%B8%8A--authorization-mode%3DRBAC%0A!%5B4dafa4f664e3790a2174c52d6d506a21.png%5D(en-resource%3A%2F%2Fdatabase%2F2251%3A1)%0ARBAC%E5%BC%95%E5%85%A5%E4%BA%864%E4%B8%AA%E6%96%B0%E7%9A%84%E9%A1%B6%E7%BA%A7%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1%EF%BC%9ARole%E3%80%81ClusterRole%E3%80%81RoleBinding%E3%80%81ClusterRoleBinding%E3%80%82%0A-%20Role%0A%E4%B8%80%E4%B8%AA%E8%A7%92%E8%89%B2%E5%B0%B1%E6%98%AF%E4%B8%80%E7%BB%84%E6%9D%83%E9%99%90%E7%9A%84%E9%9B%86%E5%90%88%EF%BC%8C%E8%BF%99%E9%87%8C%E6%9D%83%E9%99%90%E9%83%BD%E6%98%AF%E8%AE%B8%E5%8F%AF%E5%BD%A2%E5%BC%8F%E7%9A%84%EF%BC%8C%E4%B8%8D%E5%AD%98%E5%9C%A8%E6%8B%92%E7%BB%9D%E7%9A%84%E8%A7%84%E5%88%99%E3%80%82%E5%9C%A8%E4%B8%80%E4%B8%AA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%AD%EF%BC%8C%E5%8F%AF%E4%BB%A5%E7%94%A8%E8%A7%92%E8%89%B2%E6%9D%A5%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA%E8%A7%92%E8%89%B2%EF%BC%8C%E5%A6%82%E6%9E%9C%E6%98%AF%E9%9B%86%E7%BE%A4%E7%BA%A7%E5%88%AB%E7%9A%84%EF%BC%8C%E5%B0%B1%E9%9C%80%E8%A6%81%E4%BD%BF%E7%94%A8ClusterRole%E3%80%82Role%EF%BC%88%E8%A7%92%E8%89%B2%EF%BC%89%E5%8F%AA%E8%83%BD%E5%AF%B9%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E5%86%85%E7%9A%84%E8%B5%84%E6%BA%90%E8%BF%9B%E8%A1%8C%E6%8E%88%E6%9D%83%E3%80%82%0A%0A%E4%BE%8B%E5%A6%82%EF%BC%8C%E5%AE%9A%E4%B9%89%E8%A7%92%E8%89%B2%E5%85%B7%E5%A4%87%E8%AF%BB%E5%8F%96Pod%E7%9A%84%E6%9D%83%E9%99%90%EF%BC%9A%0A%60%60%60%0Aapiversion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20Role%0Ametadata%3A%0A%20%20name%3A%20pod-reader%0A%20%20namespace%3A%20default%0Arules%3A%0A-%20apiGroups%3A%20%5B%22%22%5D%20%20%20%20%20%20%20%20%23%E7%A9%BA%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%A1%A8%E7%A4%BA%E6%A0%B8%E5%BF%83API%E7%BE%A4%0A%20%20resources%3A%20%5B%22pods%22%5D%0A%20%20verbs%3A%20%5B%22get%22%2C%20%22watch%22%2C%20%22list%22%5D%0A%20%20%0Arules%E4%B8%AD%E7%9A%84%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E%EF%BC%9A%0AapiGroups%EF%BC%9A%E6%94%AF%E6%8C%81API%E7%BB%84%E5%88%97%E8%A1%A8%EF%BC%8C%E4%BE%8B%E5%A6%82%EF%BC%9AapiVersion%3A%20batch%2Fv1%E3%80%81apiVersion%3A%20extensions%2Fv1beta1%E3%80%81apiVersion%3A%20apps%2Fv1beta1%E7%AD%89%0Aresources%EF%BC%9A%E6%94%AF%E6%8C%81%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1%E5%88%97%E8%A1%A8%EF%BC%8C%E4%BE%8B%E5%A6%82%EF%BC%9APods%E3%80%81Deployments%E3%80%81Jobs%E7%AD%89%0Averbs%EF%BC%9A%E5%AF%B9%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95%E5%88%97%E8%A1%A8%EF%BC%8C%E4%BE%8B%E5%A6%82%EF%BC%9Aget%E3%80%81watch%E3%80%81list%E3%80%81delete%E3%80%81replace%E3%80%81patch%E7%AD%89%0A%60%60%60%0A-%20ClusterRole%0A%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2%E9%99%A4%E4%BA%86%E5%85%B7%E6%9C%89%E5%92%8C%E8%A7%92%E8%89%B2%E4%B8%80%E8%87%B4%E7%9A%84%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E5%86%85%E8%B5%84%E6%BA%90%E7%9A%84%E7%AE%A1%E7%90%86%E8%83%BD%E5%8A%9B%EF%BC%8C%E5%9B%A0%E5%85%B6%E9%9B%86%E7%BE%A4%E7%BA%A7%E5%88%AB%E7%9A%84%E8%8C%83%E5%9B%B4%EF%BC%8C%E8%BF%98%E5%8F%AF%E4%BB%A5%E7%94%A8%E4%BA%8E%E4%BB%A5%E4%B8%8B%E7%89%B9%E6%AE%8A%E5%85%83%E7%B4%A0%E7%9A%84%E6%8E%88%E6%9D%83%E3%80%82%0A%20%20%20%20-%20%E9%9B%86%E7%BE%A4%E8%8C%83%E5%9B%B4%E7%9A%84%E8%B5%84%E6%BA%90%EF%BC%8C%E4%BE%8B%E5%A6%82Node%0A%20%20%20%20-%20%E9%9D%9E%E8%B5%84%E6%BA%90%E5%9E%8B%E7%9A%84%E8%B7%AF%E5%BE%84%EF%BC%8C%E4%BE%8B%E5%A6%82%2Fhealthz%0A%20%20%20%20-%20%E5%8C%85%E5%90%AB%E5%85%A8%E9%83%A8%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%9A%84%E8%B5%84%E6%BA%90%EF%BC%8C%E4%BE%8B%E5%A6%82pods%0A%20%20%20%20%0A%E4%BE%8B%E5%A6%82%EF%BC%8C%E4%B8%8B%E9%9D%A2%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2%E5%8F%AF%E4%BB%A5%E8%AE%A9%E7%94%A8%E6%88%B7%E6%9C%89%E6%9D%83%E8%AE%BF%E9%97%AE%E4%BB%BB%E6%84%8F%E4%B8%80%E4%B8%AA%E6%88%96%E6%89%80%E6%9C%89%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E7%9A%84secrets%EF%BC%9A%0A%60%60%60%0Aapiversion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20ClusterRole%0Ametadata%3A%0A%20%20name%3A%20secret-reader%0A%20%20%23ClusterRole%E4%B8%8D%E5%8F%97%E9%99%90%E4%BA%8E%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%EF%BC%8C%E6%89%80%E4%BB%A5%E7%9C%81%E7%95%A5%E4%BA%86namespace%E7%9A%84%E5%AE%9A%E4%B9%89%0Arules%3A%0A-%20apiGroups%3A%20%5B%22%22%5D%0A%20%20resources%3A%20%5B%22secrets%22%5D%0A%20%20verbs%3A%20%5B%22get%22%2C%20%22watch%22%2C%20%22list%22%5D%0A%60%60%60%0A-%20RoleBinding%20%26%20ClusterRoleBinding%0A%E8%A7%92%E8%89%B2%E7%BB%91%E5%AE%9A%E6%88%96%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2%E7%BB%91%E5%AE%9A%E7%94%A8%E6%9D%A5%E6%8A%8A%E4%B8%80%E4%B8%AA%E8%A7%92%E8%89%B2%E7%BB%91%E5%AE%9A%E5%88%B0%E4%B8%80%E4%B8%AA%E7%9B%AE%E6%A0%87%E4%B8%8A%EF%BC%8C%E7%BB%91%E5%AE%9A%E7%9B%AE%E6%A0%87%E5%8F%AF%E4%BB%A5%E6%98%AFUser%E3%80%81Group%E6%88%96%E8%80%85Service%20Account%E3%80%82%E4%BD%BF%E7%94%A8RoleBinding%E4%B8%BA%E6%9F%90%E4%B8%AA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E6%8E%88%E6%9D%83%EF%BC%8CClusterRoleBinding%E4%B8%BA%E9%9B%86%E7%BE%A4%E8%8C%83%E5%9B%B4%E5%86%85%E6%8E%88%E6%9D%83%E3%80%82%0A%0A%E4%BE%8B%E5%A6%82%EF%BC%8CRoleBinding%E5%B0%86%E5%9C%A8default%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%AD%E6%8A%8Apod-reader%E8%A7%92%E8%89%B2%E6%8E%88%E4%BA%88%E7%94%A8%E6%88%B7jane%EF%BC%8C%E5%8F%AF%E4%BB%A5%E8%AE%A9jane%E7%94%A8%E6%88%B7%E8%AF%BB%E5%8F%96default%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%AD%E7%9A%84Pod%EF%BC%9A%0A%60%60%60%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20RoleBinding%0Ametadata%3A%0A%20%20name%3A%20read-pods%0A%20%20namespace%3A%20default%0Asubjects%3A%0A-%20kind%3A%20User%0A%20%20name%3A%20jane%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0AroleRef%3A%0A%20%20kind%3A%20Role%0A%20%20name%3A%20pod-reader%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0A%60%60%60%0ARoleBinding%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BC%95%E7%94%A8ClusterRole%EF%BC%8C%E5%AF%B9%E5%B1%9E%E4%BA%8E%E5%90%8C%E4%B8%80%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E5%86%85ClusterRole%E5%AE%9A%E4%B9%89%E8%B5%84%E6%BA%90%E4%B8%BB%E4%BD%93%E8%BF%9B%E8%A1%8C%E6%8E%88%E6%9D%83%E3%80%82%E4%B8%80%E7%A7%8D%E5%B8%B8%E8%A7%81%E7%9A%84%E5%81%9A%E6%B3%95%E6%98%AF%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86%E5%91%98%E4%B8%BA%E9%9B%86%E7%BE%A4%E8%8C%83%E5%9B%B4%E9%A2%84%E5%85%88%E5%AE%9A%E4%B9%89%E5%A5%BD%E4%B8%80%E7%BB%84%E8%A7%92%E8%89%B2%EF%BC%88ClusterRole%EF%BC%89%EF%BC%8C%E7%84%B6%E5%90%8E%E5%9C%A8%E5%A4%9A%E4%B8%AA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%AD%E9%87%8D%E5%A4%8D%E4%BD%BF%E7%94%A8%E8%BF%99%E4%BA%9BClusterRole%E3%80%82%0A%0A%E4%BE%8B%E5%A6%82%EF%BC%8C%E4%BD%BF%E7%94%A8RoleBinding%E7%BB%91%E5%AE%9A%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2secret-reader%EF%BC%8C%E4%BD%BFdave%E5%8F%AA%E8%83%BD%E8%AF%BB%E5%8F%96development%E5%91%BD%E4%BB%A4%E7%A9%BA%E9%97%B4%E4%B8%AD%E7%9A%84secret%EF%BC%9A%0A%60%60%60%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20RoleBinding%0Ametadata%3A%0A%20%20name%3A%20read-secrets%0A%20%20namespace%3A%20development%0Asubjects%3A%0A-%20kind%3A%20User%0A%20%20name%3A%20dave%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0AroleRef%3A%0A%20%20kind%3A%20ClusterRole%0A%20%20name%3A%20secret-reader%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0A%60%60%60%0A%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2%E7%BB%91%E5%AE%9A%E4%B8%AD%E7%9A%84%E8%A7%92%E8%89%B2%E5%8F%AA%E8%83%BD%E6%98%AF%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2%EF%BC%8C%E7%94%A8%E4%BA%8E%E8%BF%9B%E8%A1%8C%E9%9B%86%E7%BE%A4%E7%BA%A7%E5%88%AB%E6%88%96%E8%80%85%E5%AF%B9%E6%89%80%E6%9C%89%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E9%83%BD%E7%94%9F%E6%95%88%E7%9A%84%E6%8E%88%E6%9D%83%E3%80%82%0A%E4%BE%8B%E5%A6%82%EF%BC%8C%E5%85%81%E8%AE%B8manager%E7%BB%84%E7%9A%84%E7%94%A8%E6%88%B7%E8%AF%BB%E5%8F%96%E4%BB%BB%E6%84%8Fnamespace%E4%B8%AD%E7%9A%84secret%EF%BC%9A%0A%60%60%60%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20ClusterRoleBinding%0Ametadata%3A%0A%20%20name%3A%20read-secrets-global%0Asubjects%3A%0A-%20kind%3A%20Group%0A%20%20name%3A%20manager%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0AroleRef%3A%0A%20%20kind%3A%20ClusterRole%0A%20%20name%3A%20secret-reader%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0A%60%60%60%0A%0A%E5%A4%9A%E6%95%B0%E8%B5%84%E6%BA%90%E5%8F%AF%E4%BB%A5%E7%94%A8%E5%85%B6%E5%90%8D%E7%A7%B0%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9D%A5%E8%A1%A8%E8%BE%BE%EF%BC%8C%E4%B9%9F%E5%B0%B1%E6%98%AFEndpoint%E4%B8%AD%E7%9A%84URL%E7%9B%B8%E5%AF%B9%E8%B7%AF%E5%BE%84%EF%BC%8C%E4%BE%8B%E5%A6%82pods%E3%80%82%E7%84%B6%E5%90%8E%EF%BC%8C%E6%9F%90%E4%BA%9BKubernetes%20API%E5%8C%85%E5%90%AB%E4%B8%8B%E7%BA%A7%E8%B5%84%E6%BA%90%EF%BC%8C%E4%BE%8B%E5%A6%82Pod%E7%9A%84%E6%97%A5%E5%BF%97logs%E3%80%82Pod%E7%9A%84%E6%97%A5%E5%BF%97%E7%9A%84Endpoint%E6%98%AFGET%20%2Fapi%2Fv1%2Fnamespaces%2F%7Bnamespaces%7D%2Fpods%2F%7Bname%7D%2Flog%E3%80%82%0APod%E6%98%AF%E4%B8%80%E4%B8%AA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E5%86%85%E7%9A%84%E8%B5%84%E6%BA%90%EF%BC%8Clog%E5%B0%B1%E6%98%AF%E4%B8%80%E4%B8%AA%E4%B8%8B%E7%BA%A7%E8%B5%84%E6%BA%90%E3%80%82%E8%A6%81%E5%9C%A8%E4%B8%80%E4%B8%AARBAC%E8%A7%92%E8%89%B2%E4%B8%AD%E4%BD%93%E7%8E%B0%EF%BC%8C%E5%88%99%E9%9C%80%E8%A6%81%E7%94%A8%E6%96%9C%E7%BA%BF%E2%80%9C%2F%E2%80%9D%E6%9D%A5%E5%88%86%E5%89%B2%E8%B5%84%E6%BA%90%E5%92%8C%E4%B8%8B%E7%BA%A7%E8%B5%84%E6%BA%90%E3%80%82%E8%8B%A5%E6%83%B3%E6%8E%88%E6%9D%83%E8%AE%A9%E6%9F%90%E4%B8%AA%E4%B8%BB%E4%BD%93%E5%90%8C%E6%97%B6%E8%83%BD%E5%A4%9F%E8%AF%BB%E5%8F%96Pod%E5%92%8CPod%20log%EF%BC%8C%E5%88%99%E5%8F%AF%E4%BB%A5%E9%85%8D%E7%BD%AEresources%E4%B8%BA%E4%B8%80%E4%B8%AA%E6%95%B0%E7%BB%84%EF%BC%9A%0A%60%60%60%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20Role%0Ametadata%3A%0A%20%20name%3A%20pod-and-pod-logs-reader%0A%20%20namespace%3A%20default%0Arules%3A%0A-%20apiGroups%3A%20%5B%22%22%5D%0A%20%20resources%3A%20%5B%22pods%22%2C%20%22pods%2Flog%22%5D%0A%20%20verbs%3A%20%5B%22get%22%2C%20%22list%22%5D%0A%60%60%60%0A%0A%E8%B5%84%E6%BA%90%E8%BF%98%E5%8F%AF%E4%BB%A5%E9%80%9A%E8%BF%87%E5%90%8D%E5%AD%97%EF%BC%88ResourceName%EF%BC%89%E8%BF%9B%E8%A1%8C%E5%BC%95%E7%94%A8%E3%80%82%E5%9C%A8%E6%8C%87%E5%AE%9AResourceName%E5%90%8E%EF%BC%8C%E4%BD%BF%E7%94%A8get%E3%80%81delete%E3%80%81update%E3%80%81patch%E5%8A%A8%E8%AF%8D%E7%9A%84%E8%AF%B7%E6%B1%82%EF%BC%8C%E5%B0%B1%E4%BC%9A%E8%A2%AB%E9%99%90%E5%88%B6%E5%9C%A8%E8%BF%99%E4%B8%AA%E8%B5%84%E6%BA%90%E5%AE%9E%E4%BE%8B%E8%8C%83%E5%9B%B4%E5%86%85%E3%80%82%0A%E4%BE%8B%E5%A6%82%EF%BC%8C%E4%B8%8B%E9%9D%A2%E7%9A%84%E5%A3%B0%E6%98%8E%E8%AE%A9%E4%B8%80%E4%B8%AA%E4%B8%BB%E4%BD%93%E5%8F%AA%E8%83%BD%E5%AF%B9%E4%B8%80%E4%B8%AA%E5%8F%ABmy-configmap%E7%9A%84ConfigMap%E8%BF%9B%E8%A1%8Cget%E5%92%8Cupdate%E6%93%8D%E4%BD%9C%EF%BC%9A%0A%60%60%60%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1beta1%0Akind%3A%20Role%0Ametadata%3A%0A%20%20name%3A%20configmap-updater%0A%20%20namespace%3A%20default%0Arules%3A%0A-%20apiGroups%3A%20%5B%22%22%5D%0A%20%20resources%3A%20%5B%22configmap%22%5D%0A%20%20resourceNames%3A%20%5B%22my-configmap%22%5D%0A%20%20verbs%3A%20%5B%22update%22%2C%20%22get%22%5D%0A%60%60%60%0A%0A%23%23%20Admission%20Control%EF%BC%88%E5%87%86%E5%85%A5%E6%8E%A7%E5%88%B6%EF%BC%89%0AAdmission%20Control%E5%AE%9E%E9%99%85%E4%B8%8A%E6%98%AF%E4%B8%80%E4%B8%AA%E5%87%86%E5%85%A5%E6%8E%A7%E5%88%B6%E6%8F%92%E4%BB%B6%E5%88%97%E8%A1%A8%EF%BC%8C%E5%8F%91%E9%80%81%E5%88%B0API%20Server%E7%9A%84%E8%AF%B7%E6%B1%82%E9%83%BD%E9%9C%80%E8%A6%81%E7%BB%8F%E8%BF%87%E8%BF%99%E4%B8%AA%E5%88%97%E8%A1%A8%E4%B8%AD%E7%9A%84%E6%AF%8F%E4%B8%AA%E5%87%86%E5%85%A5%E6%8E%A7%E5%88%B6%E5%99%A8%E6%8F%92%E4%BB%B6%E7%9A%84%E6%A3%80%E6%9F%A5%EF%BC%8C%E6%A3%80%E6%9F%A5%E4%B8%8D%E9%80%9A%E8%BF%87%EF%BC%8C%E5%88%99%E6%8B%92%E7%BB%9D%E8%AF%B7%E6%B1%82%E3%80%82%0A1.11%E7%89%88%E6%9C%AC%E4%BB%A5%E4%B8%8A%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8%E7%9A%84%E6%8F%92%E4%BB%B6%EF%BC%9A%0A--enable-admission-plugins%3DNamespaceLifecycle%2CLimitRanger%2CServiceAccount%2CDefaultStorgeClass%2CDefaultTolerationSeconds%2CResourceQuota%0A%23%23%20%E7%9B%91%E6%8E%A7Prometheus%0APrometheus%E7%89%B9%E7%82%B9%EF%BC%9A%0A-%20%E5%A4%9A%E7%BB%B4%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B%EF%BC%9A%E7%94%B1%E5%BA%A6%E9%87%8F%E5%90%8D%E7%A7%B0%E5%92%8C%E9%94%AE%E5%80%BC%E5%AF%B9%E6%A0%87%E8%AF%86%E7%9A%84%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%95%B0%E6%8D%AE%0A-%20PromSQL%EF%BC%9A%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%9F%A5%E8%AF%A2%E8%AF%AD%E8%A8%80%EF%BC%8C%E5%8F%AF%E4%BB%A5%E5%88%A9%E7%94%A8%E5%A4%9A%E7%BB%B4%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%88%90%E5%A4%8D%E6%9D%82%E7%9A%84%E6%9F%A5%E8%AF%A2%0A-%20%E4%B8%8D%E4%BE%9D%E8%B5%96%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%EF%BC%8C%E5%8D%95%E4%B8%AA%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%8A%82%E7%82%B9%E5%8F%AF%E7%9B%B4%E6%8E%A5%E5%B7%A5%E4%BD%9C%0A-%20%E5%9F%BA%E4%BA%8EHTTP%E7%9A%84pull%E6%96%B9%E5%BC%8F%E9%87%87%E9%9B%86%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%95%B0%E6%8D%AE%0A-%20%E6%8E%A8%E9%80%81%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%95%B0%E6%8D%AE%E9%80%9A%E8%BF%87PushGateway%E7%BB%84%E4%BB%B6%E6%94%AF%E6%8C%81%0A-%20%E9%80%9A%E8%BF%87%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E6%88%96%E9%9D%99%E6%80%81%E9%85%8D%E7%BD%AE%E5%8F%91%E7%8E%B0%E7%9B%AE%E6%A0%87%0A-%20%E5%A4%9A%E7%A7%8D%E5%9B%BE%E5%BD%A2%E6%A8%A1%E5%BC%8F%E5%8F%8A%E4%BB%AA%E8%A1%A8%E7%9B%98%E6%94%AF%E6%8C%81%EF%BC%88grafana%EF%BC%89%0A%0APrometheus%E7%BB%84%E6%88%90%E5%8F%8A%E6%9E%B6%E6%9E%84%0A-%20Prometheus%20Server%EF%BC%9A%E6%94%B6%E9%9B%86%E6%8C%87%E6%A0%87%E5%92%8C%E5%AD%98%E5%82%A8%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%95%B0%E6%8D%AE%EF%BC%8C%E5%B9%B6%E6%8F%90%E4%BE%9B%E6%9F%A5%E8%AF%A2%E6%8E%A5%E5%8F%A3%0A-%20ClientLibrary%EF%BC%9A%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%BA%93%0A-%20Push%20Gateway%EF%BC%9A%E7%9F%AD%E6%9C%9F%E5%AD%98%E5%82%A8%E6%8C%87%E6%A0%87%E6%95%B0%E6%8D%AE%E3%80%82%E4%B8%BB%E8%A6%81%E7%94%A8%E4%BA%8E%E4%B8%B4%E6%97%B6%E6%80%A7%E7%9A%84%E4%BB%BB%E5%8A%A1%0A-%20Exporters%EF%BC%9A%E9%87%87%E9%9B%86%E5%B7%B2%E6%9C%89%E7%9A%84%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9C%8D%E5%8A%A1%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87%E5%B9%B6%E6%9A%B4%E9%9C%B2metrics%0A-%20Alertmanager%EF%BC%9A%E5%91%8A%E8%AD%A6%0A-%20Web%20UI%EF%BC%9A%E7%AE%80%E5%8D%95%E7%9A%84Web%E6%8E%A7%E5%88%B6%E5%8F%B0%0A!%5Ba00435fe82a477abc8581dbba530a2e0.png%5D(en-resource%3A%2F%2Fdatabase%2F2253%3A1)%0A%0A%E6%95%B0%E6%8D%AE%E6%A8%A1%E5%9E%8B%0Aprometheus%E5%B0%86%E6%89%80%E6%9C%89%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E4%B8%BA%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%EF%BC%9B%E5%85%B7%E6%9C%89%E7%9B%B8%E5%90%8C%E5%BA%A6%E9%87%8F%E5%90%8D%E7%A7%B0%E4%BB%A5%E5%8F%8A%E6%A0%87%E7%AD%BE%E5%B1%9E%E4%BA%8E%E5%90%8C%E4%B8%80%E4%B8%AA%E6%8C%87%E6%A0%87%E3%80%82%E6%AF%8F%E4%B8%AA%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E9%83%BD%E7%94%B1%60%E5%BA%A6%E9%87%8F%E6%A0%87%E5%87%86%E5%90%8D%E7%A7%B0%E5%92%8C%E4%B8%80%E7%BB%84%E9%94%AE%E5%80%BC%E5%AF%B9%EF%BC%88%E4%B9%9F%E6%88%90%E4%B8%BA%E6%A0%87%E7%AD%BE%EF%BC%89%60%E5%94%AF%E4%B8%80%E6%A0%87%E8%AF%86%E3%80%82%0A%E6%97%B6%E9%97%B4%E5%BA%8F%E5%88%97%E6%A0%BC%E5%BC%8F%EF%BC%9A%3Cmetric%20name%3E%7B%3Clabel%20name%3E%3D%3Clabel%20value%3E%2C%20...%7D%0A%0A%E4%BD%9C%E4%B8%9A%E5%92%8C%E5%AE%9E%E4%BE%8B%0A%E5%AE%9E%E4%BE%8B%EF%BC%9A%E5%8F%AF%E4%BB%A5%E6%8A%93%E5%8F%96%E7%9A%84%E7%9B%AE%E6%A0%87%E7%A7%B0%E4%B8%BA%E5%AE%9E%E4%BE%8B%EF%BC%88Instances%EF%BC%89%0A%E4%BD%9C%E4%B8%9A%EF%BC%9A%E5%85%B7%E6%9C%89%E7%9B%B8%E5%90%8C%E7%9B%AE%E6%A0%87%E7%9A%84%E5%AE%9E%E4%BE%8B%E9%9B%86%E5%90%88%E7%A7%B0%E4%B8%BA%E4%BD%9C%E4%B8%9A%EF%BC%88Job%EF%BC%89%0A%60%60%60%0Ascrape_configs%3A%0A-%20job_name%3A%20'prometheus'%0A%20%20static_configs%3A%0A%20%20-%20targets%3A%20%5B'localhost%3A9090'%5D%0A-%20job_name%3A%20'node'%0A%20%20static_configs%3A%0A%20%20-%20targets%3A%20%5B'192.168.1.10%3A9090'%5D%0A%60%60%60%0A%23%23%23%20k8s%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87%0A-%20Prometheus%E7%9B%91%E6%8E%A7K8S%E6%9E%B6%E6%9E%84%0A!%5B848efff138059a9df427a57e1e24d7d4.png%5D(en-resource%3A%2F%2Fdatabase%2F2255%3A1)%0A%0A%7C%20%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87%20%7C%20%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0%20%7C%20%E4%B8%BE%E4%BE%8B%20%7C%0A%7C%20---%20%7C%20---%20%7C%20---%20%7C%0A%7C%20Pod%E6%80%A7%E8%83%BD%20%7C%20cAdvisor%20%7C%20%E7%AA%97%E5%8F%A3CPU%EF%BC%8C%E5%86%85%E5%AD%98%E5%88%A9%E7%94%A8%E7%8E%87%20%7C%0A%7C%20Node%E6%80%A7%E8%83%BD%20%7C%20node-exporter%20%7C%20%E8%8A%82%E7%82%B9CPU%EF%BC%8C%E5%86%85%E5%AD%98%E5%88%A9%E7%94%A8%E7%8E%87%20%7C%0A%7C%20K8S%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1%20%7C%20kube-state-metrics%20%7C%20Pod%2FDeployment%2FService%20%7C%0A-%20Kubernetes%E6%9C%AC%E8%BA%AB%E7%9B%91%E6%8E%A7%0A%20%20%20%20-%20Node%E8%B5%84%E6%BA%90%E5%88%A9%E7%94%A8%E7%8E%87%0A%20%20%20%20-%20Node%E6%95%B0%E9%87%8F%0A%20%20%20%20-%20Pods%E6%95%B0%E9%87%8F%EF%BC%88Nodde%EF%BC%89%0A%20%20%20%20-%20%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1%E7%8A%B6%E6%80%81%0A-%20Pod%E7%9B%91%E6%8E%A7%0A%20%20%20%20-%20Pod%E6%95%B0%E9%87%8F%EF%BC%88%E9%A1%B9%E7%9B%AE%EF%BC%89%0A%20%20%20%20-%20%E5%AE%B9%E5%99%A8%E8%B5%84%E6%BA%90%E5%88%A9%E7%94%A8%E7%8E%87%0A%20%20%20%20-%20%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%0A%0A%0A%23%23%20%E6%A1%88%E4%BE%8B%0A%23%23%23%20%E6%8E%88%E4%BA%88wower%E8%B4%A6%E6%88%B7%E8%AE%BF%E9%97%AEpod%E7%9A%84%E6%9D%83%E9%99%90%EF%BC%9A%0A-%20%E9%A6%96%E5%85%88%E7%94%9F%E6%88%90wower%E8%B4%A6%E6%88%B7%E7%9B%B8%E5%85%B3%E7%9A%84%E8%AF%81%E4%B9%A6%E5%92%8C%E7%A7%81%E9%92%A5%0A%60%60%60%0Awower-kubeconfig.sh%E4%B8%BA%E7%94%9F%E6%88%90wower%E8%AF%81%E4%B9%A6%E5%AF%86%E9%92%A5%E7%9A%84%E8%84%9A%E6%9C%AC%EF%BC%9A%0A%0Acat%20%3E%20ca-config.json%20%3C%3C%20-%20EOF%0A%7B%0A%20%20%20%20%22signing%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%22default%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22expiry%22%3A%20%2287600h%22%0A%20%20%20%20%20%20%20%20%7D%2C%0A%20%20%20%20%20%20%20%20%22profiles%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22kubernetes%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22usages%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22signing%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22key%20encipherment%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22server%20auth%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22client%20auth%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22expiry%22%3A%20%2287600h%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D%0AEOF%0A%0Acat%20%3E%20wower-csr.json%20%3C%3C%20-%20EOF%0A%7B%0A%20%20%20%20%22CN%22%3A%20%22wower%22%2C%0A%20%20%20%20%22hosts%22%3A%20%5B%5D%2C%0A%20%20%20%20%22key%22%3A%20%7B%0A%20%20%20%20%20%20%20%20%22algo%22%3A%20%22rsa%22%2C%0A%20%20%20%20%20%20%20%20%22size%22%3A%202048%0A%20%20%20%20%7D%2C%0A%20%20%20%20%22names%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%22C%22%3A%20%22CN%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22L%22%3A%20%22Shenzhen%22%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%22ST%22%3A%20%22Guangdong%22%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%5D%0A%7D%0AEOF%0A%0Acfssl%20gencert%20-ca%3D%2Fetc%2Fkubernetes%2Fpki%2Fca.crt%20-ca-key%3D%2Fetc%2Fkubernetes%2Fpki%2Fca.key%20-config%3D%2Fopt%2Fkubernetes%2Fssl%2Fca-config.json%20-profile%3Dkubernetes%20wower-csr.json%20%7C%20cfssljson%20-bare%20wower%0A%0Akubectl%20config%20set-cluster%20kubernetes%20%5C%0A--certificate-authority%3D%2Fetc%2Fkubernetes%2Fpki%2Fca.crt%20%5C%0A--embed-certs%3Dtrue%20%5C%0A--server%3Dhttps%3A%2F%2F192.168.1.6%3A6443%20%5C%0A--kubeconfig%3Dwower-kubeconfig%0A%0Akubectl%20config%20set-credentials%20wower%20%5C%0A--client-key%3Dwower-key.pem%20%5C%0A--client-certificate%3Dwower.pem%20%5C%0A--embed-certs%3Dtrue%20%5C%0A--kubeconfig%3Dwower-kubeconfig%0A%0Akubectl%20config%20set-context%20default%20%5C%0A--cluster%3Dkubernetes%20%5C%0A--user%3Dwower%20%5C%0A--kubeconfig%3Dwower-kubeconfig%0A%0Akubectl%20config%20use-context%20default%20--kubeconfig%3Dwower-kubeconfig%0A%0A%0A%E4%B8%8A%E8%BF%B0%E5%91%BD%E4%BB%A4%E4%B8%AD%E5%BC%95%E7%94%A8%E7%9A%84ca.crt%E4%B8%BA%E7%94%9F%E6%88%90apiserver%E8%AF%81%E4%B9%A6%E7%9A%84CA%E8%AF%81%E4%B9%A6%EF%BC%8Cca.key%E4%B8%BACA%E5%AF%86%E9%92%A5%0A%60%60%60%0A-%20%E7%BB%99wower%E8%B4%A6%E6%88%B7%E7%BB%91%E5%AE%9A%E8%AE%BF%E9%97%AEpod%E7%9A%84%E6%9D%83%E9%99%90%0A%60%60%60%0Awower-rbac.sh%E4%B8%BA%E7%BB%91%E5%AE%9Awower%E8%B4%A6%E6%88%B7%E8%AE%BF%E9%97%AEpod%E7%9A%84%E6%9D%83%E9%99%90%E7%9A%84%E8%84%9A%E6%9C%AC%EF%BC%9A%0A%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1%0Akind%3A%20Role%0Ametadata%3A%0A%20%20name%3A%20pod-reader%0A%20%20namespace%3A%20default%0Arules%3A%0A-%20apiGroups%3A%20%5B%22%22%5D%0A%20%20resources%3A%20%5B%22pods%22%5D%0A%20%20verbs%3A%20%5B%22get%22%2C%20%22watch%22%2C%20%22list%22%5D%0A%0A---%0AapiVersion%3A%20rbac.authorization.k8s.io%2Fv1%0Akind%3A%20RoleBinding%0Ametadata%3A%0A%20%20name%3A%20read-pods%0A%20%20namespace%3A%20default%0Asubjects%3A%0A-%20kind%3A%20User%0A%20%20name%3A%20wower%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%23%E4%B8%BA%E8%A6%81%E7%BB%91%E5%AE%9A%E7%9A%84%E8%B4%A6%E6%88%B7%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0AroleRef%3A%0A%20%20kind%3A%20Role%0A%20%20name%3A%20pod-reader%0A%20%20apiGroup%3A%20rbac.authorization.k8s.io%0A%60%60%60%0A%E7%BB%8F%E8%BF%87%E7%94%9F%E6%88%90%E7%9B%B8%E5%85%B3%E8%AF%81%E4%B9%A6%E5%92%8C%E7%BB%91%E5%AE%9A%E7%9B%B8%E5%85%B3%E6%9D%83%E9%99%90%E5%90%8Ewower%E7%94%A8%E6%88%B7%E4%BE%BF%E6%9C%89%E4%BA%86%E8%AE%BF%E9%97%AEpod%E7%9A%84%E6%9D%83%E9%99%90%EF%BC%8C%E5%8F%AF%E4%BB%A5%E9%80%9A%E8%BF%87%E2%80%9Ckubectl%20get%20pods%20--kubeconfig%3Dwower-kubeconfig%E2%80%9D%E6%9D%A5%E9%AA%8C%E8%AF%81%E3%80%82</center></span>
+</div></body></html> 

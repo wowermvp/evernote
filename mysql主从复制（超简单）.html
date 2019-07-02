@@ -1,0 +1,105 @@
+<html>
+<head>
+  <title>mysql主从复制（超简单）</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1377"/>
+<h1>mysql主从复制（超简单）</h1>
+
+<div>
+<span><div><b><span style="font-size: 20px;"><span style="font-family: SimSun;"><span style="color: rgb(44, 44, 44);">              </span></span></span></b></div><div style="overflow:hidden;"><div style="padding:0px;margin:0px;border:1px solid rgb(224, 214, 189);background:rgb(255, 255, 255);margin-top:5px;"><div style="padding:0px;margin:0px;clear:both;"><div style="padding:0px;margin:0 0 10px;border-top-width:2px;border-top-style:solid;border-top-color:rgb(239, 239, 239);clear:both;position:relative;"><div style="padding: 0px; margin: 20px 15px 8px; border-bottom-width: 1px; border-bottom-style: dashed; border-bottom-color: rgb(217, 217, 217); word-wrap: break-word; word-break: normal;"><p style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;text-align:center;"><span style="font-size: 14px;"><span style="font-family: 宋体, 'Arial Narrow', arial, serif;"><span style="color: rgb(44, 44, 44);"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;font-size:22px;">mysql主从复制</span></strong><br style="padding:0px;margin:0px;"/>
+（超简单）</span></span></span></p><p style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;text-align:left;"><span style="font-size: 14px;"><span style="font-family: 宋体, 'Arial Narrow', arial, serif;"><span style="color: rgb(44, 44, 44);">怎么安装mysql数据库，这里不说了，只说它的主从复制，步骤如下：</span></span></span></p><p style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;"><span style="font-size: 14px;"><span style="font-family: 宋体, 'Arial Narrow', arial, serif;"><span style="color: rgb(44, 44, 44);"><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">1、主从服务器分别作以下操作</span></strong><span style="padding:0px;margin:0px;color:rgb(255,0,0);">：</span></span><br style="padding:0px;margin:0px;"/>
+  1.1、版本一致<br style="padding:0px;margin:0px;"/>
+  1.2、初始化表，并在后台启动mysql<br style="padding:0px;margin:0px;"/>
+  1.3、修改root的密码<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;font-size:18px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">2、修改主服务器master:</span></span></strong><br style="padding:0px;margin:0px;"/>
+   #vi /etc/my.cnf<br style="padding:0px;margin:0px;"/>
+       [mysqld]<br style="padding:0px;margin:0px;"/>
+       log-bin=mysql-bin   //[必须]启用二进制日志<br style="padding:0px;margin:0px;"/>
+       server-id=222      //[必须]服务器唯一ID，默认是1，一般取IP最后一段<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">3、修改从服务器slave:</span></strong></span><br style="padding:0px;margin:0px;"/>
+   #vi /etc/my.cnf<br style="padding:0px;margin:0px;"/>
+       [mysqld]<br style="padding:0px;margin:0px;"/>
+       log-bin=mysql-bin   //[不是必须]启用二进制日志<br style="padding:0px;margin:0px;"/>
+       server-id=226      //[必须]服务器唯一ID，默认是1，一般取IP最后一段<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">4、重启两台服务器的mysql</span></strong></span><br style="padding:0px;margin:0px;"/>
+   /etc/init.d/mysql restart<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">5、在主服务器上建立帐户并授权slave:</span></strong></span><br style="padding:0px;margin:0px;"/>
+   #/usr/local/mysql/bin/mysql -uroot -pmttang  <br style="padding:0px;margin:0px;"/>
+   mysql&gt;GRANT REPLICATION SLAVE ON *.* to 'mysync'@'%' identified by 'q123456'; //一般不用root帐号，&amp;ldquo;%&amp;rdquo;表示所有客户端都可能连，只要帐号，密码正确，此处可用具体客户端IP代替，如192.168.145.226，加强安全。<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">6、登录主服务器的mysql，查询master的状态</span></strong></span><br style="padding:0px;margin:0px;"/>
+   mysql&gt;show master status;<br style="padding:0px;margin:0px;"/>
+   +------------------+----------+--------------+------------------+<br style="padding:0px;margin:0px;"/>
+   | File             | Position | Binlog_Do_DB | Binlog_Ignore_DB |<br style="padding:0px;margin:0px;"/>
+   +------------------+----------+--------------+------------------+<br style="padding:0px;margin:0px;"/>
+   | mysql-bin.000004 |      308 |              |                  |<br style="padding:0px;margin:0px;"/>
+   +------------------+----------+--------------+------------------+<br style="padding:0px;margin:0px;"/>
+   1 row in set (0.00 sec)<br style="padding:0px;margin:0px;"/>
+   注：执行完此步骤后不要再操作主服务器MYSQL，防止主服务器状态值变化<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">7、配置从服务器Slave：</span></strong></span><br style="padding:0px;margin:0px;"/>
+   mysql&gt;change master to master_host='192.168.145.222',master_user='<span style="padding:0px;margin:0px;color:rgb(44,44,44);font-family:'宋体', 'Arial Narrow', arial, serif;font-size:14px;background-color:rgb(255,255,255);">mysync</span>',master_password='q123456',<br style="padding:0px;margin:0px;"/>
+         master_log_file='mysql-bin.000004',master_log_pos=308;   //注意不要断开，308数字前后无单引号。<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   Mysql&gt;start slave;    //启动从服务器复制功能<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">8、检查从服务器复制功能状态：</span></strong></span><br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   mysql&gt; show slave status\G<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   *************************** 1. row ***************************<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+              Slave_IO_State: Waiting for master to send event<br style="padding:0px;margin:0px;"/>
+              Master_Host: 192.168.2.222  //主服务器地址<br style="padding:0px;margin:0px;"/>
+              Master_User: mysync   //授权帐户名，尽量避免使用root<br style="padding:0px;margin:0px;"/>
+              Master_Port: 3306    //数据库端口，部分版本没有此行<br style="padding:0px;margin:0px;"/>
+              Connect_Retry: 60<br style="padding:0px;margin:0px;"/>
+              Master_Log_File: mysql-bin.000004<br style="padding:0px;margin:0px;"/>
+              Read_Master_Log_Pos: 600     //#同步读取二进制日志的位置，大于等于Exec_Master_Log_Pos<br style="padding:0px;margin:0px;"/>
+              Relay_Log_File: ddte-relay-bin.000003<br style="padding:0px;margin:0px;"/>
+              Relay_Log_Pos: 251<br style="padding:0px;margin:0px;"/>
+              Relay_Master_Log_File: mysql-bin.000004<br style="padding:0px;margin:0px;"/>
+              Slave_IO_Running: Yes    //此状态必须YES<br style="padding:0px;margin:0px;"/>
+              Slave_SQL_Running: Yes     //此状态必须YES<br style="padding:0px;margin:0px;"/>
+                    ......<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+注：Slave_IO及Slave_SQL进程必须正常运行，即YES状态，否则都是错误的状态(如：其中一个NO均属错误)。<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+以上操作过程，主从服务器配置完成。<br style="padding:0px;margin:0px;"/>
+ <br style="padding:0px;margin:0px;"/><span style="padding:0px;margin:0px;font-size:18px;"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">9、主从服务器测试：</span></strong></span><br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+主服务器Mysql，建立数据库，并在这个库中建表插入一条数据：<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+  mysql&gt; create database hi_db;<br style="padding:0px;margin:0px;"/>
+  Query OK, 1 row affected (0.00 sec)<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+  mysql&gt; use hi_db;<br style="padding:0px;margin:0px;"/>
+  Database changed<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+  mysql&gt;  create table hi_tb(id int(3),name char(10));<br style="padding:0px;margin:0px;"/>
+  Query OK, 0 rows affected (0.00 sec)<br style="padding:0px;margin:0px;"/>
+ <br style="padding:0px;margin:0px;"/>
+  mysql&gt; insert into hi_tb values(001,'bobu');<br style="padding:0px;margin:0px;"/>
+  Query OK, 1 row affected (0.00 sec)<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+  mysql&gt; show databases;<br style="padding:0px;margin:0px;"/>
+   +--------------------+<br style="padding:0px;margin:0px;"/>
+   | Database           |<br style="padding:0px;margin:0px;"/>
+   +--------------------+<br style="padding:0px;margin:0px;"/>
+   | information_schema |<br style="padding:0px;margin:0px;"/>
+   | hi_db                |<br style="padding:0px;margin:0px;"/>
+   | mysql                |<br style="padding:0px;margin:0px;"/>
+   | test                 |<br style="padding:0px;margin:0px;"/>
+   +--------------------+<br style="padding:0px;margin:0px;"/>
+   4 rows in set (0.00 sec)<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+从服务器Mysql查询：<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   mysql&gt; show databases;<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   +--------------------+<br style="padding:0px;margin:0px;"/>
+   | Database               |<br style="padding:0px;margin:0px;"/>
+   +--------------------+<br style="padding:0px;margin:0px;"/>
+   | information_schema |<br style="padding:0px;margin:0px;"/>
+   | hi_db                 |       //I'M here，大家看到了吧<br style="padding:0px;margin:0px;"/>
+   | mysql                 |<br style="padding:0px;margin:0px;"/>
+   | test          |</span></span></span></p><p style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;"><span style="font-size: 14px;"><span style="font-family: 宋体, 'Arial Narrow', arial, serif;"><span style="color: rgb(44, 44, 44);">   +--------------------+<br style="padding:0px;margin:0px;"/>
+   4 rows in set (0.00 sec)<br style="padding:0px;margin:0px;"/><br style="padding:0px;margin:0px;"/>
+   mysql&gt; use hi_db<br style="padding:0px;margin:0px;"/>
+   Database changed<br style="padding:0px;margin:0px;"/>
+   mysql&gt; select * from hi_tb;           //查看主服务器上新增的具体数据<br style="padding:0px;margin:0px;"/>
+   +------+------+<br style="padding:0px;margin:0px;"/>
+   | id   | name |<br style="padding:0px;margin:0px;"/>
+   +------+------+<br style="padding:0px;margin:0px;"/>
+   |    1 | bobu |<br style="padding:0px;margin:0px;"/>
+   +------+------+<br style="padding:0px;margin:0px;"/>
+   1 row in set (0.00 sec)<br style="padding:0px;margin:0px;"/>
+ </span></span></span></p><p style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;"><span style="font-size: 14px;"><span style="font-family: 宋体, 'Arial Narrow', arial, serif;"><span style="color: rgb(44, 44, 44);"><strong style="padding:0px;margin:0px;"><span style="padding:0px;margin:0px;font-size:18px;"><span style="padding:0px;margin:0px;color:rgb(255,0,0);">10、完成：</span></span></strong><br style="padding:0px;margin:0px;"/>
+    编写一shell脚本，用nagios监控slave的两个yes（Slave_IO及Slave_SQL进程），如发现只有一个或零个yes，就表明主从有问题了，发短信警报吧。</span></span></span></p><div style="padding:0px;margin:0px;padding-bottom:0px;clear:both;height:auto;overflow:hidden;"><div><br/></div></div></div></div></div></div></div></span>
+</div></body></html> 

@@ -1,0 +1,63 @@
+<html>
+<head>
+  <title>linux find中的-print0和xargs中-0的奥妙</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1905"/>
+<h1>linux find中的-print0和xargs中-0的奥妙</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="position: relative; max-width: 693px;"><div style="overflow-y: scroll;"><div style="font-style: normal; font-variant: normal; font-family: Tahoma, Helvetica, Arial, 宋体, sans-serif;"><div style="text-align: left;"><div style="overflow: hidden;"><div style="background-color: rgb(247, 252, 255);"><div style="font-weight: normal; font-size: 12px; margin: 0px auto; width: 686px; line-height: 50px; height: 50px;"><h1 style="margin:0px;padding:0px;font-size:15px;margin-left:21px;color:rgb(102, 153, 0);text-align:center;">linux find中的-print0和xargs中-0的奥妙</h1></div><div style="font-weight: normal; font-size: 12px; padding: 0px; margin: 0px auto; border-top-color: rgb(223, 245, 255); border-top-width: 1px; border-top-style: dashed; width: 680px; line-height: 27px; height: 27px; text-align: center;"><span style="margin-left:10px;color:rgb(102, 102, 102);">来源：互联网</span><span style="margin-left:10px;color:rgb(102, 102, 102);">作者：佚名</span><span style="margin-left:10px;color:rgb(102, 102, 102);">时间：08-16 17:55:23</span><span style="margin-left:10px;color:rgb(102, 102, 102);">【<a style="text-decoration:none;color:rgb(102, 102, 102);font-size:12px;font-weight:normal;">大</a> <a style="text-decoration:none;color:rgb(102, 102, 102);font-size:12px;font-weight:normal;">中</a> <a style="text-decoration:none;color:rgb(102, 102, 102);font-size:12px;font-weight:normal;">小</a>】</span></div><div style="font-size: 14px; margin: 10px auto 0px; width: 660px; word-wrap: break-word; word-break: break-all; line-height: 180%; clear: both; text-align: left; overflow: hidden; padding: 5px;"><div style="font-weight: normal; clear: both; border: 1px dashed rgb(191, 223, 255); color: rgb(68, 68, 68); padding: 3px; word-wrap: break-word; word-break: break-all; line-height: 180%; text-indent: 20px; background-color: rgb(255, 255, 255);">这篇文章主要介绍了linux find中的-print0和xargs中-0的奥妙,需要的朋友可以参考下</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; padding: 20px 0px; margin: 0px; overflow: hidden; width: 640px;">默认情况下, find 每输出一个文件名, 后面都会接着输出一个换行符 ('n'), 因此我们看到的 find 的输出都是一行一行的:</div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"><br/></p><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border: 1px solid rgb(0, 153, 204); padding: 0px 3px; font-size: 12px; margin: 3px auto 0px; overflow: hidden; background-color: rgb(246, 251, 255);"><div style="float:right;"><span style="cursor:pointer;"><u>复制代码</u></span></div>
+代码如下:</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border-right-color: rgb(0, 153, 204); border-right-width: 1px; border-right-style: solid; padding: 0px 3px; font-size: 14px; margin: 0px auto 3px; overflow: hidden; border-left-color: rgb(0, 153, 204); border-left-width: 1px; border-left-style: solid; word-break: break-all; border-bottom-color: rgb(0, 153, 204); border-bottom-width: 1px; border-bottom-style: solid; word-wrap: break-word; background-color: rgb(221, 237, 251);"><br/>
+[bash-4.1.5] ls -l<br/>
+total 0<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:09 file1.log<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:09 file2.log<br/>
+[bash-4.1.5] find -name '*.log'<br/>
+./file2.log<br/>
+./file1.log<br/></div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"></p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">比如我想把所有的 .log 文件删掉, 可以这样配合 xargs 一起用:</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"><br/></p><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border: 1px solid rgb(0, 153, 204); padding: 0px 3px; font-size: 12px; margin: 3px auto 0px; overflow: hidden; background-color: rgb(246, 251, 255);"><div style="float:right;"><span style="cursor:pointer;"><u>复制代码</u></span></div>
+代码如下:</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border-right-color: rgb(0, 153, 204); border-right-width: 1px; border-right-style: solid; padding: 0px 3px; font-size: 14px; margin: 0px auto 3px; overflow: hidden; border-left-color: rgb(0, 153, 204); border-left-width: 1px; border-left-style: solid; word-break: break-all; border-bottom-color: rgb(0, 153, 204); border-bottom-width: 1px; border-bottom-style: solid; word-wrap: break-word; background-color: rgb(221, 237, 251);"><br/>
+[bash-4.1.5] find -name '*.log'<br/>
+./file2.log<br/>
+./file1.log<br/>
+[bash-4.1.5] find -name '*.log' | xargs rm<br/>
+[bash-4.1.5] find -name '*.log'<br/></div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"></p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">嗯, 不错, find+xargs 真的很强大. 然而:</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"><br/></p><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border: 1px solid rgb(0, 153, 204); padding: 0px 3px; font-size: 12px; margin: 3px auto 0px; overflow: hidden; background-color: rgb(246, 251, 255);"><div style="float:right;"><span style="cursor:pointer;"><u>复制代码</u></span></div>
+代码如下:</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border-right-color: rgb(0, 153, 204); border-right-width: 1px; border-right-style: solid; padding: 0px 3px; font-size: 14px; margin: 0px auto 3px; overflow: hidden; border-left-color: rgb(0, 153, 204); border-left-width: 1px; border-left-style: solid; word-break: break-all; border-bottom-color: rgb(0, 153, 204); border-bottom-width: 1px; border-bottom-style: solid; word-wrap: break-word; background-color: rgb(221, 237, 251);"><br/>
+[bash-4.1.5] ls -l<br/>
+total 0<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:12 file 1.log<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:12 file 2.log<br/>
+[bash-4.1.5] find -name '*.log'<br/>
+./file 1.log<br/>
+./file 2.log<br/>
+[bash-4.1.5] find -name '*.log' | xargs rm<br/>
+rm: cannot remove `./file': No such file or directory<br/>
+rm: cannot remove `1.log': No such file or directory<br/>
+rm: cannot remove `./file': No such file or directory<br/>
+rm: cannot remove `2.log': No such file or directory<br/></div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"></p><p style="margin: 13px 0px; padding: 0px; line-height: 25px;"><font color="#444444" style="font-weight: normal;">原因其实很简单,</font> <font color="#E30000"><b>xargs 默认是以空白字符 (空格, TAB, 换行符) 来分割记录的</b></font><font color="#444444" style="font-weight: normal;">, 因此文件名 ./file 1.log 被解释成了两个记录 ./file 和 1.log, 不幸的是 rm 找不到这两个文件.</font><br/><font color="#444444" style="font-weight: normal;">　　</font><font color="#E30000" style="font-weight: normal;">为了解决此类问题, 聪明的人想出了一个办法, 让 find 在打印出一个文件名之后接着输出一个 NULL 字符 ('') 而不是换行符, 然后再告诉 xargs 也用 NULL 字符来作为记录的分隔符. 这就是 find 的 -print0 和 xargs 的 -0 的来历吧.</font></p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"><br/></p><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border: 1px solid rgb(0, 153, 204); padding: 0px 3px; font-size: 12px; margin: 3px auto 0px; overflow: hidden; background-color: rgb(246, 251, 255);"><div style="float:right;"><span style="cursor:pointer;"><u>复制代码</u></span></div>
+代码如下:</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border-right-color: rgb(0, 153, 204); border-right-width: 1px; border-right-style: solid; padding: 0px 3px; font-size: 14px; margin: 0px auto 3px; overflow: hidden; border-left-color: rgb(0, 153, 204); border-left-width: 1px; border-left-style: solid; word-break: break-all; border-bottom-color: rgb(0, 153, 204); border-bottom-width: 1px; border-bottom-style: solid; word-wrap: break-word; background-color: rgb(221, 237, 251);"><br/>
+[bash-4.1.5] ls -l<br/>
+total 0<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:12 file 1.log<br/>
+-rw-r--r-- 1 root root 0 2010-08-02 18:12 file 2.log<br/>
+[bash-4.1.5] find -name '*.log' -print0 | hd<br/>
+0 1 2 3 4 5 6 7 8 9 A B C D E F |0123456789ABCDEF|<br/>
+--------+--+--+--+--+---+--+--+--+---+--+--+--+---+--+--+--+--+----------------|<br/>
+00000000: 2e 2f 66 69 6c 65 20 31 2e 6c 6f 67 00 2e 2f 66 |./file 1.log../f|<br/>
+00000010: 69 6c 65 20 32 2e 6c 6f 67 00 |ile 2.log. |<br/>
+[bash-4.1.5] find -name '*.log' -print0 | xargs -0 rm<br/>
+[bash-4.1.5] find -name '*.log'<br/></div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"></p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">你可能要问了, 为什么要选 '' 而不是其他字符做分隔符呢? 这个也容易理解: 一般的编程语言中都用 '' 来作为字符串的结束标志, 文件的路径名中不可能包含 '' 字符.</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">其他我收集的find、xargs实例：</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">删除以html结尾的10天前的文件，包括带空格的文件：</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"><br/></p><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border: 1px solid rgb(0, 153, 204); padding: 0px 3px; font-size: 12px; margin: 3px auto 0px; overflow: hidden; background-color: rgb(246, 251, 255);"><div style="float:right;"><span style="cursor:pointer;"><u>复制代码</u></span></div>
+代码如下:</div><div style="font-weight: normal; color: rgb(68, 68, 68); clear: both; border-right-color: rgb(0, 153, 204); border-right-width: 1px; border-right-style: solid; padding: 0px 3px; font-size: 14px; margin: 0px auto 3px; overflow: hidden; border-left-color: rgb(0, 153, 204); border-left-width: 1px; border-left-style: solid; word-break: break-all; border-bottom-color: rgb(0, 153, 204); border-bottom-width: 1px; border-bottom-style: solid; word-wrap: break-word; background-color: rgb(221, 237, 251);"><br/>
+find /usr/local/backups -name &quot;*.html&quot; -mtime +10 -print0 |xargs -0 rm -rfvfind /usr/local/backups -mtime +10 -name &quot;*.html&quot; -exec rm -rf {} ;<br/></div><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;"></p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">find -print 和 -print0的区别:</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">-print 在每一个输出后会添加一个回车换行符，而-print0则不会。<br/>
+当前目录下文件从大到小排序（包括隐藏文件），文件名不为&quot;.&quot;：</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">find . -maxdepth 1 ! -name &quot;.&quot; -print0 | xargs -0 du -b | sort -nr | head -10 | nl</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">nl：可以为输出列加上编号,与cat -n相似，但空行不编号<br/>
+以下功能同上，但不包括隐藏文件：</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">for file in *; do du -b &quot;$file&quot;; done|sort -nr|head -10|nlx</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">args结合sed替换：</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">find . -name &quot;*.txt&quot; -print0 | xargs -0 sed -i 's/aaa/bbb/g'</p><p style="font-weight: normal; color: rgb(68, 68, 68); margin: 13px 0px; padding: 0px; line-height: 25px;">xargs结合grep：</p><div style="font-weight: normal; color: rgb(68, 68, 68);">find . -name '*.txt' -type f -print0 |xargs -0 grep -n 'aaa'    #“-n”输出行号</div><div style="font-weight: normal; color: rgb(68, 68, 68);"><br/></div><div style="font-weight: normal; color: rgb(68, 68, 68);"><br/></div></div></div></div></div></div></div></div></span>
+</div></body></html> 

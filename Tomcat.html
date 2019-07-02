@@ -1,0 +1,933 @@
+<html>
+<head>
+  <title>Tomcat</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1376"/>
+<h1>Tomcat</h1>
+
+<div>
+<span><span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/>
+Java体系结构包括四个独立但相关的技术：<br/>
+Java程序设计语言<br/>
+Java class文件格式<br/>
+Java API<br/>
+Java VM<br/><br/>
+用Java语言编译源代码，把它编译成Java Class文件，然后在Java VM中运行class文件；当编写程序时，通过调用类(Java API)中的方法来访问系统资源，而当程序运行时，它通过调用class文件中实现了Java API的方法也满足程序的Java API调用。Java VM和Java API一起组成了一个“平台”，所有Java程序都在其上编译和运行，因此，它们有时也被称作Java运行时环境。<br/><br/>
+Java VM的主要任务是装载class文件并且执行其中的字节码。Java VM包含一个类装载器(class loader)，它可以从程序和API装载class文件；而Java API的类只在程序执行中需要时才会被装载。<br/><br/>
+Java字节码由执行引擎来执行。而不同的Java VM中，其执行引擎的实现可能各不相同。最简单的执行引擎不是一次性解释字节码，而另一种称为“即时编译器(just-in-time compiler)”的执行引擎执行速度更快，但要消耗更多的内存资源。即时编译模式下，第一次被执行的字节码会被编译成本地机器代码并缓存下来以实现“复用”。第三种执行引擎是所谓的自适应优化器，此种方法中，虚拟机始的时候解释字节码，介是会监视运行中程序的活动，并且记录下使用最频繁的代码。程序运行时，虚拟机只把那些活动最频繁的代码编译成本地代码，而不频繁的代码则仍然保留为字节码由虚拟机解释执行。自适应优化器可以使得Java VM在80%-90%的时间里执行被优化过的本地代码，而只需要编译10%-20%对性能有影响的代码。最后一种虚拟机由硬件芯片构成，它用本地方法执行Java字节码，其执行引擎内嵌于芯片中。<br/><br/><br/><br/><br/>
+Sun公司创建了第一个Servlet容器，即Java Web Server， 但JWS只是为了演示Servlet的相应功能，所以其很不稳定。与此同时，ASF创建了JServ项目，一个能够与apache整合起来的servlet容器。1999年，Sun把JWS捐给了ASF，于是两个项目合二为一，即今天Tomcat的前身。第一个tomcat版本是Tomcat 3.x系列，而发布于2001年Tomcat4.0则是在此前基础上进行了重新设计和实现，其代码项目被命名为Catalina。目前最新的版本则是7.x系列。<br/><br/><br/>
+Java SE则包含了Java二进制程序(如JVM和Java字节码编译器)和Java的核心代码库，而Jave EE标准则包含了一组适用于创建企业级Web应用程序的API。Jave EE建立在Java SE的基础上，并依赖于Java SE才能正常工作。当然，任何级别的应用程序均能从Java EE中获益，但Jave EE却更适合解决大型软件系统设计中的问题。<br/><br/>
+JAVA EE包含多个独立的API，Servlet和JSP就是其中的两个，而JAVA EE中著名的API中还包含如下的几个：<br/><br/>
+JAVA EE APIs:<br/>
+EJB(Enterprise JavaBeans)：JAVA相关的诸多高级功能的实现，如RMI（Remote Method Invocation), 对象/关系映射，跨越多个数据源的分布式事务等；<br/><br/>
+JMS(Java Message Service)：高性能异步消息服务，实现JAVA EE应用程序与非JAVA程序的“透明”通信；<br/><br/>
+JMX（Java Management Extensions）：在程序运行时对其进行交互式监控和管理的机制；<br/><br/>
+JTA（Java Transaction API）：允许应用程序在自身的一个或多个组件中平滑地处理错误的机制；<br/><br/>
+JavaMail：通过工业标准的POP/SMTP/IMAP协议发送和接收邮件的机制；<br/><br/><br/>
+Java SE APIs：<br/>
+JNDI（Java Naming and Directory Interface）:用于与LDAP服务交互的API；<br/>
+JAXP（Java API for XML Processing）:用于分析及转换XML（基于XSLT实现）；<br/><br/>
+Java SE API + JDK<br/><br/><br/><br/><br/>
+JAVA EE Application Servers:<br/>
+Websphere<br/>
+Weblogic<br/>
+oc4j<br/>
+JBoss<br/>
+JOnAS<br/>
+Geronimo<br/>
+Glassfish<br/><br/>
+risen<br/><br/><br/>
+Sun --&gt; TWS<br/>
+  RI: Reference Implimentation<br/>
+    参考实现<br/><br/>
+ASF：Apache Software Foundation<br/>
+  Jserv<br/><br/>
+Sun --&gt; ASF<br/>
+  catalina<br/>
+  O'Reilly: Tomcat<br/>
+    男猫<br/><br/><br/><br/>
+类，.jar<br/>
+JVM,<br/><br/><br/>
+Tomcat: Servlet and JSP APIs,  JNDI and JMX APIs.<br/><br/>
+Tomcat不是一个完整意义上的Jave EE服务器，它甚至都没有提供对哪怕是一个主要Java EE API的实现；但由于遵守apache开源协议，tomcat却又为众多的java应用程序服务器嵌入自己的产品中构建商业的java应用程序服务器，如JBoss和JOnAS。<br/><br/>
+尽管Tomcat对Jave EE API的实现并不完整，然而很企业也在渐渐抛弃使用传统的Java EE技术（如EJB）转而采用一些开源组件来构建复杂的应用。这些开源组件如Structs、Spring和Hibernate，而Tomcat能够对这些组件实现完美的支持。<br/><br/><br/>
+HTTP是一种无状态的协议，在用户的一次连接请求响应完成后，服务器端将无法识别在后续的连接请求中再次识别此用户，交将其所有请求关联起来。为了解决这个问题，java container通过一个临时的cookie来为此用户保存一个标识，此标识即所谓的用户session。<br/><br/><br/><br/><br/>
+在第一次调用之后，JSP会被编译成一个servlet类，在后续的操作中则可以直接使用此类，从而避免了对每一次调用的都要重新分析和编译。因此，类似servlet，JSP的执行需要在container中完成。JSP的container跟servlet的container基本相同，但在JSP执行之前，需要一些额外的步骤如与servlet代码建立会话等。Tomcat包含了一个叫做Catalina的Servlet container（执行servlet和编译过的JSP）和一个JSP编译器（Jasper编译器）。事实上，一个包含了JSP编译器和Servlet容器的应用程序组合通过被称作Web容器。<br/><br/>
+JSP和Servlet的最大区别在于，Servlet通常需要事先编译好，而JSP则并非必须事先编译。这意味着Servlet通常放置于私有资源区域，而JSP则通常以嵌入代码的方式包含于HTML页面文件中，这些HTML文件通常放置在公开资源区域。<br/><br/><br/><br/><br/><br/><br/>
+MVC架构：<br/>
+Controller，Model和View各自独立，一个流行的开源实现是Apache Structs框架；目今，设计优良的Web应用程序通常用相就的技术实现相应的功能，比如：<br/>
+1、Servlet用于实现应用逻辑；<br/>
+2、JSP用于内容展示；<br/>
+3、标签库和JSP扩展语言用于替换在JSP内部嵌入Java代码，进而降低了HTML维护的复杂度；<br/>
+4、MVC框架用于实现展示和应用逻辑的分离；<br/><br/><br/><br/><br/><br/><br/><br/><br/>
+对于一个Web应用程序而言，其通常由Servlets、JSP和其它文件等共同组成。这些文件通常被打包成WAR（Web Application Archive）格式，并以.war作为打包后的文件扩展名。而Servlet规范则定义了在WAR内部组织这些文件的标准目录结构。其目录和功用如下：<br/>
+/  Web应用程序的根目录，所有可被公开访问的文件均放置于此处，如HTML、JSP和图片文件等；<br/>
+/WEB-INF  此目录为私有资源目录，其内部的所有文件和子目录均不能被公开访问；包含着此Web应用程序的配置文件web.xml（程序结构描述符文件）通常放置于此目录；<br/>
+/WEB-INF/classes  当前Web应用程序的类文件的存在目录；<br/>
+/WEB-INF/lib  可被打包为JAR格式的类文件通常放置于此目录；<br/><br/><br/><br/><br/><br/>
+安装tomcat：<br/>
+一、先安装JVM<br/>
+二、安装配置tomcat<br/><br/><br/><br/><br/>
+A Tomcat init script for Linux<br/>
+#!/bin/sh<br/>
+# Tomcat init script for Linux.<br/>
+#<br/>
+# chkconfig: 2345 96 14<br/>
+# description: The Apache Tomcat servlet/JSP container.<br/>
+JAVA_HOME=/usr/java/jdk1.7.0_05<br/>
+CATALINA_HOME=/opt/apache-tomcat-7.0.29<br/>
+export JAVA_HOME CATALINA_HOME<br/>
+exec $CATALINA_HOME/bin/catalina.sh $*<br/><br/><br/><br/><br/><br/><br/>
+Tomcat的架构：<br/>
+Tomcat 6支持Servlet 2.5和JSP 2.1的规范，它由一组嵌套的层次和组件组成，一般可分为以下四类：<br/>
+顶级组件：位于配置层次的顶级，并且彼此间有着严格的对应关系；<br/>
+连接器：连接客户端（可以是浏览器或Web服务器）请求至Servlet容器，<br/>
+容器：包含一组其它组件；<br/>
+被嵌套的组件：位于一个容器当中，但不能包含其它组件；<br/><br/>
+各常见组件：<br/>
+1、服务器(server)：Tomcat的一个实例，通常一个JVM只能包含一个Tomcat实例；因此，一台物理服务器上可以在启动多个JVM的情况下在每一个JVM中启动一个Tomcat实例，每个实例分属于一个独立的管理端口。这是一个顶级组件。<br/>
+2、服务(service)：一个服务组件通常包含一个引擎和与此引擎相关联的一个或多个连接器。给服务命名可以方便管理员在日志文件中识别不同服务产生的日志。一个server可以包含多个service组件，但通常情下只为一个service指派一个server。<br/><br/>
+连接器类组件：<br/>
+3、连接器(connectors)：负责连接客户端（可以是浏览器或Web服务器）请求至Servlet容器内的Web应用程序，通常指的是接收客户发来请求的位置及服务器端分配的端口。默认端口通常是HTTP协议的8080，管理员也可以根据自己的需要改变此端口。一个引擎可以配置多个连接器，但这些连接器必须使用不同的端口。默认的连接器是基于HTTP/1.1的Coyote。同时，Tomcat也支持AJP、JServ和JK2连接器。<br/><br/>
+容器类组件：<br/>
+4、引擎(Engine)：引擎通是指处理请求的Servlet引擎组件，即Catalina Servlet引擎，它检查每一个请求的HTTP首部信息以辨别此请求应该发往哪个host或context，并将请求处理后的结果返回的相应的客户端。严格意义上来说，容器不必非得通过引擎来实现，它也可以是只是一个容器。如果Tomcat被配置成为独立服务器，默认引擎就是已经定义好的引擎。而如果Tomcat被配置为Apache Web服务器的提供Servlet功能的后端，默认引擎将被忽略，因为Web服务器自身就能确定将用户请求发往何处。一个引擎可以包含多个host组件。<br/>
+5、主机(Host)：主机组件类似于Apache中的虚拟主机，但在Tomcat中只支持基于FQDN的“虚拟主机”。一个引擎至少要包含一个主机组件。<br/>
+6、上下文(Context)：Context组件是最内层次的组件，它表示Web应用程序本身。配置一个Context最主要的是指定Web应用程序的根目录，以便Servlet容器能够将用户请求发往正确的位置。Context组件也可包含自定义的错误页，以实现在用户访问发生错误时提供友好的提示信息。<br/><br/>
+被嵌套类(nested)组件：<br/>
+这类组件通常包含于容器类组件中以提供具有管理功能的服务，它们不能包含其它组件，但有些却可以由不同层次的容器各自配置。<br/>
+7、阀门(Valve)：用来拦截请求并在将其转至目标之前进行某种处理操作，类似于Servlet规范中定义的过滤器。Valve可以定义在任何容器类的组件中。Valve常被用来记录客户端请求、客户端IP地址和服务器等信息，这种处理技术通常被称作请求转储(request dumping)。请求转储valve记录请求客户端请求数据包中的HTTP首部信息和cookie信息文件中，响应转储valve则记录响应数据包首部信息和cookie信息至文件中。<br/>
+8、日志记录器(Logger)：用于记录组件内部的状态信息，可被用于除Context之外的任何容器中。日志记录的功能可被继承，因此，一个引擎级别的Logger将会记录引擎内部所有组件相关的信息，除非某内部组件定义了自己的Logger组件。<br/>
+9、领域(Realm)：用于用户的认证和授权；在配置一个应用程序时，管理员可以为每个资源或资源组定义角色及权限，而这些访问控制功能的生效需要通过Realm来实现。Realm的认证可以基于文本文件、数据库表、LDAP服务等来实现。Realm的效用会遍及整个引擎或顶级容器，因此，一个容器内的所有应用程序将共享用户资源。同时，Realm可以被其所在组件的子组件继承，也可以被子组件中定义的Realm所覆盖。<br/><br/><br/>
+引擎(Engine)：引擎是指处理请求的Servlet引擎组件，即Catalina Servlet引擎，它从HTTPconnector接收请求并响应请求。它检查每一个请求的HTTP首部信息以辨别此请求应该发往哪个host或context，并将请求处理后的结果返回的相应的客户端。严格意义上来说，容器不必非得通过引擎来实现，它也可以是只是一个容器。如果Tomcat被配置成为独立服务器，默认引擎就是已经定义好的引擎。而如果Tomcat被配置为Apache Web服务器的提供Servlet功能的后端，默认引擎将被忽略，因为Web服务器自身就能确定将用户请求发往何处。一个引擎可以包含多个host组件。<br/><br/><br/>
+Tomcat连接器架构：<br/>
+基于Apache做为Tomcat前端的架构来讲，Apache通过mod_jk、mod_jk2或mod_proxy模块与后端的Tomcat进行数据交换。而对Tomcat来说，每个Web容器实例都有一个Java语言开发的连接器模块组件，在Tomcat6中，这个连接器是org.apache.catalina.Connector类。这个类的构造器可以构造两种类别的连接器：HTTP/1.1负责响应基于HTTP/HTTPS协议的请求，AJP/1.3负责响应基于AJP的请求。但可以简单地通过在server.xml配置文件中实现连接器的创建，但创建时所使用的类根据系统是支持APR(Apache Portable Runtime)而有所不同。<br/>
+APR是附加在提供了通用和标准API的操作系统之上一个通讯层的本地库的集合，它能够为使用了APR的应用程序在与Apache通信时提供较好伸缩能力时带去平衡效用。<br/>
+同时，需要说明的是，mod_jk2模块目前已经不再被支持了，mod_jk模块目前还apache被支持，但其项目活跃度已经大大降低。因此，目前更常用 的方式是使用mod_proxy模块。<br/><br/>
+如果支持APR：<br/>
+1、HTTP/1.1：org.apache.cotote.http11.Http11AprProtocol<br/>
+2、AJP/1.3：org.apache.coyote.ajp.AjpAprProtocol<br/>
+如果不支持APR：<br/>
+HTTP/1.1: org.apache.coyote.http11.Http11Protocol<br/>
+AJP/1.3: org.apache.jk.server.JkCoyoteHandler<br/><br/><br/><br/>
+连接器协议：<br/><br/>
+Tomcat的Web服务器连接器支持两种协议：AJP和HTTP，它们均定义了以二进制格式在Web服务器和Tomcat之间进行数据传输，并提供相应的控制命令。<br/><br/>
+AJP(Apache JServ Protocol)协议：<br/>
+目前正在使用的AJP协议的版本是通过JK和JK2连接器提供支持的AJP13，它基于二进制的格式在Web服务器和Tomcat之间传输数据，而此前的版本AJP10和AJP11则使用文本格式传输数据。<br/><br/>
+HTTP协议：诚如其名称所表示，其是使用HTTP或HTTPS协议在Web服务器和Tomcat之间建立通信，此时，Tomcat就是一个完全功能的HTTP服务器，它需要监听在某端口上以接收来自于商前服务器的请求。<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+Tomcat的配置文件：<br/>
+Tomcat的配置文件默认存放在$CATALINA_HOME/conf目录中，主要有以下几个：<br/>
+server.xml: Tomcat的主配置文件，包含Service, Connector, Engine, Realm, Valve, Hosts主组件的相关配置信息；<br/>
+web.xml：遵循Servlet规范标准的配置文件，用于配置servlet，并为所有的Web应用程序提供包括MIME映射等默认配置信息；<br/>
+tomcat-user.xml：Realm认证时用到的相关角色、用户和密码等信息；Tomcat自带的manager默认情况下会用到此文件；在Tomcat中添加/删除用户，为用户指定角色等将通过编辑此文件实现；<br/>
+catalina.policy：Java相关的安全策略配置文件，在系统资源级别上提供访问控制的能力；<br/>
+catalina.properties：Tomcat内部package的定义及访问相关的控制，也包括对通过类装载器装载的内容的控制；Tomcat6在启动时会事先读取此文件的相关设置；<br/>
+logging.properties: Tomcat6通过自己内部实现的JAVA日志记录器来记录操作相关的日志，此文件即为日志记录器相关的配置信息，可以用来定义日志记录的组件级别以及日志文件的存在位置等；<br/>
+context.xml：所有host的默认配置信息；<br/><br/>
+一、server.xml<br/>
+Tomcat以面向对象的方式运行，它可以在运行时动态加载配置文件中定义的对象结构，这有点类似于apache的httpd模块的调用方式。server.xml中定义的每个主元素都会被创建为对象，并以某特定的层次结构将这些对象组织在一起。下面是个样样例配置：<br/>
+&lt;Server port=&quot;8005&quot; shutdown=&quot;SHUTDOWN&quot;&gt;<br/><br/>
+  &lt;Listener className=&quot;org.apache.catalina.core.JasperListener&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.mbeans.ServerLifecycleListener&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.mbeans.GlobalResourcesLifecycleListener&quot; /&gt;<br/><br/>
+  &lt;GlobalNamingResources&gt;<br/>
+    &lt;Resource name=&quot;UserDatabase&quot; auth=&quot;Container&quot;<br/>
+    type=&quot;org.apache.catalina.UserDatabase&quot;<br/>
+    description=&quot;User database that can be updated and saved&quot;<br/>
+    factory=&quot;org.apache.catalina.users.MemoryUserDatabaseFactory&quot;<br/>
+    pathname=&quot;conf/tomcat-users.xml&quot;/&gt;<br/>
+  &lt;/GlobalNamingResources&gt;<br/><br/>
+  &lt;Service name=&quot;Catalina&quot;&gt;<br/><br/>
+    &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;<br/>
+      maxThreads=&quot;150&quot; connectionTimeout=&quot;20000&quot;<br/>
+      redirectPort=&quot;8443&quot;/&gt;<br/><br/>
+    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;<br/><br/>
+      &lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot;<br/>
+        unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;<br/>
+        xmlValidation=&quot;false&quot; xmlNamespaceAware=&quot;false&quot;&gt;<br/>
+      &lt;/Host&gt;<br/>
+    &lt;/Engine&gt;<br/>
+  &lt;/Service&gt;<br/>
+&lt;/Server&gt;<br/><br/><br/>
+&lt;Server port=&quot;8005&quot; shutdown=&quot;SHUTDOWN&quot;&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.core.AprLifecycleListener&quot; SSLEngine=&quot;on&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.core.JasperListener&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.core.JreMemoryLeakPreventionListener&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.mbeans.GlobalResourcesLifecycleListener&quot; /&gt;<br/>
+  &lt;Listener className=&quot;org.apache.catalina.core.ThreadLocalLeakPreventionListener&quot; /&gt;<br/><br/>
+  &lt;GlobalNamingResources&gt;<br/>
+    &lt;Resource name=&quot;UserDatabase&quot; auth=&quot;Container&quot;<br/>
+              type=&quot;org.apache.catalina.UserDatabase&quot;<br/>
+              description=&quot;User database that can be updated and saved&quot;<br/>
+              factory=&quot;org.apache.catalina.users.MemoryUserDatabaseFactory&quot;<br/>
+              pathname=&quot;conf/tomcat-users.xml&quot; /&gt;<br/>
+  &lt;/GlobalNamingResources&gt;<br/><br/>
+  &lt;Service name=&quot;Catalina&quot;&gt;<br/><br/>
+    &lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;<br/>
+               connectionTimeout=&quot;20000&quot;<br/>
+               redirectPort=&quot;8443&quot; /&gt;<br/>
+    &lt;Connector port=&quot;8009&quot; protocol=&quot;AJP/1.3&quot; redirectPort=&quot;8443&quot; /&gt;<br/><br/>
+    &lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;<br/><br/>
+      &lt;Realm className=&quot;org.apache.catalina.realm.LockOutRealm&quot;&gt;<br/>
+        &lt;Realm className=&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;<br/>
+               resourceName=&quot;UserDatabase&quot;/&gt;<br/>
+      &lt;/Realm&gt;<br/><br/>
+      &lt;Host name=&quot;localhost&quot;  appBase=&quot;webapps&quot;<br/>
+            unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;&gt;<br/><br/>
+        &lt;Valve className=&quot;org.apache.catalina.valves.AccessLogValve&quot; directory=&quot;logs&quot;<br/>
+               prefix=&quot;localhost_access_log.&quot; suffix=&quot;.txt&quot;<br/>
+               pattern=&quot;%h %l %u %t &amp;quot;%r&amp;quot; %s %b&quot; /&gt;<br/><br/>
+      &lt;/Host&gt;<br/>
+    &lt;/Engine&gt;<br/>
+  &lt;/Service&gt;<br/>
+&lt;/Server&gt;<br/><br/><br/><br/><br/><br/>
+server.xml文件中可定义的元素非常多，包括Server, Service, Connector, Engine, Cluster, Host, Alias, Context, Realm, Valve, Manager, Listener, Resources, Resource, ResourceEnvRef, ResourceLink, WatchedResource, GlobalNameingResources, Store, Transaction, Channel, Membership, Transport, Member, ClusterListener等。<br/><br/>
+下面简单介绍几个常用组件：<br/>
+1、Server组件<br/><br/>
+如上面示例文件中定义的：<br/>
+&lt;Server port=”8005” shutdown=”SHUTDOWN”&gt;<br/><br/>
+这会让Tomcat6启动一个server实例（即一个JVM），它监听在8005端口以接收shutdown命令。各Server的定义不能使用同一个端口，这意味着如果在同一个物理机上启动了多个Server实例，必须配置它们使用不同的端口。这个端口的定义用于为管理员提供一个关闭此实例的便捷途径，因此，管理员可以直接telnet至此端口使用SHUTDOWN命令关闭此实例。不过，基于安全角度的考虑，这通常不允许远程进行。<br/><br/>
+Server的相关属性：<br/>
+className: 用于实现此Server容器的完全限定类的名称，默认为org.apache.catalina.core.StandardServer；<br/>
+port: 接收shutdown指令的端口，默认仅允许通过本机访问，默认为8005；<br/>
+shutdown：发往此Server用于实现关闭tomcat实例的命令字符串，默认为SHUTDOWN；<br/><br/></span><div>2、Service组件：</div><div>Service主要用于关联一个引擎和与此引擎相关的连接器，每个连接器通过一个特定的端口和协议接收入站请求交将其转发至关联的引擎进行处理。因此，Service要包含一个引擎、一个或多个连接器。</div><span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/>
+如上面示例中的定义：<br/>
+&lt;Service name=”Catalina”&gt;<br/><br/>
+这定义了一个名为Catalina的Service，此名字也会在产生相关的日志信息时记录在日志文件当中。<br/><br/>
+Service相关的属性：<br/>
+className： 用于实现service的类名，一般都是org.apache.catalina.core.StandardService。<br/>
+name：此服务的名称，默认为Catalina；<br/><br/>
+3、Connector组件：<br/>
+进入Tomcat的请求可以根据Tomcat的工作模式分为如下两类：<br/>
+Tomcat作为应用程序服务器：请求来自于前端的web服务器，这可能是Apache, IIS, Nginx等；<br/>
+Tomcat作为独立服务器：请求来自于web浏览器；<br/><br/>
+Tomcat应该考虑工作情形并为相应情形下的请求分别定义好需要的连接器才能正确接收来自于客户端的请求。一个引擎可以有一个或多个连接器，以适应多种请求方式。<br/><br/>
+定义连接器可以使用多种属性，有些属性也只适用于某特定的连接器类型。一般说来，常见于server.xml中的连接器类型通常有4种：<br/>
+1) HTTP连接器<br/>
+2) SSL连接器<br/>
+3) AJP 1.3连接器<br/>
+4) proxy连接器<br/><br/>
+如上面示例server.xml中定义的HTTP连接器：<br/>
+&lt;Connector port=&quot;8080&quot; protocol=&quot;HTTP/1.1&quot;<br/>
+      maxThreads=&quot;150&quot; connectionTimeout=&quot;20000&quot;<br/>
+      redirectPort=&quot;8443&quot;/&gt;<br/>
+     <br/>
+定义连接器时可以配置的属性非常多，但通常定义HTTP连接器时必须定义的属性只有“port”，定义AJP连接器时必须定义的属性只有&quot;protocol&quot;，因为默认的协议为HTTP。以下为常用属性的说明：<br/>
+1) address：指定连接器监听的地址，默认为所有地址，即0.0.0.0；<br/>
+2) maxThreads：支持的最大并发连接数，默认为200；<br/>
+3) port：监听的端口，默认为0；<br/>
+4) protocol：连接器使用的协议，默认为HTTP/1.1，定义AJP协议时通常为AJP/1.3；<br/>
+5) redirectPort：如果某连接器支持的协议是HTTP，当接收客户端发来的HTTPS请求时，则转发至此属性定义的端口；<br/>
+6) connectionTimeout：等待客户端发送请求的超时时间，单位为毫秒，默认为60000，即1分钟；<br/>
+7) enableLookups：是否通过request.getRemoteHost()进行DNS查询以获取客户端的主机名；默认为true；<br/>
+8) acceptCount：设置等待队列的最大长度；通常在tomcat所有处理线程均处于繁忙状态时，新发来的请求将被放置于等待队列中；<br/><br/>
+下面是一个定义了多个属性的SSL连接器：<br/>
+&lt;Connector port=&quot;8443&quot;<br/>
+    maxThreads=&quot;150&quot; minSpareThreads=&quot;25&quot; maxSpareThreads=&quot;75&quot;<br/>
+    enableLookups=&quot;false&quot; acceptCount=&quot;100&quot; debug=&quot;0&quot; scheme=&quot;https&quot; secure=&quot;true&quot;<br/>
+    clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot; /&gt;<br/><br/>
+4、Engine组件：<br/>
+Engine是Servlet处理器的一个实例，即servlet引擎，默认为定义在server.xml中的Catalina。Engine需要defaultHost属性来为其定义一个接收所有发往非明确定义虚拟主机的请求的host组件。如前面示例中定义的：<br/>
+&lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;<br/><br/>
+常用的属性定义：<br/>
+defaultHost：Tomcat支持基于FQDN的虚拟主机，这些虚拟主机可以通过在Engine容器中定义多个不同的Host组件来实现；但如果此引擎的连接器收到一个发往非非明确定义虚拟主机的请求时则需要将此请求发往一个默认的虚拟主机进行处理，因此，在Engine中定义的多个虚拟主机的主机名称中至少要有一个跟defaultHost定义的主机名称同名；<br/>
+name：Engine组件的名称，用于日志和错误信息记录时区别不同的引擎；<br/><br/>
+Engine容器中可以包含Realm、Host、Listener和Valve子容器。<br/><br/><br/>
+5、Host组件：<br/>
+位于Engine容器中用于接收请求并进行相应处理的主机或虚拟主机，如前面示例中的定义：<br/>
+      &lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot;<br/>
+        unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;<br/>
+        xmlValidation=&quot;false&quot; xmlNamespaceAware=&quot;false&quot;&gt;<br/>
+      &lt;/Host&gt;<br/><br/>
+常用属性说明：<br/>
+1) appBase：此Host的webapps目录，即存放非归档的web应用程序的目录或归档后的WAR文件的目录路径；可以使用基于$CATALINA_HOME的相对路径；<br/>
+2) autoDeploy：在Tomcat处于运行状态时放置于appBase目录中的应用程序文件是否自动进行deploy；默认为true；<br/>
+3) unpackWars：在启用此webapps时是否对WAR格式的归档文件先进行展开；默认为true；<br/><br/><br/>
+虚拟主机定义示例：<br/><br/>
+&lt;Engine name=&quot;Catalina&quot; defaultHost=&quot;localhost&quot;&gt;<br/>
+  &lt;Host name=&quot;localhost&quot; appBase=&quot;webapps&quot;&gt;<br/>
+    &lt;Context path=&quot;&quot; docBase=&quot;ROOT&quot;/&gt;<br/>
+    &lt;Context path=&quot;/bbs&quot; docBase=&quot;/web/bss&quot;<br/>
+      reloadable=&quot;true&quot; crossContext=&quot;true&quot;/&gt;<br/>
+  &lt;/Host&gt;<br/>
+ <br/>
+  &lt;Host name=&quot;mail.magedu.com&quot; appBase=&quot;/web/mail&quot;&gt;<br/>
+    &lt;Context path=&quot;&quot; docBase=&quot;ROOT&quot;/&gt;<br/>
+  &lt;/Host&gt;<br/>
+&lt;/Engine&gt;<br/><br/>
+主机别名定义：<br/>
+如果一个主机有两个或两个以上的主机名，额外的名称均可以以别名的形式进行定义，如下：<br/>
+&lt;Host name=&quot;www.magedu.com&quot; appBase=&quot;webapps&quot; unpackWARs=&quot;true&quot;&gt;<br/>
+  &lt;Alias&gt;magedu.com&lt;/Alias&gt;<br/>
+&lt;/Host&gt;<br/><br/><br/>
+6、Context组件：<br/>
+Context在某些意义上类似于apache中的路径别名，一个Context定义用于标识tomcat实例中的一个Web应用程序；如下面的定义：<br/>
+    &lt;!-- Tomcat Root Context --&gt;<br/>
+    &lt;Context path=&quot;&quot; docBase=&quot;/web/webapps&quot;/&gt;<br/>
+   <br/>
+    &lt;!-- buzzin webapp --&gt;<br/>
+    &lt;Context path=&quot;/bbs&quot;<br/>
+      docBase=&quot;/web/threads/bbs&quot;<br/>
+      reloadable=&quot;true&quot;&gt;<br/>
+    &lt;/Context&gt;<br/>
+   <br/>
+    &lt;!-- chat server --&gt;<br/>
+      &lt;Context path=&quot;/chat&quot; docBase=&quot;/web/chat&quot;/&gt;<br/>
+     <br/>
+    &lt;!-- darian web --&gt;<br/>
+    &lt;Context path=&quot;/darian&quot; docBase=&quot;darian&quot;/&gt;<br/><br/>
+在Tomcat6中，每一个context定义也可以使用一个单独的XML文件进行，其文件的目录为$CATALINA_HOME/conf/&lt;engine name&gt;/&lt;host name&gt;。可以用于Context中的XML元素有Loader，Manager，Realm，Resources和WatchedResource。<br/><br/><br/>
+常用的属性定义有：<br/>
+1) docBase：相应的Web应用程序的存放位置；也可以使用相对路径，起始路径为此Context所属Host中appBase定义的路径；切记，docBase的路径名不能与相应的Host中appBase中定义的路径名有包含关系，比如，如果appBase为deploy，而docBase绝不能为deploy-bbs类的名字；<br/>
+2) path：相对于Web服务器根路径而言的URI；如果为空“”，则表示为此webapp的根路径；如果context定义在一个单独的xml文件中，此属性不需要定义；<br/>
+3) reloadable：是否允许重新加载此context相关的Web应用程序的类；默认为false；<br/><br/><br/><br/>
+7、Realm组件：<br/>
+一个Realm表示一个安全上下文，它是一个授权访问某个给定Context的用户列表和某用户所允许切换的角色相关定义的列表。因此，Realm就像是一个用户和组相关的数据库。定义Realm时惟一必须要提供的属性是classname，它是Realm的多个不同实现，用于表示此Realm认证的用户及角色等认证信息的存放位置。<br/>
+JAASRealm：基于Java Authintication and Authorization Service实现用户认证；<br/>
+JDBCRealm：通过JDBC访问某关系型数据库表实现用户认证；<br/>
+JNDIRealm：基于JNDI使用目录服务实现认证信息的获取；<br/>
+MemoryRealm：查找tomcat-user.xml文件实现用户信息的获取；<br/>
+UserDatabaseRealm：基于UserDatabase文件(通常是tomcat-user.xml)实现用户认证，它实现是一个完全可更新和持久有效的MemoryRealm，因此能够跟标准的MemoryRealm兼容；它通过JNDI实现；<br/><br/>
+下面是一个常见的使用UserDatabase的配置：<br/>
+  &lt;Realm className=”org.apache.catalina.realm.UserDatabaseRealm”<br/>
+    resourceName=”UserDatabase”/&gt;<br/><br/>
+下面是一个使用JDBC方式获取用户认证信息的配置：<br/>
+  &lt;Realm className=&quot;org.apache.catalina.realm.JDBCRealm&quot; debug=&quot;99&quot;<br/>
+    driverName=&quot;org.gjt.mm.mysql.Driver&quot;<br/>
+    connectionURL=&quot;jdbc:mysql://localhost/authority&quot;<br/>
+    connectionName=&quot;test&quot; connectionPassword=&quot;test&quot;<br/>
+    userTable=&quot;users&quot; userNameCol=&quot;user_name&quot;<br/>
+    userCredCol=&quot;user_pass&quot;<br/>
+    userRoleTable=&quot;user_roles&quot; roleNameCol=&quot;role_name&quot; /&gt;<br/><br/><br/><br/>
+8、Valve组件：<br/>
+Valve类似于过滤器，它可以工作于Engine和Host/Context之间、Host和Context之间以及Context和Web应用程序的某资源之间。一个容器内可以建立多个Valve，而且Valve定义的次序也决定了它们生效的次序。Tomcat6中实现了多种不同的Valve：<br/>
+AccessLogValve：访问日志Valve<br/>
+ExtendedAccessValve：扩展功能的访问日志Valve<br/>
+JDBCAccessLogValve：通过JDBC将访问日志信息发送到数据库中；<br/>
+RequestDumperValve：请求转储Valve；<br/>
+RemoteAddrValve：基于远程地址的访问控制；<br/>
+RemoteHostValve：基于远程主机名称的访问控制；<br/>
+SemaphoreValve：用于控制Tomcat主机上任何容器上的并发访问数量；<br/>
+JvmRouteBinderValve：在配置多个Tomcat为以Apache通过mod_proxy或mod_jk作为前端的集群架构中，当期望停止某节点时，可以通过此Valve将用记请求定向至备用节点；使用此Valve，必须使用JvmRouteSessionIDBinderListener；<br/>
+ReplicationValve：专用于Tomcat集群架构中，可以在某个请求的session信息发生更改时触发session数据在各节点间进行复制；<br/>
+SingleSignOn：将两个或多个需要对用户进行认证webapp在认证用户时连接在一起，即一次认证即可访问所有连接在一起的webapp；<br/>
+ClusterSingleSingOn：对SingleSignOn的扩展，专用于Tomcat集群当中，需要结合ClusterSingleSignOnListener进行工作；<br/><br/><br/>
+RemoteHostValve和RemoteAddrValve可以分别用来实现基于主机名称和基于IP地址的访问控制，控制本身可以通过allow或deny来进行定义，这有点类似于Apache的访问控制功能；如下面的Valve则实现了仅允许本机访问/probe：<br/>
+  &lt;Context path=&quot;/probe&quot; docBase=&quot;probe&quot;&gt;<br/>
+    &lt;Valve className=&quot;org.apache.catalina.valves.RemoteAddrValve&quot;<br/>
+    allow=&quot;127\.0\.0\.1&quot;/&gt;<br/>
+  &lt;/Context&gt;<br/><br/>
+其中相关属性定义有:<br/>
+1) className：相关的java实现的类名，相应于分别应该为org.apache.catalina.valves.RemoteHostValve或org.apache.catalina.valves.RemoteAddrValve；<br/>
+2) allow：以逗号分开的允许访问的IP地址列表，支持正则表达式，因此，点号“.”用于IP地址时需要转义；仅定义allow项时，非明确allow的地址均被deny；<br/>
+3) deny: 以逗号分开的禁止访问的IP地址列表，支持正则表达式；使用方式同allow；<br/><br/>
+9、GlobalNamingResources<br/>
+应用于整个服务器的JNDI映射，此可以避免每个Web应用程序都需要在各自的web.xml创建，这在web应用程序以WAR的形式存在时尤为有用。它通常可以包含三个子元素：<br/>
+1) Environment;<br/>
+2) Resource;<br/>
+3) ResourceEnvRef;<br/><br/><br/>
+10、WatchedResource<br/>
+WatchedResource可以用于Context中监视指定的webapp程序文件的改变，并且能够在监视到文件内容发生改变时重新装载此文件。<br/><br/>
+11、Listener<br/>
+Listener用于创建和配置LifecycleListener对象，而LifecycleListener通常被开发人员用来创建和删除容器。<br/><br/>
+11、Loader<br/>
+Java的动态装载功能是其语言功能强大表现之一，Servlet容器使用此功能在运行时动态装载servlet和它们所依赖的类。Loader可以用于Context中控制java类的加载。<br/><br/>
+12、Manager<br/>
+Manger对象用于实现HTTP会话管理的功能，Tomcat6中有5种Manger的实现：<br/>
+1) StandardManager<br/>
+Tomcat6的默认会话管理器，用于非集群环境中对单个处于运行状态的Tomcat实例会话进行管理。当Tomcat关闭时，这些会话相关的数据会被写入磁盘上的一个名叫SESSION.ser的文件，并在Tomcat下次启动时读取此文件。<br/>
+2) PersistentManager<br/>
+当一个会话长时间处于空闲状态时会被写入到swap会话对象，这对于内存资源比较吃紧的应用环境来说比较有用。<br/>
+3)DeltaManager<br/>
+用于Tomcat集群的会话管理器，它通过将改变了会话数据同步给集群中的其它节点实现会话复制。这种实现会将所有会话的改变同步给集群中的每一个节点，也是在集群环境中用得最多的一种实现方式。<br/>
+4) BackupManager<br/>
+用于Tomcat集群的会话管理器，与DeltaManager不同的是，某节点会话的改变只会同步给集群中的另一个而非所有节点。<br/>
+5)SimpleTcpReplicationManager<br/>
+Tomcat4时用到的版本，过于老旧了。<br/><br/>
+13、Stores<br/>
+PersistentManager必须包含一个Store元素以指定将会话数据存储至何处。这通常有两种实现方式：FileStore和JDBCStore。<br/><br/>
+14、Resources<br/>
+经常用于实现在Context中指定需要装载的但不在Tomcat本地磁盘上的应用资源，如Java类，HTML页面，JSP文件等。<br/><br/>
+15、Cluster<br/>
+专用于配置Tomcat集群的元素，可用于Engine和Host容器中。在用于Engine容器中时，Engine中的所有Host均支持集群功能。在Cluster元素中，需要直接定义一个Manager元素，这个Manager元素有一个其值为org.apache.catalina.ha.session.DeltaManager或org.apache.catalina.ha.session.BackupManager的className属性。同时，Cluster中还需要分别定义一个Channel和ClusterListener元素。<br/><br/>
+15.1、Channel<br/>
+用于Cluster中给集群中同一组中的节点定义通信“信道”。Channel中需要至少定义Membership、Receiver和Sender三个元素，此外还有一个可选元素Interceptor。<br/><br/>
+15.2、Membership<br/>
+用于Channel中配置同一通信信道上节点集群组中的成员情况，即监控加入当前集群组中的节点并在各节点间传递心跳信息，而且可以在接收不到某成员的心跳信息时将其从集群节点中移除。Tomcat6中Membership的实现是org.apache.catalina.tribes.membership.McastService。<br/><br/>
+15.3、Sender<br/>
+用于Channel中配置“复制信息”的发送器，实现发送需要同步给其它节点的数据至集群中的其它节点。发送器不需要属性的定义，但可以在其内部定义一个Transport元素。<br/><br/>
+15.4 Transport<br/>
+用于Sender内部，配置数据如何发送至集群中的其它节点。Tomcat6有两种Transport的实现：<br/>
+1) PooledMultiSender<br/>
+基于Java阻塞式IO，可以将一次将多个信息并发发送至其它节点，但一次只能传送给一个节点。<br/>
+2)PooledParallelSener<br/>
+基于Java非阻塞式IO，即NIO，可以一次发送多个信息至一个或多个节点。<br/><br/>
+15.5 Receiver<br/>
+用于Channel定义某节点如何从其它节点的Sender接收复制数据，Tomcat6中实现的接收方式有两种BioReceiver和NioReceiver。<br/><br/><br/>
+二、web.xml文件<br/>
+web.xml基于Java Servlet规范，可被用于每一个Java servlet容器，通常有两个存放位置，$CATALINA_BASE/conf和每个Web应用程序（通常是WEB-INF/web.xml）。Tomcat在deploy一个应用程序时(包括重启或重新载入)，它首先读取conf/web.xml，而后读取WEB-INF/web.xml。<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+启用manager功能：<br/>
+编辑tomcat-user.xml，添加如下行：<br/>
+&lt;role rolename=&quot;manager-gui&quot;/&gt;<br/>
+&lt;role rolename=&quot;manager-script&quot;/&gt;<br/>
+&lt;role rolename=&quot;standard&quot;/&gt;<br/>
+&lt;user username=&quot;tomcat&quot; password=&quot;secret&quot; roles=&quot;admin-gui,manager-script,standard&quot;/&gt;<br/><br/>
+而后重启tomcat。<br/><br/>
+启用host-manager和server status功能：<br/>
+&lt;role rolename=&quot;admin-gui&quot;/&gt;<br/>
+&lt;user username=&quot;tomcat&quot; password=&quot;s3cret&quot; roles=&quot;admin-gui&quot;/&gt;<br/><br/><br/><br/>
+startup脚本：<br/>
+#!/bin/sh<br/>
+# Tomcat init script for Linux.<br/>
+#<br/>
+# chkconfig: 2345 96 14<br/>
+# description: The Apache Tomcat servlet/JSP container.<br/>
+JAVA_OPTS='-Xms64m -Xmx128m'<br/>
+JAVA_HOME=/usr/java/jdk1.7.0_05<br/>
+CATALINA_HOME=/usr/local/apache-tomcat-7.0.29<br/>
+export JAVA_HOME CATALINA_HOME<br/>
+exec $CATALINA_HOME/bin/catalina.sh $*<br/><br/><br/>
+APR即Apache Portable Runtime，原来是apache2的一个库，后来被独立成了一个项目。基于此库文件，Tomcat可以表现出更好的稳定性和性能，尤其是Tomcat作为apache的后端Servlet容器时。<br/><br/>
+事先安装apr-devel包，而后编译安装tomcat的APR JNI。安装方法如下：<br/>
+# cd  $CATALINA_HOME/bin<br/>
+# tar xf tomcat-native.tar.gz<br/>
+# cd tomcat-native-1.1.22-src/jni/native/<br/>
+# ./configure --with-apr=/usr --with-ssl --with-apxs<br/>
+# make &amp;&amp; make install<br/><br/>
+# echo &quot;/usr/local/apr/lib/&quot; &gt; /etc/ld.so.conf.d/apr.conf<br/>
+# ldconfig<br/><br/><br/>
+应用程序：<br/>
+jforum<br/>
+java center home<br/><br/><br/><br/><br/><br/>
+配置tomcat启用Manager<br/>
+&lt;role rolename=&quot;manager-gui&quot;/&gt;<br/>
+&lt;user username=&quot;tomcat&quot; password=&quot;guessme&quot; roles=&quot;manager-gui&quot;/&gt;<br/><br/>
+Manager的四个管理角色：<br/>
+manager-gui - allows access to the HTML GUI and the status pages<br/>
+manager-script - allows access to the text interface and the status pages<br/>
+manager-jmx - allows access to the JMX proxy and the status pages<br/>
+manager-status - allows access to the status pages only<br/><br/><br/>
+添加一个新的Host:<br/>
+编辑server.xml:<br/>
+     &lt;Host name=&quot;www.magedu.com&quot; appBase=&quot;webapps&quot; unpackWARs=&quot;true&quot; autoDeploy=&quot;true&quot;<br/>
+       xmlValidation=&quot;false&quot; xmlNamespaceAware=&quot;false&quot;&gt;<br/>
+          &lt;Context docBase=&quot;my-webapp&quot; path=&quot;&quot; /&gt;<br/>
+     &lt;/Host&gt;<br/><br/><br/><br/><br/><br/><br/><br/>
+列出所有Deployed的Web应用程序：<br/>
+http://{ hostname }:{ portnumber }/manager/list<br/><br/><br/><br/><br/>
+Tomcat的连接器分为两类：HTTP连接器和Web服务器连接器。<br/><br/>
+Tomcat的HTTP连接器有三种：<br/>
+1) 基于java的HTTP/1.1连接器，这也是Tomcat6默认使用的连接器，即Coyote；它是Tomcat作为standalone模式工作时所用到的连接器，可直接响应来自用户浏览器的关于JSP、servlet和HTML的请求；此连接器是一个Java类，定义在server.xml当中，默认使用8080端口；<br/>
+2) Java开发的高性能NIO HTTP/1.1连接器，它支持非阻塞式IO和Comnet，在基于库向tomcat发起请求时，此连接器表现不俗；但其实现不太成熟，有严重bug存在；<br/>
+3) C/C++开发的native APR HTTP/1.1连接器；在负载较大的场景中，此连接器可以提供非常好的性能；APR即Apache Portable Runtime，它是一个能让开发者采用与平台无关的风格的方式来开发C/C++代码本地库，它能够很好的跨Windows,<br/><br/>
+Linux和*nix平台工作。此连接器从三个主要方面优化了系统性能并提升了系统的伸缩能力：(1)使用sendfile()内核模式调用发送大的静态文件；(2) 仅使用一个native code保持大量的连接；(3) 使用能够加速SSL请求处理的OpenSSL本地代码；<br/><br/>
+启用APR连接器的条件：<br/>
+1) 将连接器的protocol属性设定为org.apache.coyote.http11.Http11AprProtocol；<br/>
+2) APR的库文件已经在系统库文件的搜索路径内；<br/><br/><br/><br/><br/>
+基于连接器提供Tomcat6性能的方法：<br/>
+1) 设置tcpNoDelay属性值为“true”；<br/>
+2) 通过maxKeepAliveRequest属性调整允许keep-alive功能的请求的最大数目，值为1时表示禁用；<br/>
+3) 调整socketBuffer属性的值以改变套接字缓冲的大小；<br/>
+4) 将enableLookups设置为false以禁用DNS反解；<br/>
+5) Tomcat是一个多线程的Servlet容器，使用线程池能对服务器性能带去很大影响；这主要通过maxThreads、maxSpareThreads和minSpareThreads来定义；<br/>
+6) 通过JAVA_OPTS，如-Xms和-Xmx设定JVM相关的参数以定义其使用内存的能力；<br/><br/><br/><br/><br/>
+AJP(Apache JServ Protocol):<br/>
+AJP是面向数据包的基于TCP/IP的协议，它在Apache和Tomcat的实例之间提供了一个专用的通信信道。目前常用AJP协议的版本是1.3，它主要有以下特征：<br/>
+1) 在快速网络有着较好的性能表现，支持数据压缩传输；<br/>
+2) 支持SSL，加密及客户端证书；<br/>
+3) 支持Tomcat实例集群；<br/>
+4) 支持在apache和tomcat之间的连接的重用；<br/><br/><br/><br/>
+Apache可以通过mod_jk和mod_proxy模块跟Tomcat整合，但mod_proxy只有在apache 2.2.x系列的版本才直接提供，但它可以提供更丰富的功能和安全性；而对于apache 1.3.x和2.0.x来说mod_jk才更适用。<br/><br/><br/><br/>
+配置apache通过mod_proxy模块与Tomcat连接：<br/><br/>
+1、检测当前的apache是否支持mod_proxy、mod_proxy_http、mod_proxy_ajp和proxy_balancer_module模块：<br/>
+# httpd -D DUMP_MODULES<br/>
+……………………<br/>
+proxy_module (shared)<br/>
+proxy_balancer_module (shared)<br/>
+proxy_ftp_module (shared)<br/>
+proxy_http_module (shared)<br/>
+proxy_connect_module (shared)<br/>
+……………………<br/><br/>
+2、在httpd.conf的全局配置段或虚拟主机中添加如下内容：<br/>
+ProxyVia On<br/>
+ProxyRequests Off<br/>
+ProxyPreserveHost On<br/>
+&lt;Proxy *&gt;<br/>
+  Order deny,allow<br/>
+  Allow from all<br/>
+&lt;/Proxy&gt;<br/>
+ProxyPass /examples/jsp ajp://172.16.100.1:8009/examples/jsp<br/>
+ProxyPassReverse /examples/jsp ajp://172.16.100.1:8009/examples/jsp<br/>
+&lt;Location /examples/jsp &gt;<br/>
+  Order allow,deny<br/>
+  Allow from all<br/>
+&lt;/Location&gt;<br/><br/><br/><br/><br/><br/>
+配置apache和tomcat一起工作：<br/><br/>
+1、编译安装apache：<br/>
+# ./configure --prefix=/usr/local/apache --enable-proxy --enable-proxy-http --enable-proxy-ajp<br/><br/>
+2、配置apache加载相应的模块：<br/>
+LoadModule proxy_module modules/mod_proxy.so<br/>
+LoadModule proxy_http_module modules/mod_proxy_http.so<br/>
+LoadModule proxy_ajp_module modules/mod_proxy_ajp.so<br/><br/>
+3、配置apache代理tomcat：<br/><br/>
+第一种方法，基于proxy-http：<br/>
+ProxyPass /my-webapp http://www.magedu.com:8080/my-webapp<br/>
+ProxyPassReverse /my-webapp http://www.magedu.com:8080/my-webapp<br/>
+ProxyVia On<br/><br/>
+第二种方法，基于proxy-ajp：<br/>
+ProxyPass /my-webapp ajp://tomcathost:8009/my-webapp<br/>
+ProxyPassReverse /my-webapp ajp://tomcathost:8009/my-webapp<br/>
+ProxyVia On<br/><br/>
+4、确保tomcat配置有如上使用的连接器；<br/><br/><br/><br/>
+tar xf httpd-2.4.2<br/>
+cd httpd-2.4.2<br/>
+./configure --prefix=/usr/local/apache --sysconfdir=/etc/httpd --enable-so --enable-ssl --enable-cgi --enable-rewrite --with-zlib --with-pcre --with-apr=/usr/local/apr --with-apr-util=/usr/local/apr-util  --enable-proxy --enable-proxy-http --enable-proxy-ajp<br/>
+make &amp;&amp; make install<br/><br/><br/><br/>
+tar xf tomcat-connectors-1.2.37-src.tar.gz<br/>
+cd tomcat-connectors-1.2.37-src/native/<br/>
+./configure --with-apxs=/usr/local/apache/bin/apxs<br/>
+make &amp;&amp; make install<br/><br/><br/><br/><br/><br/><br/><br/>
+server端session：<br/>
+1、service向用户浏览器发送cookie，此cookie包含获取服务端session的标识。<br/>
+2、向用户通过浏览器请求同一站点的页面时，相应的cookie信息会随之发送。<br/>
+3、server从cookie信息中识别出与此浏览器相关的session标识，从而判别出当前server上此浏览器的session信息。<br/><br/>
+在用户浏览器不支持cookie的场景中，也可以基于URL重写实现session功能。简单来讲就是server端通过为任何一个响应给用户的URL附加上session id的方式来标识用户请求。<br/><br/>
+不过需要注意的是，每个浏览器进程都会各自管理各自跟服务端的会话ID，因此，在服务器端看来，同一个客户端上的多个浏览器进程会被识别成不同的客户端。<br/><br/><br/><br/><br/><br/><br/><br/><br/>
+2012年7月7号：<br/>
+Tomcat7的配置文件(conf目录中)：<br/>
+catalina.policy: Tomcat7的安全策略，用于JVM强制将安全策略施加于Webapp；<br/>
+catalina.properties: Tomcat启动时会扫描此文件，它包括共享的server、shared loader及JAR等；<br/>
+server.xml: 主配置文件之一，包含了诸多的重要配置，如IP地址、端口、虚拟主机、context路径等；<br/>
+tomcat-users.xml: 基于角色实现的认证及授权相关的文件；<br/>
+logging.properties: Tomcat实例的日志相关的定义；<br/>
+web.xml：定义tomcat实例启动时为所有装载至当前实例中的webapp定义的默认属性值；当然，某webapp也可以定义自己的属性来替代这里的默认值；<br/>
+context.xml:<br/><br/><br/>
+JDBC: (Java Database Connectivity) 基于java的数据库访问接口, 即用于让客户端访问数据库的API；<br/>
+JNDI：(Java Naming and Directory Interface), JAVA的API之一，用于向java语言编写的应用程序提供命名及目录的功能；<br/>
+DataSource: 用于通过JDBC API连接关系型数据库的Java对象，通常需要整合进JNDI并将数据源对象注册为一个JNDI的名称服务；这样对象可以被程序自身访问，并用于连接至数据库；一般说来，tomcat7连接至任何数据时通常需要提供以下几个参数：<br/>
+  IP地址<br/>
+  端口号<br/>
+  JNDI名称<br/>
+  数据库用户名及其密码<br/>
+DBCP：(Dababase Connection Pool), 其通常位于TOMCAT_HOME或CATALINA_HOME/lib/tomcat-dbcp.jar中，用于实现连接池；<br/><br/><br/><br/><br/><br/>
+Tomcat Manager：<br/>
+tomcat强大的管理工具，具有以下特性：<br/>
+  远程deploy新应用程序<br/>
+  清理空闲会话<br/>
+  在不重启container的情况下Undeploy应用程序<br/>
+  分析内存泄漏<br/>
+  JVM状态<br/>
+  服务器状态<br/>
+ <br/>
+然而，在tomcat7中，TM默认是禁用的。要启用之，需要编辑tomcat-users.xml文件；<br/><br/><br/><br/><br/>
+Context:<br/>
+对于应用程序来说，context路径是一个关键属性，其也经常用于虚拟主机的配置及.war文件中的URL映射。使用context可以降低系统负载，因为，当某URL请求到达tomcat时，如果没有context，tomcat需要搜索server.xml或context.xml的配置以确定此URL，否则则需要搜索所有的war文件来查找用户的请求的资源。<br/><br/>
+此外，context也可以让管理员基于每个app提供日志、appBase、DB连接等配置，这极大地增强配置的灵活性；<br/><br/><br/><br/>
+应用程序目录的结构：<br/>
+/WEB-INF/web.xml：包含当前webapp的deploy描述符，如所有的servlets和JSP等动态文件的详细信息，会话超时时间和数据源等；因此，其也通常用于定义当前webapp特有的资源；<br/>
+/WEB-INF/classes: 包含所有服务器端类及当前应用程序相关的其它第三方类等；<br/>
+/WEB-INF/lib: 包含JSP所用到的JAR文件；<br/><br/>
+用于tomcat的webapp即可以多个独立的文件组成，也可以是jar打包后的单个文件；这些打包后的文件的扩展名可用于判断其内容的类型，如：<br/>
+  EJB通常打包为.jar<br/>
+  webapp通常打包为.war<br/>
+  资源适配器(Resource adapters)通常打包为.rar<br/>
+  企业级应用程序通常打包为.ear，它通常是整合的EJB、webapp及资源适配器文件；<br/>
+  Web服务通常会打包为.ear或.war；<br/>
+ <br/><br/>
+于是，到底应该使用展开格式的文件还是打包为单个文件的格式，就需要根据需要进行了。一般说来，如果满足以下场景，就应该使用展开后的格式，而非打包格式：<br/>
+1、需要在将来的某个时候更新应用程序中的部分内容；使用展开的格式可以避免重新deploy应用程序；<br/>
+2、期望使用Tomcat Manager来动态编辑及选择deployment descriptor值；<br/>
+3、应用程序中包含静态文件，而这些静态文件需要定期更新；<br/><br/><br/>
+Deploy应用程序所涉及到的操作：<br/>
+Deploy: 向tomcat实例提供某应用程序源文件，并让服务器将类加载进类加器中；这样，应用程序才可以为用户所使用；<br/>
+Redeploy:用于更新deployment后的某应用程序或应用程序的部分内容；当redeploy整个应用程序时，当前应用程序的所有模块都必须要redeploy成功，否则整个webapp将会停止 ；<br/>
+Stop: 卸载当前应用程序的所有类，并停止向用户提供服务；不过，其仍然会保留所有已deploy的文件及名称，并可用于后续的redeployment或starting；<br/>
+Start: 重新装载当前应用的类至类加载器，并开启服务；<br/>
+Undeploy: 停止某已经deploy的应用程序，并移除deploy产生的文件和名称；<br/><br/><br/><br/>
+Tomcat7 deploy应用程序的方法：<br/>
+War格式的应用程序：将应用程序war文件放置于CATALINA_BASE目录中并重新启动tomcat；<br/>
+没打包的应用程序：将应用程序的非归档文件旋转于CATALINA_BASE目录中；<br/>
+Tomcat Manager：登录TM而后进行deploy；<br/><br/><br/><br/><br/><br/><br/><br/>
+telnet webserver<br/><br/>
+GET / HTTP/1.1<br/>
+HOST:localhost<br/>
+Connection:{Keep-Alive|Close}<br/><br/><br/><br/>
+&lt;%@ page language=&quot;java&quot; %&gt;<br/>
+&lt;%@ page import=&quot;java.util.*&quot; %&gt;<br/>
+&lt;html&gt;<br/>
+  &lt;head&gt;<br/>
+    &lt;title&gt;JSP test page.&lt;/title&gt;<br/>
+  &lt;/head&gt;<br/>
+  &lt;body&gt;<br/>
+    &lt;% out.println(&quot;Hello,world!&quot;); %&gt;<br/>
+  &lt;/body&gt;<br/>
+&lt;/html&gt;<br/><br/><br/><br/>
+# mkdir /usr/local/tcinstance2<br/>
+# cd /usr/local/tcinstance2<br/>
+# cp -a $CATALINA_HOME/conf .<br/>
+# mkdir common logs temp server shared webapps work<br/><br/>
+server.xml:<br/><br/>
+&lt;Server port=&quot;8007&quot; shutdown=&quot;SHUTDOWN&quot;&gt;<br/>
+&lt;Connector port=&quot;8081&quot; maxHttpHeaderSize=&quot;8192&quot;<br/>
+    maxThreads=&quot;150&quot; minSpareThreads=&quot;25&quot; maxSpareThreads=&quot;75&quot;<br/>
+    enableLookups=&quot;false&quot; redirectPort=&quot;8443&quot; acceptCount=&quot;100&quot;<br/>
+    connectionTimeout=&quot;20000&quot; disableUploadTimeout=&quot;true&quot; /&gt;<br/><br/><br/>
+# set CATALINA_BASE=&quot;/usr/local/tcinstance2&quot;<br/>
+# set CATALINA_HOME=&quot;/usr/local/tomcat&quot;<br/>
+# export CATALINA_BASE CATALINA_HOME<br/>
+# service tomcat start # Standard way to start on Linux<br/><br/><br/><br/>
+http://172.16.100.1/manager/html:<br/>
+http://172.16.100.1/manager/text<br/>
+http://172.16.100.1/manager/status<br/><br/><br/><br/><br/><br/>
+会话管理：<br/>
+标准会话管理器和持久会话管理器<br/><br/>
+标准会话管理器(StandardManager)：<br/>
+&lt;Manager className=&quot;org.apache.catalina.session.StandardManager&quot;<br/>
+         maxInactiveInterval=&quot;7200&quot;/&gt;<br/><br/>
+默认保存于$CATALINA_HOME/work/Catalina/&lt;hostname&gt;/&lt;webapp-name&gt;/下的SESSIONS.ser文件中。<br/><br/>
+maxActiveSessions：最多允许的活动会话数量，默认为-1，表示不限制；<br/>
+maxInactiveInterval：非活动的会话超时时长，默认为60s；<br/>
+pathname：会话文件的保存目录；<br/><br/><br/><br/>
+持久会话管理器(PersistentManager)：<br/>
+将会话数据保存至持久存储中，并且能在服务器意外中止后重新启动时重新加载这些会话信息。持久会话管理器支持将会话保存至文件存储(FileStore)或JDBC存储(JDBCStore)中。<br/><br/>
+保存至文件中的示例：<br/>
+&lt;Manager className=&quot;org.apache.catalina.session.PersistentManager&quot;<br/>
+  saveOnRestart=&quot;true&quot;&gt;<br/>
+  &lt;Store className=&quot;org.apache.catalina.session.FileStore&quot;<br/>
+    directory=&quot;/data/tomcat-sessions&quot;/&gt;<br/>
+&lt;/Manager&gt;<br/><br/>
+每个用户的会话会被保存至directory指定的目录中的文件中，文件名为&lt;session id&gt;.session，并通过后台线程每隔一段时间(checkInterval参数定义，默认为60秒)检查一次超时会话。<br/><br/><br/>
+保存至JDBCStore中的示例：<br/>
+&lt;Manager className=&quot;org.apache.catalina.session.PersistentManager&quot;<br/>
+  saveOnRestart=&quot;true&quot;&gt;<br/>
+  &lt;Store className=&quot;org.apache.catalina.session.JDBCStore&quot;<br/>
+    driverName=&quot;com.mysql.jdbc.Driver&quot;<br/>
+    connectionURL=&quot;jdbc:mysql://localhost:3306/mydb?user=jb;password=pw&quot;/&gt;<br/>
+&lt;/Manager&gt;<br/><br/><br/><br/><br/>
+安装apache<br/><br/>
+6.4.1 安装apr和apr-util<br/><br/><br/>
+可以从http://apr.apache.org/获取apr源码，目前最新的版本是1.4.6。<br/>
+[root@www.magedu.com  ~]# tar  xf  apr-1.4.6.tar.bz2<br/>
+[root@www.magedu.com  ~]# cd apr-1.4.6<br/>
+[root@www.magedu.com  ~]# ./configure --prefix=/usr/local/apr --disable-ipv6<br/>
+[root@www.magedu.com  ~]# make &amp;&amp; make install<br/><br/>
+apr-util是apr的工具库，其可以让程序员更好的使用apr的功能。可以从http://apr.apache.org/获取apr源码，目前最新的版本是1.4.1。<br/>
+[root@www.magedu.com  ~]# tar xf apr-util-1.4.1.tar.bz2<br/>
+[root@www.magedu.com  ~]# cd apr-util-1.4.1<br/>
+[root@www apr-util-1.4.1]#  ./configure  --prefix=/usr/local/apr-util  --with-apr=/usr/local/apr<br/>
+[root@www apr-util-1.4.1]#  make &amp;&amp; make install<br/><br/>
+6.4.2 安装apache<br/><br/>
+httpd目前最新的2.4系列版本中引入了event MPM，其在性能上较之其它MPM有了较大的提升，<br/>
+[root@www.magedu.com  ~]# tar xf httpd-2.4.2<br/>
+[root@www.magedu.com  ~]# cd httpd-2.4.2<br/>
+[root@www.magedu.com  ~]# ./configure --prefix=/usr/local/apache --sysconfdir=/etc/httpd --enable-so --enable-ssl --enable-cgi --enable-rewrite --with-zlib --with-pcre --with-apr=/usr/local/apr --with-apr-util=/usr/local/apr-util --enable-mpms-shared=all --with-mpm=event --enable-proxy --enable-proxy-http --enable-proxy-ajp --enable-proxy-balancer  --enable-lbmethod-heartbeat --enable-heartbeat --enable-slotmem-shm  --enable-slotmem-plain --enable-watchdog<br/>
+[root@www.magedu.com  ~]# make &amp;&amp; make install<br/><br/>
+为apache提供init脚本，实现服务的控制。建立/etc/rc.d/init.d/httpd文件，并添加如下内容：<br/><br/>
+这是个脚本文件，因此需要执行权限；同时，为了让httpd服务能够开机自动启动，还需要将其添加至服务列表，并设置其在3或5级别下自动运行。<br/>
+chmod  +x  /etc/rc.d/init.d/httpd<br/>
+chkconfig  --add  httpd<br/>
+chkconfig  --level  35  httpd  on<br/><br/><br/><br/>
+6.5  配置apache通过mod_proxy模块与Tomcat连接<br/><br/>
+要使用mod_proxy与Tomcat实例连接，需要apache已经装载mod_proxy、mod_proxy_http、mod_proxy_ajp和proxy_balancer_module（实现Tomcat集群时用到）等模块：<br/><br/>
+# /usr/local/apache/bin/httpd -D DUMP_MODULES | grep  proxy<br/>
+proxy_module (shared)<br/>
+proxy_connect_module (shared)<br/>
+proxy_ftp_module (shared)<br/>
+proxy_http_module (shared)<br/>
+proxy_fcgi_module (shared)<br/>
+proxy_scgi_module (shared)<br/>
+proxy_ajp_module (shared)<br/>
+proxy_balancer_module (shared)<br/>
+proxy_express_module (shared)<br/><br/>
+2、在httpd.conf的全局配置段或虚拟主机中添加如下内容：<br/>
+ProxyVia Off<br/>
+ProxyRequests Off<br/>
+ProxyPreserveHost Off<br/>
+&lt;Proxy *&gt;<br/>
+  Require all granted<br/>
+&lt;/Proxy&gt;<br/>
+  ProxyPass  /  ajp://172.16.100.1:8009/<br/>
+  ProxyPassReverse  /  ajp://172.16.100.1:8009/<br/>
+&lt;Location  / &gt;<br/>
+  Require all granted<br/>
+&lt;/Location&gt;<br/><br/>
+或让apache跟Tomcat的http连接器进行整合：<br/>
+ProxyVia Off<br/>
+ProxyRequests Off<br/>
+ProxyPass / http://172.16.100.1:8080/<br/>
+ProxyPassReverse / http://172.16.100.1:8080/<br/>
+&lt;Proxy *&gt;<br/>
+  Require all granted<br/>
+&lt;/Proxy&gt;<br/>
+&lt;Location  / &gt;<br/>
+  Require all granted<br/>
+&lt;/Location&gt;<br/><br/>
+关于如上apache指令的说明：<br/><br/>
+ProxyPreserveHost {On|Off}：如果启用此功能，代理会将用户请求报文中的Host:行发送给后端的服务器，而不再使用ProxyPass指定的服务器地址。如果想在反向代理中支持虚拟主机，则需要开启此项，否则就无需打开此功能。<br/><br/>
+ProxyVia  {On|Off|Full|Block}：用于控制在http首部是否使用Via:，主要用于在多级代理中控制代理请求的流向。默认为Off，即不启用此功能；On表示每个请求和响应报文均添加Via:；Full表示每个Via:行都会添加当前apache服务器的版本号信息；Block表示每个代理请求报文中的Via：都会被移除。<br/><br/>
+ProxyRequests {On|Off}：是否开启apache正向代理的功能；启用此项时为了代理http协议必须启用mod_proxy_http模块。同时，如果为apache设置了ProxyPass，则必须将ProxyRequests设置为Off。<br/><br/>
+ProxyPass  [path]  !|url  [key=value key=value ...]]：将后端服务器某URL与当前服务器的某虚拟路径关联起来作为提供服务的路径，path为当前服务器上的某虚拟路径，url为后端服务器上某URL路径。使用此指令时必须将ProxyRequests的值设置为Off。需要注意的是，如果path以“/”结尾，则对应的url也必须以“/”结尾，反之亦然。<br/>
+另外，mod_proxy模块在httpd 2.1的版本之后支持与后端服务器的连接池功能，连接在按需创建在可以保存至连接池中以备进一步使用。连接池大小或其它设定可以通过在ProxyPass中使用key=value的方式定义。常用的key如下所示：<br/>
+◇ min：连接池的最小容量，此值与实际连接个数无关，仅表示连接池最小要初始化的空间大小。<br/>
+◇ max：连接池的最大容量，每个MPM都有自己独立的容量；都值与MPM本身有关，如Prefork的总是为1，而其它的则取决于ThreadsPerChild指令的值。<br/>
+◇ loadfactor：用于负载均衡集群配置中，定义对应后端服务器的权重，取值范围为1-100。<br/>
+◇ retry：当apache将请求发送至后端服务器得到错误响应时等待多长时间以后再重试。单位是秒钟。<br/><br/>
+如果Proxy指定是以balancer://开头，即用于负载均衡集群时，其还可以接受一些特殊的参数，如下所示：<br/>
+◇lbmethod：apache实现负载均衡的调度方法，默认是byrequests，即基于权重将统计请求个数进行调度，bytraffic则执行基于权重的流量计数调度，bybusyness通过考量每个后端服务器的当前负载进行调度。<br/>
+◇ maxattempts：放弃请求之前实现故障转移的次数，默认为1，其最大值不应该大于总的节点数。<br/>
+◇ nofailover：取值为On或Off，设置为On时表示后端服务器故障时，用户的session将损坏；因此，在后端服务器不支持session复制时可将其设置为On。<br/>
+◇ stickysession：调度器的sticky session的名字，根据web程序语言的不同，其值为JSESSIONID或PHPSESSIONID。<br/>
+上述指令除了能在banlancer://或ProxyPass中设定之外，也可使用ProxySet指令直接进行设置，如：<br/>
+&lt;Proxy balancer://hotcluster&gt;<br/>
+BalancerMember  http://www1.magedu.com:8080 loadfactor=1<br/>
+BalancerMember  http://www2.magedu.com:8080 loadfactor=2<br/>
+ProxySet  lbmethod=bytraffic<br/>
+&lt;/Proxy&gt;<br/><br/>
+ProxyPassReverse：用于让apache调整HTTP重定向响应报文中的Location、Content-Location及URI标签所对应的URL，在反向代理环境中必须使用此指令避免重定向报文绕过proxy服务器。<br/><br/>
+6.6  配置apache通过mod_jk模块与Tomcat连接<br/><br/><br/><br/>
+mod_jk是ASF的一个项目，是一个工作于apache端基于AJP协议与Tomcat通信的连接器，它是apache的一个模块，是AJP协议的客户端（服务端是Tomcat的AJP连接器）。<br/><br/>
+[root@www.magedu.com  ~]# tar xf tomcat-connectors-1.2.37-src.tar.gz<br/>
+[root@www.magedu.com  ~]# cd tomcat-connectors-1.2.37-src/native/<br/>
+[root@www.magedu.com  ~]# ./configure --with-apxs=/usr/local/apache/bin/apxs<br/>
+[root@www.magedu.com  ~]# make &amp;&amp; make install<br/><br/>
+apache要使用mod_jk连接器，需要在启动时加载此连接器模块。为了便于管理与mod_jk模块相关的配置，这里使用一个专门的配置文件/etc/httpd/extra/httpd-jk.conf来保存相关指令及其设置。其内容如下：<br/>
+# Load the mod_jk<br/>
+LoadModule  jk_module  modules/mod_jk.so<br/>
+JkWorkersFile  /etc/httpd/extra/workers.properties<br/>
+JkLogFile  logs/mod_jk.log<br/>
+JkLogLevel  debug<br/>
+JkMount  /*  TomcatA<br/>
+JkMount  /status/  stat1<br/><br/>
+除了需要使用LoadModule指令在apache中装载模块外，mod_jk还需要在apache的主配置文件中设置其它一些指令来配置其工作属性。如JkWorkersFile则用于指定保存了worker相关工作属性定义的配置文件，JkLogFile则用于指定mod_jk模块的日志文件，JkLogLevel则可用于指定日志的级别（info, error, debug），此外还可以使用JkRequestLogFormat自定义日志信息格式。而JkMount（格式： JkMount  &lt;URL to match&gt;  &lt;Tomcat worker name&gt;）指定则用于控制URL与Tomcat workers的对应关系。<br/><br/>
+为了让apache能使用/etc/httpd/extra/httpd-jk.conf配置文件中的配置信息，需要编辑/etc/httpd/httpd.conf，添加如下一行：<br/>
+Include  /etc/httpd/extra/httpd-jk.conf<br/><br/>
+对于apache代理来说，每一个后端的Tomcat实例中的engine都可以视作一个worker，而每一个worker的地址、连接器的端口等信息都需要在apache端指定以便apache可以识别并使用这些worker。约定俗成，配置这些信息的文件通常为workers.properties，其具体路径则是使用前面介绍过的JkWorkersFile指定的，在apache启动时，mod_jk会扫描此文件获取每一个worker的配置信息。比如，我们这里使用/etc/httpd/extra/workers.properties。<br/><br/>
+workers.properties文件一般由两类指令组成：一是mod_jk可以连接的各worker名称列表，二是每一个worker的属性配置信息。它们分别遵循如下使用语法。<br/><br/>
+worker.list = &lt; a comma separated list of worker names &gt;<br/>
+worker. &lt;worker name&gt; .&lt;property&gt; = &lt;property value&gt;<br/><br/>
+其中worker.list指令可以重复指定多次，而worker name则是Tomcat中engine组件jvmRoute参数的值。如：<br/>
+worker.TomcatA.host=172.16.100.1<br/><br/>
+根据其工作机制的不同，worker有多种不同的类型，这是需要为每个worker定义的一项属性woker.&lt;work name&gt;.type。常见的类型如下：<br/>
+◇ ajp13：此类型表示当前worker为一个运行着的Tomcat实例。<br/>
+◇ lb：lb即load balancing，专用于负载均衡场景中的woker；此worker并不真正负责处理用户请求，而是将用户请求调度给其它类型为ajp13的worker。<br/>
+◇   status：用户显示分布式环境中各实际worker工作状态的特殊worker，它不处理任何请求，也不关联到任何实际工作的worker实例。具体示例如请参见后文中的配置。<br/><br/>
+worker其它常见的属性说明：<br/>
+◇ host：Tomcat 7的worker实例所在的主机；<br/>
+◇ port：Tomcat 7实例上AJP1.3连接器的端口；<br/>
+◇ connection_pool_minsize：最少要保存在连接池中的连接的个数；默认为pool_size/2；<br/>
+◇ connection_pool_timeout：连接池中连接的超时时长；<br/>
+◇ mount：由当前worker提供的context路径，如果有多个则使用空格格开；此属性可以由JkMount指令替代；<br/>
+◇ retries：错误发生时的重试次数；<br/>
+◇ socket_timeout：mod_jk等待worker响应的时长，默认为0，即无限等待；<br/>
+◇ socket_keepalive：是否启用keep alive的功能，1表示启用，0表示禁用；<br/>
+◇ lbfactor：worker的权重，可以在负载均衡的应用场景中为worker定义此属性；<br/><br/>
+另外，在负载均衡模式中，专用的属性还有：<br/>
+◇balance_workers：用于负载均衡模式中的各worker的名称列表，需要注意的是，出现在此处的worker名称一定不能在任何worker.list属性列表中定义过，并且worker.list属性中定义的worker名字必须包含负载均衡worker。具体示例请参见后文中的定义。<br/>
+◇ method：可以设定为R、T或B；默认为R，即根据请求的个数进行调度；T表示根据已经发送给worker的实际流量大小进行调度；B表示根据实际负载情况进行调度。<br/>
+◇sticky_session：在将某请求调度至某worker后，源于此址的所有后续请求都将直接调度至此worker，实现将用户session与某worker绑定。默认为值为1，即启用此功能。如果后端的各worker之间支持session复制，则可以将此属性值设为0。<br/><br/>
+根据前文中的指定，这里使用/etc/httpd/extra/workers.properties来定义一个名为TomcatA的worker，并为其指定几个属性。文件内容如下：<br/>
+worker.list=TomcatA,stat1<br/>
+worker.TomcatA.port=8009<br/>
+worker.TomcatA.host=172.16.100.1<br/>
+worker.TomcatA.type=ajp13<br/>
+worker.TomcatA.lbfactor=1<br/>
+worker.stat1.type = status<br/><br/>
+至此，一个基于mod_jk模块与后端名为TomcatA的worker通信的配置已经完成，重启httpd服务即可生效。<br/><br/><br/><br/><br/>
+配置基于mod_jk的负载均衡<br/><br/>
+1、  为了避免用户直接访问后端Tomcat实例，影响负载均衡的效果，建议在Tomcat 7的各实例上禁用HTTP/1.1连接器。<br/>
+2、为每一个Tomcat 7实例的引擎添加jvmRoute参数，并通过其为当前引擎设置全局惟一标识符。如下所示。需要注意的是，每一个实例的jvmRoute的值均不能相同。<br/>
+&lt;Engine name=”Standalone” defaultHost=”localhost” jvmRoute=” TomcatA ”&gt;<br/><br/>
+而后去配置apache，修改/etc/httpd/extra/httpd-jk.conf为如下内容：<br/>
+LoadModule  jk_module  modules/mod_jk.so<br/>
+JkWorkersFile  /etc/httpd/extra/workers.properties<br/>
+JkLogFile  logs/mod_jk.log<br/>
+JkLogLevel  debug<br/>
+JkMount  /*  lbcluster1<br/>
+JkMount  /jkstatus/  stat1<br/><br/><br/>
+编辑/etc/httpd/extra/workers.properties，添加如下内容：<br/>
+worker.list = lbcluster1,stat1<br/>
+worker.TomcatA.type = ajp13<br/>
+worker.TomcatA.host = 172.16.100.1<br/>
+worker.TomcatA.port = 8009<br/>
+worker.TomcatA.lbfactor = 5<br/>
+worker.TomcatB.type = ajp13<br/>
+worker.TomcatB.host = 172.16.100.2<br/>
+worker.TomcatB.port = 8009<br/>
+worker.TomcatB.lbfactor = 5<br/>
+worker.lbcluster1.type = lb<br/>
+worker.lbcluster1.sticky_session = 1<br/>
+worker.lbcluster1.balance_workers = TomcatA, TomcatB<br/>
+worker.stat1.type = status<br/><br/>
+演示效果，在TomcatA上某context中（如/test），提供如下页面<br/>
+&lt;%@ page language=&quot;java&quot; %&gt;<br/>
+&lt;html&gt;<br/>
+  &lt;head&gt;&lt;title&gt;TomcatA&lt;/title&gt;&lt;/head&gt;<br/>
+  &lt;body&gt;<br/>
+    &lt;h1&gt;&lt;font color=&quot;red&quot;&gt;TomcatA &lt;/font&gt;&lt;/h1&gt;<br/>
+    &lt;table align=&quot;centre&quot; border=&quot;1&quot;&gt;<br/>
+      &lt;tr&gt;<br/>
+        &lt;td&gt;Session ID&lt;/td&gt;<br/>
+    &lt;% session.setAttribute(&quot;abc&quot;,&quot;abc&quot;); %&gt;<br/>
+        &lt;td&gt;&lt;%= session.getId() %&gt;&lt;/td&gt;<br/>
+      &lt;/tr&gt;<br/>
+      &lt;tr&gt;<br/>
+        &lt;td&gt;Created on&lt;/td&gt;<br/>
+        &lt;td&gt;&lt;%= session.getCreationTime() %&gt;&lt;/td&gt;<br/>
+     &lt;/tr&gt;<br/>
+    &lt;/table&gt;<br/>
+  &lt;/body&gt;<br/>
+&lt;/html&gt;<br/><br/><br/>
+演示效果，在TomcatB上某context中（如/test），提供如下页面<br/>
+&lt;%@ page language=&quot;java&quot; %&gt;<br/>
+&lt;html&gt;<br/>
+  &lt;head&gt;&lt;title&gt;TomcatB&lt;/title&gt;&lt;/head&gt;<br/>
+  &lt;body&gt;<br/>
+    &lt;h1&gt;&lt;font color=&quot;blue&quot;&gt;TomcatB &lt;/font&gt;&lt;/h1&gt;<br/>
+    &lt;table align=&quot;centre&quot; border=&quot;1&quot;&gt;<br/>
+      &lt;tr&gt;<br/>
+        &lt;td&gt;Session ID&lt;/td&gt;<br/>
+    &lt;% session.setAttribute(&quot;abc&quot;,&quot;abc&quot;); %&gt;<br/>
+        &lt;td&gt;&lt;%= session.getId() %&gt;&lt;/td&gt;<br/>
+      &lt;/tr&gt;<br/>
+      &lt;tr&gt;<br/>
+        &lt;td&gt;Created on&lt;/td&gt;<br/>
+        &lt;td&gt;&lt;%= session.getCreationTime() %&gt;&lt;/td&gt;<br/>
+     &lt;/tr&gt;<br/>
+    &lt;/table&gt;<br/>
+  &lt;/body&gt;<br/>
+&lt;/html&gt;<br/><br/>
+理解Sticky sessions：<br/><br/><br/><br/><br/>
+基于mod_proxy实现负载均衡<br/><br/>
+在httpd.conf的全局配置中配置如下内容：<br/><br/>
+ProxyRequests Off<br/>
+&lt;proxy balancer://lbcluster1&gt;<br/>
+BalancerMember ajp://172.16.100.1:8009 loadfactor=10 route=TomcatA<br/>
+BalancerMember ajp://172.16.100.2:8009 loadfactor=10 route=TomcatB<br/>
+&lt;/proxy&gt;<br/><br/>
+&lt;VirtualHost *:80&gt;<br/>
+ServerAdmin admin@magedu.com<br/>
+ServerName www.magedu.com<br/>
+ProxyPass / balancer://lbcluster1/ stickysession=jsessionid<br/>
+ProxyPassReverse / balancer://lbcluster1/<br/>
+&lt;/VirtualHost&gt;<br/><br/><br/>
+&lt;Proxy balancer://hotcluster&gt;<br/>
+BalancerMember  http://www1.magedu.com:8080 loadfactor=1<br/>
+BalancerMember  http://www2.magedu.com:8080 loadfactor=2<br/>
+ProxySet  lbmethod=bytraffic<br/>
+&lt;/Proxy&gt;<br/><br/><br/><br/><br/><br/><br/>
+Tomcat基于内存复制的集群<br/><br/><br/><br/><br/><br/>
+&lt;Cluster className=&quot;org.apache.catalina.ha.tcp.SimpleTcpCluster&quot;<br/>
+                   channelSendOptions=&quot;8&quot;&gt;<br/>
+     &lt;Manager className=&quot;org.apache.catalina.ha.session.DeltaManager&quot;<br/>
+                    expireSessionsOnShutdown=&quot;false&quot;<br/>
+                    notifyListenersOnReplication=&quot;true&quot;/&gt;<br/>
+       &lt;Channel className=&quot;org.apache.catalina.tribes.group.GroupChannel&quot;&gt;<br/>
+          &lt;Membership className=&quot;org.apache.catalina.tribes.membership.McastService&quot;<br/>
+                   address=&quot;228.50.10.1&quot;   bind=&quot;172.16.100.1&quot;   port=&quot;45564&quot;<br/>
+                   frequency=&quot;500&quot;  dropTime=&quot;3000&quot;/&gt;<br/>
+             &lt;Receiver className=&quot;org.apache.catalina.tribes.transport.nio.NioReceiver&quot;<br/>
+                                address=&quot;172.16.100.1&quot;   port=&quot;4000&quot;  autoBind=&quot;100&quot;<br/>
+                                selectorTimeout=&quot;5000&quot;   maxThreads=&quot;6&quot;/&gt;<br/>
+             &lt;Sender className=&quot;org.apache.catalina.tribes.transport.ReplicationTransmitter&quot;&gt;<br/>
+                &lt;Transport className=&quot;org.apache.catalina.tribes.transport.nio.PooledParallelSender&quot;/&gt;<br/>
+             &lt;/Sender&gt;<br/>
+       &lt;Interceptor className=&quot;org.apache.catalina.tribes.group.interceptors.TcpFailureDetector&quot;/&gt;<br/>
+       &lt;Interceptor className=&quot;org.apache.catalina.tribes.group.interceptors.MessageDispatch15Interceptor&quot;/&gt;<br/>
+     &lt;/Channel&gt;<br/>
+     &lt;Valve className=&quot;org.apache.catalina.ha.tcp.ReplicationValve&quot;<br/>
+                        filter=&quot;.*\.gif;.*\.js;.*\.jpg;.*\.htm;.*\.html;.*\.txt;&quot;/&gt;<br/>
+     &lt;Valve className=&quot;org.apache.catalina.ha.session.JvmRouteBinderValve&quot;/&gt;<br/>
+     &lt;Deployer className=&quot;org.apache.catalina.ha.deploy.FarmWarDeployer&quot;<br/>
+                     tempDir=&quot;/tmp/war-temp/&quot; deployDir=&quot;/tmp/war-deploy/&quot;<br/>
+                    watchDir=&quot;/tmp/war-listen/&quot;  watchEnabled=&quot;false&quot;/&gt;<br/>
+      &lt;ClusterListener className=&quot;org.apache.catalina.ha.session.JvmRouteSessionIDBinderListener&quot;/&gt;<br/>
+      &lt;ClusterListener className=&quot;org.apache.catalina.ha.session.ClusterSessionListener&quot;/&gt;<br/>
+&lt;/Cluster&gt;<br/><br/>
+以上内容定义在Engine容器中，则表示对所有主机均启动用集群功能。如果定义在某Host中，则表示仅对此主机启用集群功能。<br/><br/><br/><br/><br/>
+&lt;Cluster&gt;<br/>
+  Serves as the container element for all of the clustering configuration tags.<br/>
+&lt;Manager&gt;<br/>
+  Specifies a clustered session manager implementation for a node to use.<br/>
+&lt;Channel&gt;<br/>
+  Configures the group communication “channel” implementation usedby the cluster.<br/>
+&lt;Membership&gt;<br/>
+  Configures how the cluster members (nodes) find each other and how they keep track of which nodes are up and running.<br/>
+&lt;Receiver&gt;<br/>
+  Specifies andconfigures the implementation of the code that receives cluster replication messages. The Receiver receives cluster messages that were sent by another node’s Sender.<br/>
+&lt;Sender&gt;<br/>
+  Specifies and configures the implementation of the code that sends replication messages out to other cluster members (nodes).<br/>
+&lt;Transport&gt;<br/>
+  Specifies the pluggable transport implementation that will be usedby a Sender (but not a Receiver).<br/>
+&lt;Interceptor&gt;<br/>
+  Code modules that can act on or modify messages leaving the Sender, or entering the Receiver, or both.<br/>
+&lt;Valve&gt;<br/>
+  Regular Tomcat Valve implementations that can modify requests and/or responses.<br/>
+&lt;ClusterListener&gt;<br/>
+  Configures the intended recipient code modules of cluster messages, such as session replication messages. ClusterListeners are similar to Interceptors, but they’re meant to be the final destination for certain types of cluster messages, whereas Interceptors are listening into the communication between the sender and the Receiver’s ClusterListener, and may intervene.<br/><br/><br/><br/><br/><br/><br/>
+用于mod_proxy状态信息的输出<br/>
+&lt;Location /balancer-manager&gt;<br/>
+  SetHandler balancer-manager<br/>
+  Order Deny,Allow<br/>
+  Allow from all<br/>
+&lt;/Location&gt;<br/><br/><br/>
+如果使用虚拟主机实现反向代理，如何在对应的虚拟主机上完成状态信息输出：<br/>
+ProxyRequests Off<br/>
+&lt;proxy balancer://lbcluster1&gt;<br/>
+  BalancerMember ajp://192.168.10.8:8009 loadfactor=1<br/>
+  BalancerMember ajp://192.168.10.9:8009 loadfactor=1<br/>
+  ProxySet lbmethod=bytraffic<br/>
+&lt;/proxy&gt;<br/><br/><br/>
+&lt;VirtualHost *:80&gt;<br/>
+  ServerName localhost<br/>
+  ProxyVia On<br/>
+  ProxyPass / balancer://lbcluster1/  stickysession=JSESSIONID|jsessionid nofailover=On<br/>
+  ProxyPassReverse / balancer://lbcluster1/<br/>
+  &lt;Location /balancer-manager&gt;<br/>
+    SetHandler balancer-manager<br/>
+    Proxypass !<br/>
+    Require all granted<br/>
+  &lt;/Location&gt;<br/>
+  &lt;Proxy *&gt;<br/>
+    Require all granted<br/>
+  &lt;/Proxy&gt;<br/>
+  &lt;Location  / &gt;<br/>
+    Require all granted<br/>
+  &lt;/Location&gt;<br/>
+&lt;/VirtualHost&gt;<br/><br/><br/><br/><br/>
+此外，所有启用集群功能的web应用程序，其web.xml中都须添加&lt;distributable/&gt;才能实现集群功能。如果某web应用程序没有自己的web.xml，也可以通过复制默认的web.xml至其WEB-INF目录中实现。<br/><br/><br/><br/>
+商业版：<br/>
+◇ Sun GlassFish Enterprise Server<br/>
+◇ Sun Java System Web Server<br/>
+◇ JBoss Enterprise Application Platform<br/>
+◇ WebLogic Application Server<br/>
+◇ Caucho's Resin Server<br/>
+◇ WebSphere Application Server<br/>
+◇ NetWeaver<br/><br/>
+非商业版：<br/>
+◇ Apache Tomcat<br/>
+◇ Apache Geronimo<br/>
+◇ GlassFish<br/>
+◇ JBoss Application Server<br/>
+◇ Jetty<br/>
+◇ Tiny Java Web Server<br/>
+◇ Eclipse Virgo<br/><br/><br/><br/>
+静态方法：<br/>
+  rr，wrr, sh, dh<br/>
+动态方法：<br/>
+  lc, wlc, sed, nq, lblc, lblcr<br/><br/>
+  sed: (Active+1)/weight<br/>
+  wlc: (Active*256+Inactive)/weight<br/><br/><br/><br/>
+HTTP: ab, httpload, siege<br/><br/>
+TSung<br/><br/>
+MySQL: sysbench<br/><br/>
+GNUPlot<br/><br/><br/></span></span>
+</div></body></html> 

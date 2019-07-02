@@ -1,0 +1,92 @@
+<html>
+<head>
+  <title>zabbix下载安装（详细图解）</title>
+  <basefont face="宋体" size="2" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+  <meta name="exporter-version" content="YXBJ Windows/600718 (zh-CN, DDL); Windows/10.0.0 (Win64);"/>
+  <style>
+    body, td {
+      font-family: 宋体;
+      font-size: 10pt;
+    }
+  </style>
+</head>
+<body>
+<a name="1781"/>
+<h1>zabbix下载安装（详细图解）</h1>
+
+<div>
+<span style="word-wrap: break-word; -webkit-nbsp-mode: space; -webkit-line-break: after-white-space;"><br/><div style="overflow-x: auto; overflow-y: scroll; text-align: center;"><div style="font-family: 'Hiragino Sans GB W3', 'Hiragino Sans GB', Arial, Helvetica, simsun, u5b8bu4f53; zoom: 1; background-color: rgb(111, 88, 57); background-position: 0% 0%;"><div style="zoom: 1; overflow: hidden; background-position: 50% 0%;"><div style="zoom: 1; background-position: 0% 0%;"><div style="zoom: 1; overflow: hidden; background-color: rgb(225, 219, 211);"><div style="zoom: 1;"><div style="zoom: 1; overflow: hidden;"><div style="zoom: 1; overflow: hidden;"><div style="zoom: 1; overflow: hidden;"><div style="zoom: 1;"><div style="overflow: hidden;"><div style="text-align: left;"><div style="color: rgb(55, 42, 24); font-size: 12px;"><div><h3 style="overflow:hidden;text-align:left;white-space:normal;word-wrap:break-word;word-break:break-all;font-size:16px;padding:0px;margin:34px 0px 10px;line-height:normal;"><span style="font-size:26px;font-weight:bold;font-family:'Hiragino Sans GB W3', 'Hiragino Sans GB', 'Microsoft YaHei', 微软雅黑, Arial, Helvetica, simsun, 宋体;line-height:38px;">zabbix下载安装（详细图解）</span>  </h3></div><div style="height:24px;line-height:24px;margin-top:-8px;"><span style="line-height: 175%; font-size: small;"><br/></span></div><div style="height:24px;line-height:24px;margin-top:-8px;"><span style="line-height: 175%; font-size: small;">最近老板说需要一监控，监控内部的测试服务器和机房的几台生产机，以前做过nagios和cacti，听说zabbix比较全面，有两者结合的趋势所以花两天时间研究了下，做做笔记！</span></div></div><div style="text-align: left; word-wrap: break-word; color: rgb(55, 42, 24); margin: 15px 0px; padding: 5px 0px; overflow: hidden;"><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">1.Zabbix Server需运行在LAMP或者lnmp环境下，环境部署比较简单。</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">zabbix下载安装<br style="line-height:175%;"/>
+    1.下载zabbix<br style="line-height:175%;"/>
+下载地址 </font> <a href="http://www.zabbix.com/download.php" rel="nofollow" style="line-height:175%;text-decoration:none;color:rgb(55, 42, 24);"><font size="2" style="line-height:175%;">http://www.zabbix.com/download.php</font></a><font size="2" style="line-height:175%;">，在此我使用zabbix 1.8.2<br style="line-height:175%;"/>
+#wget</font> <a href="http://nchc.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/1.8.2/zabbix-1.8.2.tar.gz" rel="nofollow" style="line-height:175%;text-decoration:none;color:rgb(55, 42, 24);"><font size="2" style="line-height:175%;">http://nchc.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/1.8.2/zabbix-1.8.2.tar.gz</font></a><br style="line-height:175%;"/><font size="2" style="line-height:175%;">   <br style="line-height:175%;"/>
+2.安装zabbix所需的组件<br style="line-height:175%;"/>
+#yum -y install curl curl-devel net-snmp net-snmp-devel perl-DBI php-gd php-xml php-bcmath<br style="line-height:175%;"/>
+    3.数据库创建并导入数据<br style="line-height:175%;"/>
+#tar zxf zabbix 1.8.2.tar.gz<br style="line-height:175%;"/>
+#cd zabbix 1.8.2<br style="line-height:175%;"/>
+#mysql -uroot -p<br style="line-height:175%;"/>
+&gt;create database zabbix;<br style="line-height:175%;"/>
+&gt;grant all on zabbix.* to</font> <a href="http://88fly.blog.163.com/blog/static/12268039020125933329445/mailto:zabbix@localhost" rel="nofollow" style="line-height:175%;text-decoration:none;color:rgb(55, 42, 24);"><font size="2" style="line-height:175%;">zabbix@localhost</font></a> <font size="2" style="line-height:175%;">identified by 'zabbix';<br style="line-height:175%;"/>
+&gt;flush privileges;<br style="line-height:175%;"/>
+#mysql -uroot zabbix&lt;create/schema/mysql.sql<br style="line-height:175%;"/>
+#mysql -uroot zabbix&lt;create/data/data.sql<br style="line-height:175%;"/>
+#mysql -uroot zabbix&lt;create/data/images_mysql.sql<br style="line-height:175%;"/>
+//为zabbix创建自己的数据库，以便zabbix可以把收集到的数据信息存放在那里调用。<br style="line-height:175%;"/>
+    4.编译安装<br style="line-height:175%;"/>
+#./configure --prefix=/usr/local/zabbix --enable-server --enable-agent --enable-proxy --with-mysql=/usr/local/mysql-5.1.56/bin/mysql_config --with-net-snmp --with-libcurl<br style="line-height:175%;"/>
+ <br style="line-height:175%;"/>
+//--prefix指定zabbix安装目录，--enable-server 支持zabbix服务器<br style="line-height:175%;"/>
+--enable-agent支持zabbix代理<br style="line-height:175%;"/>
+--enable-proxy 支持zabbix代理服务器<br style="line-height:175%;"/>
+--with-mysql 使用MySQL客户端库可以选择指定路径mysql_config<br style="line-height:175%;"/>
+--with-net-snmp 使用net - snmp软件包,择性地指定路径NET - SNMP配置<br style="line-height:175%;"/>
+ --with-libcurl 使用curl包</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">#make &amp;&amp; make install<br style="line-height:175%;"/>
+    5.添加zabbix服务对应的端口（可以省略，但是官方建议有）<br style="line-height:175%;"/>
+         #cat &gt;&gt;/etc/services&lt;&lt;EOF<br style="line-height:175%;"/>
+zabbix-agent 10050/tcp Zabbix Agent<br style="line-height:175%;"/>
+zabbix-agent 10050/udp Zabbix Agent<br style="line-height:175%;"/>
+zabbix-trapper 10051/tcp Zabbix Trapper<br style="line-height:175%;"/>
+zabbix-trapper 10051/udp Zabbix Trapper<br style="line-height:175%;"/>
+EOF<br style="line-height:175%;"/>
+    6.拷贝zabbix的配置文件到etc下,web相关文件拷贝到web目录下<br style="line-height:175%;"/>
+#cd zabbix-1.8.2<br style="line-height:175%;"/>
+#mkdir /etc/zabbix<br style="line-height:175%;"/>
+#cp misc/conf/*  etc/zabbix<br style="line-height:175%;"/>
+#cp -r frontends/php /var/www/html/zabbix</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">修改zabbix连接的数据库的用户名和密码<br style="line-height:175%;"/>
+#vi /etc/zabbix/zabbix_server.conf<br style="line-height:175%;"/>
+DBName=zabbix<br style="line-height:175%;"/>
+DBUser=zabbix<br style="line-height:175%;"/>
+DBUDBPassword=zabbix</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">7.为zabbix的启动、关闭和重启的脚本文件做链接，方便系统可以找得到<br style="line-height:175%;"/>
+#cd /usr/local/zabbix/bin/<br style="line-height:175%;"/>
+#for i in *;do ln -s /usr/local/zabbix/bin/${i} /usr/bin/${i};done<br style="line-height:175%;"/>
+#cd /usr/local/zabbix/sbin/<br style="line-height:175%;"/>
+#for i in *;do ln -s /usr/local/zabbix/sbin/${i} /usr/sbin/${i};done</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;"> 8.把mysql的lib库文件添加到系统动态库配置文件中，方便系统可以找到mysql的lib库。  <br style="line-height:175%;"/>
+  #echo “/usr/local/mysql-5.1.56/lib/mysql/” &gt;&gt;/etc/ld.so.conf<br style="line-height:175%;"/>
+  #ldconfig   //使上面的操作立即生效<br style="line-height:175%;"/>
+  <br style="line-height:175%;"/>
+ 9.将zabbix相关的启动脚本等文件拷贝的/etc/init.d/下，方便日后对zabbix的启动关闭操作<br style="line-height:175%;"/>
+#cp misc/init.d/redhat/8.0/zabbix_server /etc/init.d/<br style="line-height:175%;"/>
+#chmod +x /etc/init.d/zabbix_server  //赋予可执行权限<br style="line-height:175%;"/>
+#cp misc/init.d/redhat/8.0/zabbix_agentd /etc/init.d/<br style="line-height:175%;"/>
+#chmod +x /etc/init.d/zabbix_agentd<br style="line-height:175%;"/>
+修改zabbix server和agentd程序目录的位置：<br style="line-height:175%;"/>
+#vi /etc/init.d/zabbix_server<br style="line-height:175%;"/>
+progdir=&quot;/usr/local/zabbix/sbin/&quot;<br style="line-height:175%;"/>
+ <br style="line-height:175%;"/>
+#vi /etc/init.d/zabbix_agentd<br style="line-height:175%;"/>
+progdir=&quot;/usr/local/zabbix/sbin/&quot;<br style="line-height:175%;"/>
+ <br style="line-height:175%;"/>
+    10.添加开机启动服务<br style="line-height:175%;"/>
+#chkconfig --add zabbix_server<br style="line-height:175%;"/>
+#chkconfig --add zabbix_agentd<br style="line-height:175%;"/>
+#chkconfig --level 345 zabbix_server on<br style="line-height:175%;"/>
+#chkconfig --level 345 zabbix_agentd on</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">7、修改php相关参数</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;"># vi /etc/php.ini<br style="line-height:175%;"/>
+max_input_time = 600<br style="line-height:175%;"/>
+max_execution_time = 300<br style="line-height:175%;"/>
+date.timezone = Asia/Shanghai<br style="line-height:175%;"/>
+post_max_size = 32M<br style="line-height:175%;"/>
+memory_limit = 128M<br style="line-height:175%;"/>
+mbstring.func_overload = 2</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">重启apache<br style="line-height:175%;"/>
+#service httpd restart</font></p><p style="font-size: 16px; line-height: 175%; margin: 0px 0px 10px; padding: 0px;"><font size="2" style="line-height:175%;">启动浏览器，地址栏输入：“http://主机ip/zabbix” ,setup1:<br style="line-height:175%;"/></font></p><div style="font-size: 16px; line-height: 175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/1329406315022039800.jpg" type="image/jpeg" data-filename="1329406315022039800.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="480" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="639"/></font></div><div style="font-size: 16px; line-height: 175%;"><div style="line-height:175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/2554103938690108270.jpg" type="image/jpeg" data-filename="2554103938690108270.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="490" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="710"/></font></div><div style="line-height:175%;"><div style="line-height:175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/23925373038023905.jpg" type="image/jpeg" data-filename="23925373038023905.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="480" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="639"/></font></div><div style="line-height:175%;"><div style="line-height:175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/2712011400624779661.jpg" type="image/jpeg" data-filename="2712011400624779661.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="481" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="638"/></font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;"> </font></div><font size="2" style="line-height:175%;"> </font></div><div style="line-height:175%;"><div style="line-height:175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/1299569967490714196.jpg" type="image/jpeg" data-filename="1299569967490714196.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="481" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="639"/></font></div><font size="2" style="line-height:175%;"> 按提示下载配置文件到Server的/var/www/html/zabbix/conf下，名字一定要是zabbix.conf.php，然后点击Retry‘’</font></div><div style="line-height:175%;"><div style="line-height:175%;"><font size="2" style="line-height:175%;"><img src="zabbix下载安装（详细图解）_files/112589990701878218.jpg" type="image/jpeg" data-filename="112589990701878218.jpg" alt="zabbix下载安装（详细图解） - herb - herb" height="479" style="line-height:175%;border:0px;max-width:100%;height:auto;margin:0px 10px 0px 0px;cursor: default;cursor: default;" width="639"/></font></div><font size="2" style="line-height:175%;"> </font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;">配置完成后，出现登陆界面，默认的用户为:admin,密码为:zabbix</font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;"> </font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;">安装完成！</font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;"> </font></div><font size="2" style="line-height:175%;"> </font></div><div style="line-height:175%;"><font size="2" style="line-height:175%;"> </font></div><font size="2" style="line-height:175%;"> </font></div></div><div style="color: rgb(55, 42, 24); font-size: 12px;"><div style="color:rgb(55, 42, 24);margin:0;border:none;padding:0;clear:both;overflow:hidden;*zoom:1;*position:relative;"><div style="padding:0;margin:0;border:none;clear:both;display:block;"><div style="font-size:14px;padding:20px 0 5px;margin:0;border:none;_padding-top:10px;text-indent:0;text-align:left;font-weight:bold;">herb为您推荐：</div><ul style="padding:0;margin:0 0 0 1px;"><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/12268039020125114114115/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(179, 120, 107);">zabbix监控windows（zabbix windows客户端安装详解）</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/12268039020125952912947/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(210, 193, 168);">zabbix汉化</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/122680390201171663643924/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(212, 102, 70);">cacti安装配置</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/1226803902012810548482/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(210, 143, 168);">2012年09月10日</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/12268039020125954238611/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(200, 79, 84);">zabbix客户端安装&amp;一键安装脚本</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/12268039020125126452078/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(179, 120, 107);">zabbix设置邮件告警（详细图解）</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/1226803902012594756542/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(210, 193, 168);">zabbix飞信报警设置</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/1226803902012716102538170/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(212, 102, 70);">2012年08月16日</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/122680390201251435740777/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(210, 143, 168);">Zabbix中文字体乱码解决</span></a></li><li style="list-style:disc inside none;display:list-item;line-height:1.65em;background:none repeat scroll 0 0 transparent;padding:0;margin:0;text-indent:0;text-align:left;font-size:14px;"><a href="http://blog.163.com/88fly/blog/static/1226803902012514114442477/" style="outline:none;color:rgb(55, 42, 24);text-decoration:none;border-bottom:none;"><span style="background:rgb(200, 79, 84);">2012年06月14日</span></a></li></ul></div></div></div><div style="font-size: 12px; zoom: 1; margin: 5px 0px; padding: 10px 0px; text-align: right; line-height: 20px;"><div style="margin-bottom: 10px; height: 32px; line-height: 32px; text-align: left;"><font color="#696969"><br/></font></div></div></div></div></div></div></div></div></div></div></div></div></div></div></span>
+</div></body></html> 
